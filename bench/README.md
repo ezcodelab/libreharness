@@ -17,6 +17,11 @@ The full design, arms, task set, metrics, and threats are in
 repetitions per task per arm, one model and environment per arm, hidden tests
 scored outside the agent workspace.
 
+The headline is **pass@1 at the fixed budget**: tasks whose first repetition
+passes all hidden tests divided by tasks in the suite, times 100. Cost and wall
+time are secondary. Run the `plain` arm first as the before baseline, then the
+`harness` arm.
+
 No performance claim may be made from this directory until the raw data, the
 manifest, and the analysis are published or made available to reviewers. A
 neutral or negative result is published with the same care as a positive one.
@@ -77,16 +82,17 @@ described in the protocol and are not automated yet.
 Never run a live benchmark against a production checkout. Use a fresh clone of
 the fixture in a temporary directory.
 
-## Analyze
+## Score
 
 ```sh
-python3 bench/analyze.py --help
-python3 bench/analyze.py
+python3 bench/score.py --help
+python3 bench/score.py --input bench/results/YYYY-MM-DD --arm plain
+python3 bench/score.py --input bench/results/YYYY-MM-DD --baseline plain --candidate harness
 python3 bench/analyze.py --input bench/results/YYYY-MM-DD
 ```
 
-With no `runs.csv`, the script prints a clear no-results message and exits 0.
-It never substitutes sample numbers.
+With no `runs.csv`, the scripts print a clear no-results message and exit 0.
+They never substitute sample numbers or a composite score.
 
 ## Data policy
 

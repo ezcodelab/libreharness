@@ -1,13 +1,34 @@
 {
   "name": "libreharness",
   "version": "1.0.0-rc.1",
-  "private": true,
+  "private": false,
   "license": "MIT",
   "type": "module",
-  "description": "A durable task queue and engineering workflow for OpenCode.",
+  "description": "A durable task queue and engineering workflow for OpenCode. One-command install.",
+  "bin": {
+    "libreharness": "bin/libreharness.js"
+  },
+  "files": [
+    "AGENTS.md",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "opencode.example.json",
+    "agents",
+    "commands",
+    "skills",
+    "plugins",
+    "bin",
+    "docs"
+  ],
+  "engines": {
+    "node": ">=20",
+    "python": ">=3.10"
+  },
   "scripts": {
     "test:python": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
-    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/review-protocol.test.mjs && node tests/security-guard.test.mjs"
+    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/review-protocol.test.mjs && node tests/security-guard.test.mjs && node tests/installer.test.mjs",
+    "test": "npm run test:python && npm run test:node"
   },
   "devDependencies": {
     "@opencode-ai/plugin": "1.14.20"

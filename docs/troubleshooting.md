@@ -29,6 +29,25 @@ A missing helper is not a passed check. Record it.
 
 ## Install
 
+### `npx libreharness init` fails
+
+Run the checkout form and read the first error:
+
+```sh
+node bin/libreharness.js init --dry-run
+```
+
+`--dry-run` writes nothing. The usual causes are Node older than 20, Python
+older than 3.10, or a state directory inside the config directory. Fix the
+reported item, then run the installer again.
+
+### Existing OpenCode config
+
+The installer preserves existing files and reports conflicts. It does not
+overwrite `AGENTS.md`, `opencode.json`, or plugins unless you pass `--force`.
+With `--force`, the replaced files move to
+`$HARNESS_HOME/.libreharness-backup-<timestamp>/`.
+
 ### `python3: command not found`
 
 Install Python 3.10 or newer, then confirm:

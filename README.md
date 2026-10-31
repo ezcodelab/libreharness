@@ -48,26 +48,42 @@ harness makes three things durable:
    to auth, secrets, data, or a public API gets a closer look. Jev is one
    input, never the deciding gate.
 
-## 60-second quickstart
-
-From a checkout, with no Jev key:
+## One-command install
 
 ```sh
-export HARNESS_HOME="$PWD"
-export HARNESS_STATE="$(mktemp -d)"
-ID=$(python3 "$HARNESS_HOME/bin/tasks.py" new "Try the harness" \
-  --scope "Create and close one task." \
-  --acceptance "- board lists the task")
-python3 "$HARNESS_HOME/bin/tasks.py" claim "$ID" --owner me
-python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" review
-python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" done \
-  --evidence "python3 bin/tasks.py board: task listed"
-python3 "$HARNESS_HOME/bin/tasks.py" board
+npx libreharness init
 ```
 
-The last command writes `work/BOARD.md` under the temporary state root and
-prints its path. Remove that root when you are done. The full walkthrough is in
-[docs/quickstart.md](docs/quickstart.md).
+The guided installer asks for the OpenCode config and state directories, copies
+the runtime, creates `opencode.json` only when none exists, and runs the
+environment check. For an unattended install, add `--yes`.
+
+Until the npm package is published, use the checkout directly:
+
+```sh
+node bin/libreharness.js init
+```
+
+The installer does not choose a provider or model. Start OpenCode and choose
+one with `/models`.
+
+The full walkthrough is in [docs/quickstart.md](docs/quickstart.md). The manual
+path is in [docs/install.md](docs/install.md).
+
+## Benchmark baseline
+
+The headline is **pass@1 at the fixed budget**: tasks whose first repetition
+passes all hidden tests, divided by tasks in the suite, times 100. Cost and wall
+time are secondary. Run the plain arm first, then the harness arm:
+
+```sh
+python3 bench/score.py --input bench/results/YYYY-MM-DD --arm plain
+python3 bench/score.py --input bench/results/YYYY-MM-DD \
+  --baseline plain --candidate harness
+```
+
+The benchmark is a protocol and scaffold; no fixtures or results are published
+yet. See [bench/protocol.md](bench/protocol.md).
 
 ## Jev, the advisory layer
 

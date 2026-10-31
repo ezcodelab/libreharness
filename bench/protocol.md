@@ -32,7 +32,7 @@ results are published with the same care as positive ones.
 
 | ID | Question | Arms | Tasks | Unit | Primary outcome | Use |
 |---|---|---|---|---|---|---|
-| A | Does the harness improve completed work at acceptable cost? | `plain` vs `harness`, Jev disabled in both | B1 to B8 | One task run | Hidden-test pass rate | Publication claim and README performance section |
+| A | Does the harness improve completed work at acceptable cost? | `plain` vs `harness`, Jev disabled in both | B1 to B8 | One task run | pass@1 at the fixed budget | Publication claim and README performance section |
 | B | Did the publication refactor change behavior? | `pre-refactor` vs `rc`, Jev enabled in both | B1 to B8 | One task run | Parity in pass rate, tokens, and time | Release gate and regression threshold |
 | C | Does Jev justify its cost? | `harness-no-jev` vs `harness-jev` | B1, B4, B7, B8 | One task run | Hidden-test pass, review send-backs, defects caught before submission | Jev claim, default enablement, docs |
 
@@ -104,12 +104,40 @@ Controls:
   environment shims. A task that still needs a private path is excluded and
   recorded.
 
+## Standard metric
+
+The headline number is **pass@1 at the fixed benchmark budget**:
+
+```text
+pass@1 = tasks whose first repetition passes all hidden tests
+         --------------------------------------------------- x 100
+                      number of tasks in the suite
+```
+
+The fixed budget is the task packet's 30-minute limit and token cap. Use the
+first repetition for each task. Cost, wall time, review send-backs, and human
+interventions are reported beside the score, not blended into it. There is no
+composite score and no weighting.
+
+The **before** number is the `plain` arm on the same eight tasks, same model,
+same environment, and same budget. A person considering LibreHarness should
+record that baseline first. The **after** number is the `harness` arm. Report
+the absolute scores and the delta in percentage points.
+
+```sh
+python3 bench/score.py --input bench/results/YYYY-MM-DD --arm plain
+python3 bench/score.py --input bench/results/YYYY-MM-DD --baseline plain --candidate harness
+```
+
+A score without the raw `runs.csv`, manifest, and task hashes is not publishable.
+
 ## Metrics
 
 | Metric | Definition | Source |
 |---|---|---|
 | `task_pass` | All acceptance checks pass, 0 or 1 | Evaluator |
 | `hidden_pass` | All hidden tests pass, 0 or 1 | Hidden test run |
+| `pass_at_1` | First repetition per task passes all hidden tests / tasks in suite x 100 | `bench/score.py` |
 | `wall_seconds` | Start to final answer, excluding queue wait | Runner |
 | `input_tokens` | Prompt tokens | Session JSON |
 | `output_tokens` | Completion tokens | Session JSON |

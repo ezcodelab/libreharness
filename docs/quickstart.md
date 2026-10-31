@@ -2,169 +2,77 @@
 
 # Quickstart
 
-This walkthrough creates, claims, reviews, and closes one task in a temporary
-state root. It takes a few minutes and does not need a Jev key.
-
-You need a checkout and Python 3.10 or newer. The commands work from the
-checkout root.
-
-## 1. Set a temporary state root
+## 1. Install
 
 ```sh
-export HARNESS_HOME="$PWD"
-export HARNESS_STATE="$(mktemp -d)"
+npx libreharness init
 ```
 
-`HARNESS_HOME` is the code. `HARNESS_STATE` is the data. Using a temporary state
-root means nothing here can disturb real work.
-
-## 2. Create a task
+The guided installer asks for the OpenCode config directory and state directory,
+then runs the environment check. For an unattended install:
 
 ```sh
-ID=$(python3 "$HARNESS_HOME/bin/tasks.py" new "Try the harness" \
+npx libreharness init --yes
+```
+
+From a checkout, use `node bin/libreharness.js init`.
+
+## 2. Start OpenCode
+
+Open OpenCode in your project and choose a provider and model with `/models`.
+The installer does not choose either for you.
+
+## 3. Create, claim, and close one task
+
+Set the two roots once. They are the same defaults the installer uses.
+
+```sh
+export HARNESS_HOME="${HARNESS_HOME:-$HOME/.config/opencode}"
+export HARNESS_STATE="${HARNESS_STATE:-$HOME/.local/state/libreharness}"
+ID=$(python3 "$HARNESS_HOME/bin/tasks.py" new "Try LibreHarness" \
   --project demo \
   --scope "Create and close one task." \
   --acceptance "- board lists the task")
-printf '%s\n' "$ID"
-```
-
-Expected output is a date-based id:
-
-```text
-20261030-try-the-harness
-```
-
-The exact date changes. The id is the file name under
-`$HARNESS_STATE/work/tasks/`.
-
-The command also writes `$HARNESS_STATE/work/BOARD.md`. The task starts in
-`ready`.
-
-## 3. Claim it
-
-```sh
 python3 "$HARNESS_HOME/bin/tasks.py" claim "$ID" --owner quickstart
-```
-
-Expected output:
-
-```text
-claimed: 20261030-try-the-harness by quickstart
-```
-
-The status is now `active` and the owner is recorded. Claiming a goal is
-rejected; claim a child task instead.
-
-## 4. Move it to review
-
-```sh
-python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" review \
-  --note "quickstart walkthrough"
-```
-
-Expected output:
-
-```text
-20261030-try-the-harness: review
-```
-
-In a real task, this is where you run the documented checks and `/review`.
-
-## 5. Close it with evidence
-
-```sh
+python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" review --note "quickstart"
 python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" done \
-  --evidence "python3 bin/tasks.py board: task listed"
-```
-
-Expected output:
-
-```text
-20261030-try-the-harness: done
-```
-
-The evidence gate rejects a placeholder. These all fail:
-
-```text
-none
-ok
-pass
-done
-tests pass
-```
-
-Use a command and result, a measured check, or an explicit `[T]` with a plan.
-The evidence is appended to the task's Evidence section and one row is written
-to `$HARNESS_STATE/metrics/workflow-log.csv`.
-
-## 6. Inspect the board
-
-```sh
+  --evidence "python3 $HARNESS_HOME/bin/tasks.py board: task listed"
 python3 "$HARNESS_HOME/bin/tasks.py" board
-cat "$HARNESS_STATE/work/BOARD.md"
 ```
 
-The board has a Done section with one row:
+The evidence gate rejects `none`, `ok`, `pass`, and `tests pass`. Use a command
+and result, a measured check, or an explicit `[T]` with a plan.
 
-```text
-| 2 | `20261030-try-the-harness` Try the harness | demo | quickstart |  | 2026-10-30 |
-```
+## 4. Use it from OpenCode
 
-The exact date and column spacing may differ.
+In OpenCode, use `/goal` for one task or a multi-deliverable goal. The harness
+loads the queue, skills, commands, and local plugins from the config directory.
 
-## 7. Inspect the task file
+Optional Jev review without a key:
 
 ```sh
-cat "$HARNESS_STATE/work/tasks/$ID.md"
-```
-
-The file starts with YAML-like frontmatter and has these sections: Scope, Out
-of scope, Acceptance, Context, Plan, Evidence, Handoff, and Log. You may edit
-Scope, Out of scope, Acceptance, Context, Plan, and Handoff. Do not hand-edit
-status, owner, dependencies, or evidence. Use the CLI so the board and metrics
-stay consistent.
-
-## 8. Clean up
-
-```sh
-rm -rf "$HARNESS_STATE"
-```
-
-`HARNESS_STATE` was a temporary directory. Removing it removes the demo task,
-board, and metrics.
-
-## What just happened
-
-```text
-new -> ready -> claim -> active -> status review -> review -> done with evidence
-```
-
-The queue is a set of Markdown files plus a lock. There is no database and no
-server. The board is generated from the files. The lock serializes writers so
-two tasks cannot claim the same branch or worktree, and writes are atomic so a
-crash does not leave a half-written task.
-
-## Try Jev without a key
-
-Jev is optional. To see its request shape and verdict without a network call:
-
-```sh
-printf 'diff --git a/demo.txt b/demo.txt\n+hello\n' > "$HARNESS_STATE/quickstart.diff"
+printf 'diff --git a/demo.txt b/demo.txt\n+hello\n' > "$HARNESS_STATE/demo.diff"
 JEV_MODEL=example-model python3 "$HARNESS_HOME/bin/jev_review.py" \
-  --mock good \
-  --diff "$HARNESS_STATE/quickstart.diff" \
-  --task "Quickstart demo"
+  --mock good --diff "$HARNESS_STATE/demo.diff" --task "Quickstart"
 ```
 
-`--mock good` returns a canned pass. `--mock bad` returns a canned send-back.
-The model name is still required because the client validates it before the
-mock branch. The mock does not call the endpoint and does not need a key.
+## 5. Record a benchmark baseline
 
-For a live call, see [jev.md](jev.md).
+Before adopting the harness, run the plain baseline on the fixed eight-task
+suite. The headline is **pass@1 at the fixed budget**, not a composite score:
+
+```sh
+python3 "$HARNESS_HOME/bench/score.py" --input bench/results/YYYY-MM-DD --arm plain
+python3 "$HARNESS_HOME/bench/score.py" --input bench/results/YYYY-MM-DD \
+  --baseline plain --candidate harness
+```
+
+The fixtures and live runs are release-gated. No score is published until the
+raw `runs.csv` and manifest exist.
 
 ## Next
 
-- Read [workflow.md](workflow.md) for the full loop.
-- Read [concepts.md](concepts.md) for the terms.
-- Read [command-reference.md](command-reference.md) for every command and
-  argument.
+- [Install options](install.md)
+- [Workflow](workflow.md)
+- [Model routing](model-routing.md)
+- [Benchmark protocol](../bench/protocol.md)

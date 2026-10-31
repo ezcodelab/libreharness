@@ -12,8 +12,8 @@ here makes a performance claim.
 
 | Document | What it answers |
 |---|---|
-| [Install](install.md) | How to put the harness on a clean POSIX machine, configure a provider, and verify the install |
-| [Quickstart](quickstart.md) | How to create, claim, review, and close one task in a temporary state root |
+| [Install](install.md) | One-command `npx libreharness init`, guided and unattended paths, upgrade, and manual fallback |
+| [Quickstart](quickstart.md) | Create, claim, review, and close one task after install |
 | [Concepts](concepts.md) | What a task, goal, lane, handoff, evidence, review, and close mean |
 | [Workflow](workflow.md) | How the pieces fit together, with a worked example and the evidence gate |
 
@@ -26,6 +26,7 @@ here makes a performance claim.
 | [Plugins](plugins.md) | The four local plugins, their environment, failure modes, and disable switches |
 | [Model routing](model-routing.md) | Roles, provider-agnostic configuration, static matrix, and cost controls |
 | [Skill evaluation](skill-eval.md) | How to run a small with/without experiment before promoting a skill |
+| [Benchmark protocol](../bench/protocol.md) | The eight-task suite, the pass@1-at-fixed-budget headline, and the plain baseline |
 
 ## Jev
 

@@ -41,6 +41,7 @@ node tests/auto-intake.test.mjs
 node tests/goal-watch.test.mjs
 node tests/review-protocol.test.mjs
 node tests/security-guard.test.mjs
+node tests/installer.test.mjs
 python3 bin/docs_lint.py . --skills-dir skills
 node --check plugins/auto-intake.js
 node --check plugins/close-reminder.js

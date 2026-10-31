@@ -14,7 +14,10 @@ organization, two similar repositories, and an npm package.
 
 ## Passed
 
-- [x] Fresh local git history: one initial commit, no remote, no prior history.
+- [x] Fresh one-commit history on `main`, pushed to the local Gitea
+  `origin/main`.
+- [x] One-command npm-tarball install in a clean temporary `HOME`; doctor
+  passed.
 - [x] Clean temporary `HOME` copy of the tree.
 - [x] `bin/doctor.py`: checkout, state outside checkout, Python, Node, Git,
   config parse, plugin syntax, queue help.
@@ -22,11 +25,15 @@ organization, two similar repositories, and an npm package.
   with evidence, generated board.
 - [x] Jev mock review without a key or network call.
 - [x] Python queue tests: 16 passed.
-- [x] Node tests: auto-intake, goal-watch, review-protocol, security-guard.
-- [x] Docs lint: 58 Markdown files, no problems.
+- [x] Node tests: auto-intake, goal-watch, review-protocol, security-guard,
+  installer.
+- [x] Docs lint: 59 Markdown files, no problems.
 - [x] SPDX headers: all checked files pass.
 - [x] Private-path scan: no findings.
-- [x] Benchmark runner `--dry-run` and analyzer no-data path.
+- [x] Benchmark runner `--dry-run`, score no-data path, and analyzer no-data
+  path.
+- [x] Headline metric defined as pass@1 at the fixed budget; plain arm is the
+  before baseline.
 - [x] No `free-explore` or `flash-fallback` code remains.
 
 ## Not proven
@@ -35,8 +42,8 @@ organization, two similar repositories, and an npm package.
   provider credentials, so this was not run.
 - [ ] GitHub Actions workflows were not executed on GitHub. They were inspected
   and the same local commands pass.
-- [ ] Benchmark comparison A, B, or C. Task descriptors exist, but no fixture,
-  run data, or result exists.
+- [ ] Benchmark comparison A, B, or C. Task descriptors and the score command
+  exist, but no fixture, run data, baseline score, or result exists.
 - [ ] Live Jev endpoint call. Only the mock path was exercised.
 - [ ] `JEV_MODE` is documented as an adapter contract but is not read by the
   rc.1 clients.
