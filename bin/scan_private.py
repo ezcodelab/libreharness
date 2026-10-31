@@ -9,7 +9,7 @@ import re
 import sys
 from pathlib import Path
 
-SKIP_DIRS = {".git", "node_modules", "state", "__pycache__", ".venv", "bench/results"}
+SKIP_DIRS = {".git", "node_modules", "state", "__pycache__", ".venv", "bench/results", "jobs"}
 DEFAULT_PATTERNS = [
     r"/home/[^/\s]+/Documents/homelab",
     r"Documents/homelab",

@@ -18,14 +18,41 @@ from __future__ import annotations
 
 import os
 import shlex
+from dataclasses import replace
 from pathlib import Path
 
+from harbor.agents.agent_auth_resolution import ProviderAccess
 from harbor.agents.installed.opencode import OpenCode
 from harbor.environments.base import BaseEnvironment
 
 
 class OpenCodeLibreHarness(OpenCode):
     """OpenCode plus the LibreHarness agents, commands, skills, and queue."""
+
+    # OpenCode's native Ollama provider reads OLLAMA_API_KEY. Harbor's stock
+    # OpenCode mapping only looks for OPENAI_API_KEY, which made the first
+    # Terminal-Bench trial call ollama.com without a credential.
+    MODEL_CONNECTION = replace(
+        OpenCode.MODEL_CONNECTION,
+        agent_provider_access=ProviderAccess(
+            api_key_candidate_names=[
+                "OLLAMA_API_KEY",
+                "OPENCODE_API_KEY",
+                "OPENAI_API_KEY",
+            ],
+            base_url_candidate_names=[
+                "OLLAMA_BASE_URL",
+                "OPENCODE_BASE_URL",
+                "OPENAI_BASE_URL",
+                "OPENAI_API_BASE",
+            ],
+        ),
+        api_key_destination_names={
+            "ollama-cloud": "OLLAMA_API_KEY",
+            "opencode": "OPENCODE_API_KEY",
+            "default": "OPENAI_API_KEY",
+        },
+    )
 
     def __init__(
         self,
