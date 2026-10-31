@@ -104,15 +104,17 @@ deliberately skips the local UI plugins so auto-intake, close reminders, and
 goal-watch cannot alter a benchmark task.
 
 ```sh
+export OLLAMA_API_KEY=...
 PYTHONPATH="$PWD" harbor run \
   -d terminal-bench@2.0 \
   -a harbor_agent.opencode_agent:OpenCodeLibreHarness \
-  -m <provider>/<model>
+  -m ollama-cloud/deepseek-v4.1-flash
 ```
 
-The plain arm remains stock `-a opencode`. The adapter has not been exercised
-against a live Harbor task yet; run one task as a smoke test before a full
-dataset.
+The Docker sandbox does not inherit OpenCode's host auth store, so the key must
+be in the shell that launches Harbor or supplied through `--env-file`. The plain
+arm remains stock `-a opencode`. The adapter has not completed a live trial
+yet; run one task as a smoke test before a full dataset.
 
 ## Commands to validate
 
