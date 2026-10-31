@@ -102,8 +102,8 @@ def load_arms(args: argparse.Namespace) -> list[tuple[str, Path, dict]]:
 
 def load_defects(path: Path) -> list[dict]:
     data = load_json(path)
-    if not isinstance(data, list) or not data:
-        raise SystemExit(f"{path}: defects must be a non-empty list")
+    if not isinstance(data, list):
+        raise SystemExit(f"{path}: defects must be a list")
     for index, defect in enumerate(data):
         if not isinstance(defect, dict):
             raise SystemExit(f"{path}: defect {index} must be an object")
@@ -172,6 +172,7 @@ def score_findings(findings: list[dict], defects: list[dict]) -> dict:
 
     true_positives = len(matched)
     denominator = true_positives + false_positives
+    clean = not defects
     return {
         "true_positives": true_positives,
         "false_positives": false_positives,
@@ -180,8 +181,11 @@ def score_findings(findings: list[dict], defects: list[dict]) -> dict:
         "false_nits": false_nits,
         "false_unknown": false_unknown,
         "duplicates": duplicates,
+        "clean": clean,
         "recall": true_positives / len(defects) if defects else 0.0,
-        "precision": true_positives / denominator if denominator else 0.0,
+        "precision": (1.0 if false_positives == 0 else 0.0)
+        if clean
+        else (true_positives / denominator if denominator else 0.0),
         "recall_by_severity": {
             severity: matched_severity[severity] / total if total else None
             for severity, total in defect_severity.items()
@@ -407,6 +411,7 @@ def arm_row(
         "false_majors": scored["false_majors"],
         "false_nits": scored["false_nits"],
         "duplicates": scored["duplicates"],
+        "clean": scored["clean"],
         "recall": f"{scored['recall']:.3f}",
         "precision": f"{scored['precision']:.3f}",
         "recall_blockers": _rate(scored["recall_by_severity"]["blocker"]),
@@ -563,7 +568,12 @@ def print_summary(rows: list[dict]) -> None:
         errors = sum(1 for row in items if row["error"])
         scored = [row for row in items if not row["error"]]
         if scored:
-            recall = f"{statistics.mean(float(row['recall']) for row in scored):.0%}"
+            clean = all(row.get("clean", False) for row in scored)
+            recall = (
+                "n/a"
+                if clean
+                else f"{statistics.mean(float(row['recall']) for row in scored):.0%}"
+            )
             precision = f"{statistics.mean(float(row['precision']) for row in scored):.0%}"
             false_blockers = f"{statistics.mean(int(row['false_blockers']) for row in scored):.2f}"
             tokens = str(sum(int(row["input_tokens"]) + int(row["output_tokens"]) for row in scored))
@@ -581,9 +591,10 @@ def print_summary(rows: list[dict]) -> None:
     print("|---|---:|---:|---:|---:|---:|---:|---:|---:|---|")
     for row in sorted(rows, key=lambda item: (item["arm"], int(item["repetition"]))):
         tokens = int(row["input_tokens"]) + int(row["output_tokens"])
+        recall = "n/a" if row.get("clean") else f"{float(row['recall']):.0%}"
         print(
             f"| {row['arm']} | {row['repetition']} | {row.get('sequence', '')} | "
-            f"{float(row['recall']):.0%} | {float(row['precision']):.0%} | "
+            f"{recall} | {float(row['precision']):.0%} | "
             f"{row['false_blockers']} | {tokens} | ${float(row['cost_usd']):.4f} | "
             f"{float(row['wall_seconds']):.1f} | {row['error']} |"
         )
@@ -599,8 +610,13 @@ def print_summary(rows: list[dict]) -> None:
         recalls = [float(row["recall"]) for row in items]
         precisions = [float(row["precision"]) for row in items]
         walls = [float(row["wall_seconds"]) for row in items]
+        recall_text = (
+            "n/a"
+            if all(row.get("clean", False) for row in items)
+            else f"{min(recalls):.0%}-{max(recalls):.0%}"
+        )
         print(
-            f"| {arm} | {min(recalls):.0%}-{max(recalls):.0%} | "
+            f"| {arm} | {recall_text} | "
             f"{min(precisions):.0%}-{max(precisions):.0%} | "
             f"{min(walls):.1f}-{max(walls):.1f} |"
         )

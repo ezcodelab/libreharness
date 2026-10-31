@@ -29,6 +29,7 @@ here makes a performance claim.
 | [EGM review](egm-review.md) | What Google's Elephant-Goldfish Model does, what to adopt, and whether the Harbor adapter is still the right integration |
 | [Superpowers review](superpowers-review.md) | What Superpowers does, which skills fit, and the four-arm comparison design |
 | [Self-improvement pilot](self-improvement-2026-10-31.md) | Four-arm review pilot, Harbor check, and the rejected Superpowers change |
+| [Benchmark proof protocol](benchmark-proof.md) | What would make an “objectively best” claim valid, and what would falsify it |
 | [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
 | [Local benchmark protocol](../bench/protocol.md) | The small B1-B8 regression suite and its pass@1 calculation |
 

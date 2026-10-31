@@ -19,6 +19,11 @@ declarative prompt arms, scores findings against five seeded defects, and runs
 in minutes.
 It is a feature-level supplement, not a public score.
 
+For coding outcomes, [`coding.py`](coding.py) runs a fixed Terminal-Bench suite
+through Harbor across stock OpenCode and the LibreHarness profiles. It records
+reward, exceptions, tokens, cost, wall time, and a test-first heuristic. See
+[`coding.md`](coding.md).
+
 The local suite answers three questions:
 
 - A: does the harness improve completed work at acceptable cost, with Jev
@@ -50,6 +55,9 @@ bench/
 ├── runner.py          plan or run one task repetition
 ├── ablation.py        fast review-feature ablation and scoring
 ├── ablation.md        how the ablation works and how to add a feature
+├── coding.py          fixed Terminal-Bench coding runner
+├── coding.md          coding metrics and test-first limits
+├── coding-suite.json  fixed tasks and five arms
 ├── features/ablation/ declarative arm prompts
 ├── analyze.py         summarize a results directory
 ├── tasks/             one fixed prompt and rubric per category, B1 to B8

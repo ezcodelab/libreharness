@@ -97,8 +97,13 @@ The two fixtures do not agree on one winner:
   precision and zero false blockers on B.
 - **Current** is the reference, not a candidate, and it is competitive on B.
 
-This is still two fixtures and one model. It is a reason to keep testing, not a
-reason to promote.
+The fixture set now also contains a clean no-defect spec (`spec-clean.md`) and a
+third seeded spec (`spec-c.md`, webhook delivery). They are added but not yet
+run across all arms; the clean fixture measures false positives only, and
+fixture C adds a different failure surface.
+
+This is still two measured fixtures and one model. It is a reason to keep
+testing, not a reason to promote.
 
 ## Harbor one-task check
 
@@ -214,8 +219,8 @@ It does not show:
 
 ## Next
 
-1. Add a clean no-defect fixture and a third independently authored seeded spec.
-2. Add the coding-purpose task set described above; one Harbor task remains a
+1. Run the clean and fixture-C review sets across all arms.
+2. Run the coding-purpose task set described above; one Harbor task remains a
    smoke.
 3. Test the EGM false-blocker fix: require a source, failure path, and missing
    guard for every blocker, and rerun across all fixtures.

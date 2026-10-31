@@ -89,6 +89,44 @@ class AblationTests(unittest.TestCase):
                 scored = ablation.score_findings([finding], defects)
                 self.assertEqual(defect_id in scored["matched"], expected)
 
+    def test_clean_fixture_reports_false_positives_only(self) -> None:
+        defects = ablation.load_defects(
+            ROOT / "bench/fixtures/ablation/defects-clean.json"
+        )
+        empty = ablation.score_findings([], defects)
+        self.assertTrue(empty["clean"])
+        self.assertEqual(empty["recall"], 0.0)
+        self.assertEqual(empty["precision"], 1.0)
+        noisy = ablation.score_findings(
+            [{"severity": "blocker", "issue": "An unrelated blocker."}],
+            defects,
+        )
+        self.assertTrue(noisy["clean"])
+        self.assertEqual(noisy["false_blockers"], 1)
+        self.assertEqual(noisy["precision"], 0.0)
+
+    def test_fixture_c_rejects_praise(self) -> None:
+        defects = ablation.load_defects(
+            ROOT / "bench/fixtures/ablation/defects-c.json"
+        )
+        cases = [
+            ("The payload is signed and verified.", False, "C1"),
+            ("The handler is idempotent.", False, "C3"),
+            ("Logs do not contain PII.", False, "C5"),
+            ("PII is not logged.", False, "C5"),
+            ("Sensitive data is never logged.", False, "C5"),
+            ("No PII is written to logs.", False, "C5"),
+            ("We never log payloads.", False, "C5"),
+            ("There is no signature or authentication.", True, "C1"),
+            ("The worker logs the full request body.", True, "C5"),
+        ]
+        for issue, expected, defect_id in cases:
+            with self.subTest(defect=defect_id, issue=issue):
+                scored = ablation.score_findings(
+                    [{"severity": "major", "issue": issue}], defects
+                )
+                self.assertEqual(defect_id in scored["matched"], expected)
+
     def test_duplicate_findings_do_not_lower_precision(self) -> None:
         defects = ablation.load_defects(ROOT / "bench/fixtures/ablation/defects.json")
         findings = [

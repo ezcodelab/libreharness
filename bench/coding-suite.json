@@ -1,0 +1,47 @@
+{
+  "name": "terminal-bench-coding-pilot",
+  "dataset": "terminal-bench@2.0",
+  "tasks": [
+    "break-filter-js-from-html",
+    "sqlite-db-truncate",
+    "sanitize-git-repo"
+  ],
+  "arms": [
+    {
+      "name": "plain",
+      "agent": "opencode",
+      "profile": null,
+      "label": "Stock OpenCode"
+    },
+    {
+      "name": "current",
+      "agent": "harbor_agent.opencode_agent:OpenCodeLibreHarness",
+      "profile": null,
+      "label": "LibreHarness base"
+    },
+    {
+      "name": "egm",
+      "agent": "harbor_agent.opencode_agent:OpenCodeLibreHarness",
+      "profile": "egm",
+      "label": "LibreHarness plus EGM"
+    },
+    {
+      "name": "superpowers",
+      "agent": "harbor_agent.opencode_agent:OpenCodeLibreHarness",
+      "profile": "superpowers",
+      "label": "LibreHarness plus Superpowers"
+    },
+    {
+      "name": "both",
+      "agent": "harbor_agent.opencode_agent:OpenCodeLibreHarness",
+      "profile": "both",
+      "label": "LibreHarness plus both"
+    }
+  ],
+  "model": "ollama-cloud/deepseek-v4.1-flash",
+  "opencode_version": "1.19.5",
+  "harbor_version": "0.25.0",
+  "base_url": "https://ollama.com/v1",
+  "api_key_name": "OLLAMA_API_KEY",
+  "api_format": "openai_chat_completions"
+}

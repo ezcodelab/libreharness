@@ -1,0 +1,32 @@
+[
+  {
+    "id": "C1",
+    "severity": "blocker",
+    "match": "((no|missing|without|lacks|lack of|not).{0,60}(signature|verify|authenticat|shared secret)|X-Customer-Id.{0,80}(only|not|spoof)|customer id header.{0,80}(not|only|spoof))",
+    "description": "The design has no signed payload or authentication; a customer id header is not proof of origin."
+  },
+  {
+    "id": "C2",
+    "severity": "blocker",
+    "match": "(no maximum|unlimited|until.*2xx|dead.?letter|max.*attempt|poison|retry.*forever|never.*stop)",
+    "description": "Retries have no cap or dead-letter path, so a poison endpoint can block delivery forever."
+  },
+  {
+    "id": "C3",
+    "severity": "blocker",
+    "match": "((no|missing|without|lacks|lack of).{0,60}(idempoten|dedup)|(idempoten|dedup).{0,60}(missing|not implemented|no key|lacks|without)|duplicate (event|delivery|side effect)|same event.*twice|at.least.once|exactly.once)",
+    "description": "There is no consumer idempotency or delivery deduplication, so retries can duplicate side effects."
+  },
+  {
+    "id": "C4",
+    "severity": "major",
+    "match": "((no|missing|without|lacks).{0,60}(rate limit|backpressure|concurrency limit)|(rate limit|backpressure).{0,60}(missing|not defined|none)|one (slow|high.volume) customer.{0,80}(starve|block)|flood|tenant.*limit)",
+    "description": "There is no per-customer rate limit or backpressure; one slow or high-volume customer can starve the queue."
+  },
+  {
+    "id": "C5",
+    "severity": "major",
+    "match": "((?<!never )(?<!not )(?<!no )(logs?|logging).{0,40}(full|request body|response body|event data)|(full|request body|response body|event data).{0,40}(?<!never )(?<!not )(?<!no )(logs?|logging)|info level.{0,40}(payload|body)|PII.{0,40}(payload|body|request|response))",
+    "description": "The worker logs full request and response bodies, which can expose PII and customer data."
+  }
+]

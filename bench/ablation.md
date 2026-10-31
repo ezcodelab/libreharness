@@ -1,7 +1,8 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Feature ablation benchmark
 
-Status: **pilot run on two fixtures, not a public score.** This is a fast
+Status: **pilot run on two seeded fixtures, not a public score.** The clean
+fixture and fixture C are added but not yet run across all arms. This is a fast
 supplement to the Harbor/Terminal-Bench headline.
 
 ## What it answers
@@ -57,6 +58,10 @@ bench/
     ├── defects.json         five seeded defects for A
     ├── spec-b.md            seeded API-key rotation design B
     ├── defects-b.json       five seeded defects for B
+    ├── spec-c.md            seeded webhook delivery design C
+    ├── defects-c.json       five seeded defects for C
+    ├── spec-clean.md        no-defect design
+    ├── defects-clean.json   empty defect list
     └── sample-findings.json deterministic scoring sample
 ```
 
@@ -105,6 +110,19 @@ python3 bench/ablation.py --dry-run --out bench/results/four-arm-b \
 the `run_order` list are written even for a dry run. The manifest also records
 the fixture hash, defect hash, model, feature labels, prompt hashes, repetition
 count, timeout, and planned commands.
+
+Clean fixture:
+
+```sh
+python3 bench/ablation.py --dry-run --out bench/results/clean \
+  --fixture bench/fixtures/ablation/spec-clean.md \
+  --defects bench/fixtures/ablation/defects-clean.json \
+  --arm current=bench/features/ablation/baseline.json
+```
+
+A clean fixture has no seeded defects. Recall is shown as `n/a`; precision is
+1.0 when the arm reports no findings and 0.0 when it reports any. That measures
+false-positive discipline, not recall.
 
 Self-check, no model call:
 
