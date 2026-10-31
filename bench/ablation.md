@@ -100,6 +100,25 @@ findings. A finding can use different words and still be correct; a broad regex
 can also accept a vague finding. Read the per-run `findings.json` before making
 a decision.
 
+## Host smoke, 2026-10-31
+
+This is a host smoke, not a benchmark result. It ran on OpenCode 2.2.4, not the
+Harbor pin of 1.19.5, with one repetition and the current fixture.
+
+| Arm | Recall | Precision | Tokens | Cost USD | Wall s |
+|---|---:|---:|---:|---:|---:|
+| baseline | 60% | 27% | 17,232 | $0.0041 | 17.8 |
+| candidate | 60% | 38% | 17,024 | $0.0040 | 11.6 |
+
+Both arms matched D1, D3, and D4 under the regex. Manual review of the raw
+findings shows both also identified D2 (the create/poll method problem), but the
+regex did not credit it; D5 was missed. The candidate produced fewer false
+positives on the same seeded recall, which is a useful signal but not enough to
+adopt. A v2 fixture with clearer match rules and three repetitions is needed
+before a claim.
+
+Raw data: `bench/results/ablation-2026-10-31-live/` (ignored by git).
+
 ## Adoption rule
 
 Adopt the candidate only when:
@@ -126,7 +145,8 @@ feature. A neutral result is a valid outcome.
   before a claim, and still report the sample size.
 - The runner does not replace Harbor, Terminal-Bench, hidden tests, or human
   review.
-- No live result exists yet. Do not cite a quality gain from this scaffold.
+- The 2026-10-31 host smoke is one repetition on a different OpenCode version.
+  It is not a quality claim. Do not cite a gain from this scaffold.
 
 For the EGM review that motivated the comprehension arm, see
 [`docs/egm-review.md`](../docs/egm-review.md). For the public benchmark, see
