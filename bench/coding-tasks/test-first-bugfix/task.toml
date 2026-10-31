@@ -1,0 +1,32 @@
+schema_version = "1.4"
+artifacts = []
+
+[task]
+name = "libreharness/test-first-bugfix"
+version = "1.0.0"
+description = "Add a failing regression test, then fix the bug."
+keywords = []
+[[task.authors]]
+name = "LibreHarness"
+
+[metadata]
+
+[verifier]
+timeout_sec = 600.0
+environment_mode = "shared"
+collect = []
+
+[verifier.env]
+
+[agent]
+timeout_sec = 600.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 600.0
+os = "linux"
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]

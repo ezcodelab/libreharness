@@ -23,12 +23,44 @@ not replace the official benchmark.
 
 - dataset `terminal-bench@2.0`;
 - tasks `break-filter-js-from-html`, `sqlite-db-truncate`,
-  `sanitize-git-repo`;
+  `sanitize-git-repo`, `fix-code-vulnerability`, `sqlite-with-gcov`,
+  `code-from-image`, `cobol-modernization`, `multi-source-data-merger`;
 - arms `plain` (stock OpenCode), `current` (LibreHarness base), `egm`,
   `superpowers`, and `both`;
 - model, OpenCode version, Harbor version, endpoint, and API format.
 
 Change the suite file, not Python constants, to add a task or arm.
+
+## Local test-writing task
+
+`bench/coding-tasks/test-first-bugfix/` is a separate local Harbor task that
+requires a new regression test. The verifier checks that:
+
+- `/app/tests/test_regression.py` exists;
+- the existing `/app/tests/test_calc.py` is unchanged;
+- all tests pass on the fixed code;
+- the new test fails against the baseline code with the bug;
+- `safe_div(1, 0)` raises `ValueError`.
+
+Run one arm:
+
+```sh
+export OLLAMA_API_KEY=...
+PYTHONPATH="$PWD" harbor run \
+  -p bench/coding-tasks/test-first-bugfix \
+  -a harbor_agent.opencode_agent:OpenCodeLibreHarness \
+  -m ollama-cloud/deepseek-v4.1-flash \
+  --base-url https://ollama.com/v1 \
+  --api-key-name OLLAMA_API_KEY \
+  --api-format openai_chat_completions \
+  --ak version=1.19.5 \
+  --ak profile=egm \
+  -k 1
+```
+
+The local task uses a shared verifier because its tests read `/app`. It is not
+part of the Terminal-Bench dataset suite; run it separately and report it as a
+supplement.
 
 ## Commands
 
@@ -48,8 +80,8 @@ The wrapper prints a cost warning, randomizes the arm order with `--seed`, and
 writes `manifest.json` and `runs.csv` under the output directory. Harbor's job
 directories stay under that output, outside the public tree.
 
-Use `--repetitions 3` for a comparison. The pilot default is 1 because a
-three-task, five-arm run at n=3 is already 45 trials.
+Use `--repetitions 3` for a comparison. The default is 1 because an
+eight-task, five-arm run at n=3 is already 120 trials.
 
 Paired analysis:
 
@@ -114,7 +146,7 @@ manual column to the pilot report; do not invent a number.
 
 ## Next
 
-1. Run the three-task pilot at n=1 and inspect failures.
+1. Run the eight-task suite at n=1 and inspect failures.
 2. Add a fourth task that requires tests, so test-first behavior is exercised.
 3. Run n=3 with the same suite and publish raw jobs and `runs.csv`.
 4. Add a paired analysis with a bootstrap confidence interval before making a

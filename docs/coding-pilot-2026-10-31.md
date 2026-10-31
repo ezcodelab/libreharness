@@ -4,6 +4,10 @@
 Status: **pilot only. Not proof and not an “objectively best” claim.** One
 repetition per arm, three Terminal-Bench tasks, one model.
 
+This report covers the original three-task pilot and the separate local
+test-writing task. The expanded eight-task Terminal-Bench run is a different
+run and is not included here until it finishes.
+
 ## Setup
 
 - Harbor 0.25.0, OpenCode 1.19.5, `ollama-cloud/deepseek-v4.1-flash`.
@@ -67,6 +71,26 @@ the heuristic could observe a source write. The tasks do not require a failing
 test first, and `break-filter` and `sqlite` are shell-work tasks. This metric
 does not exercise the Superpowers TDD behavior. A test-requiring task is
 required before it can say anything about Superpowers.
+
+## Local test-writing task
+
+The Terminal-Bench tasks do not require the agent to author a test, so a local
+Harbor task was added: `bench/coding-tasks/test-first-bugfix`. The verifier
+requires a new regression test, checks that it fails against the baseline code,
+passes against the fixed code, and that the existing test is unchanged.
+
+| Arm | Reward | Test-first | Test files | Existing test | Cost USD | Tokens |
+|---|---:|---:|---:|---|---:|---:|
+| plain | 1.0 | 1 | 1 | unchanged | $0.00125 | 58,366 |
+| current | 1.0 | 1 | 1 | unchanged | $0.00362 | 82,134 |
+| egm | 1.0 | 1 | 1 | unchanged | $0.00358 | 81,629 |
+| superpowers | 1.0 | 1 | 1 | unchanged | $0.00259 | 76,187 |
+| both | 1.0 | 1 | 1 | unchanged | $0.00395 | 107,501 |
+
+All five arms wrote a regression test, kept the existing test, and fixed the
+bug. The plain arm again recorded a benign agent-exit exception after a solved
+task; the LibreHarness arms did not. This task shows the test-first metric
+works; it does not separate the arms.
 
 ## Decision
 

@@ -97,7 +97,7 @@ class CodingBenchTests(unittest.TestCase):
             shutil.rmtree(out, ignore_errors=True)
         self.assertEqual(data["status"], "dry-run")
         self.assertEqual(data["suite"], "terminal-bench-coding-pilot")
-        self.assertEqual(len(data["tasks"]), 3)
+        self.assertEqual(len(data["tasks"]), 8)
         self.assertEqual(len(data["arms"]), 5)
         self.assertIn("plain", [arm["name"] for arm in data["arms"]])
         self.assertEqual(len(data["run_order"]), 5)

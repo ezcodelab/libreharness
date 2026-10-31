@@ -4,7 +4,12 @@
   "tasks": [
     "break-filter-js-from-html",
     "sqlite-db-truncate",
-    "sanitize-git-repo"
+    "sanitize-git-repo",
+    "fix-code-vulnerability",
+    "sqlite-with-gcov",
+    "code-from-image",
+    "cobol-modernization",
+    "multi-source-data-merger"
   ],
   "arms": [
     {
