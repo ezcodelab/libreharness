@@ -1,9 +1,14 @@
 <!-- SPDX-License-Identifier: MIT -->
-# Benchmark protocol
+# Local benchmark protocol
 
-Status: **protocol only, no results**. This file is frozen before the first
-live run. Record its hash and the hashes of the task files in the run manifest.
-Do not change tasks after seeing results.
+Status: **local supplement only, no results.** The public headline is
+Terminal-Bench 2.0 via Harbor. Use this smaller suite for fast harness
+regression, not for a public comparison. See
+[`docs/benchmark-tools.md`](../docs/benchmark-tools.md).
+
+This file is frozen before the first local live run. Record its hash and the
+hashes of the task files in the run manifest. Do not change tasks after seeing
+results.
 
 ## Purpose
 

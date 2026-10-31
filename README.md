@@ -70,20 +70,26 @@ one with `/models`.
 The full walkthrough is in [docs/quickstart.md](docs/quickstart.md). The manual
 path is in [docs/install.md](docs/install.md).
 
-## Benchmark baseline
+## Benchmark
 
-The headline is **pass@1 at the fixed budget**: tasks whose first repetition
-passes all hidden tests, divided by tasks in the suite, times 100. Cost and wall
-time are secondary. Run the plain arm first, then the harness arm:
+The public headline is **Terminal-Bench 2.0 resolution rate** run through
+Harbor. Harbor already supports OpenCode, reports tokens and cost, and has a
+public leaderboard and an OpenCode entry:
 
 ```sh
-python3 bench/score.py --input bench/results/YYYY-MM-DD --arm plain
-python3 bench/score.py --input bench/results/YYYY-MM-DD \
-  --baseline plain --candidate harness
+uv tool install harbor
+harbor run -d terminal-bench@2.0 -a opencode -m <provider>/<model>
 ```
 
-The benchmark is a protocol and scaffold; no fixtures or results are published
-yet. See [bench/protocol.md](bench/protocol.md).
+The before baseline is plain OpenCode on the same tasks, model, and
+environment. The after result is OpenCode with LibreHarness installed. Cost,
+tokens, and wall time are reported alongside resolution rate, not blended into a
+score.
+
+The small B1-B8 suite is a local regression supplement only. Its
+`bench/score.py` is not the public headline. See
+[docs/benchmark-tools.md](docs/benchmark-tools.md) and
+[bench/protocol.md](bench/protocol.md). No benchmark has been run yet.
 
 ## Jev, the advisory layer
 

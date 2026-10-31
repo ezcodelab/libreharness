@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Compute LibreHarness pass@1 at the fixed benchmark budget.
+"""Compute pass@1 for the local B1-B8 regression supplement.
 
-The headline metric is one number: pass@1 = tasks whose first repetition passes
-all hidden tests / tasks in the suite. Cost and wall time are reported beside
-it, never blended into a composite score.
+This is not the public headline. The external benchmark is Terminal-Bench 2.0
+via Harbor. This script scores the small local suite only. Cost and wall time
+are reported beside pass@1, never blended into a composite score.
 """
 
 from __future__ import annotations

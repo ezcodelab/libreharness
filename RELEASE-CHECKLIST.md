@@ -27,13 +27,13 @@ organization, two similar repositories, and an npm package.
 - [x] Python queue tests: 16 passed.
 - [x] Node tests: auto-intake, goal-watch, review-protocol, security-guard,
   installer.
-- [x] Docs lint: 59 Markdown files, no problems.
+- [x] Docs lint: 60 Markdown files, no problems.
 - [x] SPDX headers: all checked files pass.
 - [x] Private-path scan: no findings.
 - [x] Benchmark runner `--dry-run`, score no-data path, and analyzer no-data
   path.
-- [x] Headline metric defined as pass@1 at the fixed budget; plain arm is the
-  before baseline.
+- [x] External benchmark selected: Terminal-Bench 2.0 via Harbor. Plain
+  OpenCode is the before baseline; the local B1-B8 suite is only a supplement.
 - [x] No `free-explore` or `flash-fallback` code remains.
 
 ## Not proven
@@ -42,8 +42,8 @@ organization, two similar repositories, and an npm package.
   provider credentials, so this was not run.
 - [ ] GitHub Actions workflows were not executed on GitHub. They were inspected
   and the same local commands pass.
-- [ ] Benchmark comparison A, B, or C. Task descriptors and the score command
-  exist, but no fixture, run data, baseline score, or result exists.
+- [ ] Terminal-Bench 2.0 via Harbor has not been run. No plain or LibreHarness
+  resolution rate exists. The local B1-B8 suite also has no fixtures or run data.
 - [ ] Live Jev endpoint call. Only the mock path was exercised.
 - [ ] `JEV_MODE` is documented as an adapter contract but is not read by the
   rc.1 clients.
@@ -72,5 +72,7 @@ in this checklist authorizes a push, a public repository, or a release.
 3. Pin GitHub Actions to commit SHAs and run the workflows on a fork-like
    clone.
 4. Run at least one live OpenCode quickstart with a disposable provider key.
-5. Build the benchmark fixtures and run comparison A before making any claim.
+5. Run plain OpenCode and LibreHarness on Terminal-Bench 2.0 via Harbor before
+   making any benchmark claim. Build the local B1-B8 fixtures only for fast
+   regression.
 6. Publish only after G4 approval.

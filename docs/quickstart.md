@@ -56,19 +56,20 @@ JEV_MODEL=example-model python3 "$HARNESS_HOME/bin/jev_review.py" \
   --mock good --diff "$HARNESS_STATE/demo.diff" --task "Quickstart"
 ```
 
-## 5. Record a benchmark baseline
+## 5. Compare on Terminal-Bench
 
-Before adopting the harness, run the plain baseline on the fixed eight-task
-suite. The headline is **pass@1 at the fixed budget**, not a composite score:
+The standardized external benchmark is Terminal-Bench 2.0 through Harbor. Run
+plain OpenCode first, then OpenCode with LibreHarness, using the same model and
+environment:
 
 ```sh
-python3 "$HARNESS_HOME/bench/score.py" --input bench/results/YYYY-MM-DD --arm plain
-python3 "$HARNESS_HOME/bench/score.py" --input bench/results/YYYY-MM-DD \
-  --baseline plain --candidate harness
+uv tool install harbor
+harbor run -d terminal-bench@2.0 -a opencode -m <provider>/<model>
 ```
 
-The fixtures and live runs are release-gated. No score is published until the
-raw `runs.csv` and manifest exist.
+The headline is **resolution rate**. Report tokens, wall time, and cost beside
+it. The local B1-B8 suite is only a fast regression supplement. See
+[benchmark-tools.md](benchmark-tools.md).
 
 ## Next
 

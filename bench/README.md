@@ -1,10 +1,15 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Benchmark
 
-Status: **protocol and scaffold only, no results**.
+Status: **local workflow supplement; the external headline uses Harbor and
+Terminal-Bench.**
 
-This directory holds the before-and-after benchmark for the harness. It answers
-three questions:
+The public comparison is **Terminal-Bench 2.0 via Harbor**, which already
+supports OpenCode and reports resolution rate plus tokens and cost. See
+[`docs/benchmark-tools.md`](../docs/benchmark-tools.md). This directory is now a
+fast local smoke/regression suite, not the public headline.
+
+The local suite answers three questions:
 
 - A: does the harness improve completed work at acceptable cost, with Jev
   disabled in both arms?

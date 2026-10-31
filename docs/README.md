@@ -26,7 +26,8 @@ here makes a performance claim.
 | [Plugins](plugins.md) | The four local plugins, their environment, failure modes, and disable switches |
 | [Model routing](model-routing.md) | Roles, provider-agnostic configuration, static matrix, and cost controls |
 | [Skill evaluation](skill-eval.md) | How to run a small with/without experiment before promoting a skill |
-| [Benchmark protocol](../bench/protocol.md) | The eight-task suite, the pass@1-at-fixed-budget headline, and the plain baseline |
+| [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
+| [Local benchmark protocol](../bench/protocol.md) | The small B1-B8 regression suite and its pass@1 calculation |
 
 ## Jev
 
