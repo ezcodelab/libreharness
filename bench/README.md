@@ -9,6 +9,10 @@ supports OpenCode and reports resolution rate plus tokens and cost. See
 [`docs/benchmark-tools.md`](../docs/benchmark-tools.md). This directory is now a
 fast local smoke/regression suite, not the public headline.
 
+A two-task Harbor pilot is recorded in
+[`pilot-2026-10-30.md`](pilot-2026-10-30.md). It is not a full benchmark and
+shows no quality delta.
+
 The local suite answers three questions:
 
 - A: does the harness improve completed work at acceptable cost, with Jev

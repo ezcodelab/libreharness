@@ -90,7 +90,9 @@ resolution rate, not blended into a score.
 The small B1-B8 suite is a local regression supplement only. Its
 `bench/score.py` is not the public headline. See
 [docs/benchmark-tools.md](docs/benchmark-tools.md) and
-[bench/protocol.md](bench/protocol.md). No benchmark has been run yet.
+[bench/protocol.md](bench/protocol.md). A two-task pilot is recorded in
+[bench/pilot-2026-10-30.md](bench/pilot-2026-10-30.md); it is not a full
+benchmark and shows no quality delta.
 
 ## Jev, the advisory layer
 

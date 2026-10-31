@@ -6,10 +6,14 @@ Run LibreHarness as a custom Harbor agent:
 
 ```sh
 uv tool install harbor
+export OLLAMA_API_KEY=...
 PYTHONPATH="$PWD" harbor run \
   -d terminal-bench@2.0 \
   -a harbor_agent.opencode_agent:OpenCodeLibreHarness \
-  -m <provider>/<model>
+  -m ollama-cloud/deepseek-v4.1-flash \
+  --base-url https://ollama.com/v1 \
+  --api-key-name OLLAMA_API_KEY \
+  --api-format openai_chat_completions
 ```
 
 The plain baseline uses Harbor's stock OpenCode agent:

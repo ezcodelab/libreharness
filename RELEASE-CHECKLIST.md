@@ -28,7 +28,7 @@ organization, two similar repositories, and an npm package.
   under a Harbor venv and is skipped when Harbor is not installed.
 - [x] Node tests: auto-intake, goal-watch, review-protocol, security-guard,
   installer.
-- [x] Docs lint: 61 Markdown files, no problems.
+- [x] Docs lint: 62 Markdown files, no problems.
 - [x] SPDX headers: all checked files pass.
 - [x] Private-path scan: no findings.
 - [x] Benchmark runner `--dry-run`, score no-data path, and analyzer no-data
@@ -45,10 +45,11 @@ organization, two similar repositories, and an npm package.
   provider credentials, so this was not run.
 - [ ] GitHub Actions workflows were not executed on GitHub. They were inspected
   and the same local commands pass.
-- [ ] Terminal-Bench 2.0 via Harbor has not been run. No plain or LibreHarness
-  resolution rate exists. The local B1-B8 suite also has no fixtures or run data.
-- [ ] The `harbor_agent` adapter has not been exercised against a live Harbor
-  task; only static inspection and syntax checks exist.
+- [ ] Terminal-Bench 2.0 via Harbor is not a full run. A two-task pilot passed
+  on both arms with no quality delta; one task was cancelled by the outer
+  timeout. The local B1-B8 suite has no fixtures or run data.
+- [x] The `harbor_agent` adapter completed live Harbor trials on
+  gpt2-codegolf and break-filter-js-from-html with clean harness exits.
 - [ ] Live Jev endpoint call. Only the mock path was exercised.
 - [ ] `JEV_MODE` is documented as an adapter contract but is not read by the
   rc.1 clients.
