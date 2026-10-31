@@ -8,27 +8,69 @@ Run LibreHarness as an OpenCode custom agent in a Harbor task:
       -a harbor_agent.opencode_agent:OpenCodeLibreHarness \\
       -m <provider>/<model>
 
-The adapter installs OpenCode through Harbor's stock OpenCode integration, then
-uploads the LibreHarness workflow files into the sandbox's OpenCode config. It
-does not install the local UI plugins, so auto-intake, close reminders, and
-goal-watch cannot alter a benchmark task.
+The adapter is deliberately thin. It inherits Harbor's stock OpenCode install
+and run loop, uploads the LibreHarness workflow surface from ``setup()``, and
+rewrites only the final OpenCode command through ``exec_as_agent``. The rewrite
+removes the stock ``tee`` pipeline, which can turn a completed run with a benign
+EPIPE on a secondary stream into an agent error, and tolerates only that narrow
+case. A source-contract test fails when Harbor changes the command shape the
+rewrite depends on.
+
+The adapter does not install the local UI plugins, so auto-intake, close
+reminders, and goal-watch cannot alter a benchmark task.
 """
 
 from __future__ import annotations
 
 import os
+import re
 import shlex
 from dataclasses import replace
 from pathlib import Path
 from typing import override
 
 from harbor.agents.agent_auth_resolution import ProviderAccess
-from harbor.agents.installed.base import (
-    NonZeroAgentExitCodeError,
-    with_prompt_template,
-)
 from harbor.agents.installed.opencode import OpenCode
 from harbor.environments.base import BaseEnvironment
+
+_STOCK_RUN_TAIL = re.compile(
+    r"(?P<head>.*?)\s+2>&1\s+</dev/null\s+\|\s+stdbuf\s+-oL\s+tee\s+"
+    r"(?P<output>(?:'[^']*'|\"[^\"]*\"|\S+))\s*$",
+    re.DOTALL,
+)
+_STOP_EVENT = (
+    r'"type"[[:space:]]*:[[:space:]]*"step_finish"'
+    r'.*"reason"[[:space:]]*:[[:space:]]*"stop"'
+)
+_EPIPE = "EPIPE"
+
+
+def rewrite_opencode_run_command(command: str) -> str:
+    """Replace stock Harbor's OpenCode tee pipeline with a direct log write.
+
+    Harbor 0.25.0 pipes the OpenCode JSON stream through ``stdbuf -oL tee``.
+    OpenCode 1.19.5 can emit a benign EPIPE on a secondary stream and still
+    exit non-zero after a completed run, so the pipeline makes Harbor record a
+    passing task as an agent error. Write the stream straight to the same log
+    and tolerate only the narrow case: non-zero exit, a completed stop event,
+    and EPIPE somewhere in the stream.
+    """
+    match = _STOCK_RUN_TAIL.search(command)
+    if match is None:
+        return command
+    head = match.group("head")
+    output = match.group("output")
+    stop_pattern = shlex.quote(_STOP_EVENT)
+    return (
+        f"{head} > {output} 2>&1 </dev/null; "
+        "rc=$?; "
+        'if [ "$rc" -ne 0 ]; then '
+        f"if grep -Eq {stop_pattern} {output} 2>/dev/null && "
+        f"grep -q {shlex.quote(_EPIPE)} {output} 2>/dev/null; then "
+        "exit 0; fi; "
+        'exit "$rc"; '
+        "fi"
+    )
 
 
 class OpenCodeLibreHarness(OpenCode):
@@ -84,8 +126,33 @@ class OpenCodeLibreHarness(OpenCode):
     def name() -> str:
         return "opencode-libreharness"
 
-    async def configure(self, environment: BaseEnvironment) -> None:
-        await super().configure(environment)
+    @override
+    async def setup(self, environment: BaseEnvironment) -> None:
+        # Harbor calls setup(), not configure(). The previous configure() hook
+        # was dead code, so the pilot never uploaded the harness surface.
+        await super().setup(environment)
+        await self._upload_overlay(environment)
+
+    @override
+    async def exec_as_agent(
+        self,
+        environment: BaseEnvironment,
+        command: str,
+        env: dict[str, str] | None = None,
+        cwd: str | None = None,
+        timeout_sec: int | None = None,
+    ):
+        # Keep stock OpenCode.run() and its future flags. Only the final
+        # command shape is ours to change.
+        return await super().exec_as_agent(
+            environment,
+            rewrite_opencode_run_command(command),
+            env=env,
+            cwd=cwd,
+            timeout_sec=timeout_sec,
+        )
+
+    async def _upload_overlay(self, environment: BaseEnvironment) -> None:
         home = (await self.exec_as_agent(
             environment, command='printf %s "$HOME"'
         )).stdout.strip()
@@ -115,52 +182,12 @@ class OpenCodeLibreHarness(OpenCode):
             f"{config}/AGENTS.md",
         )
 
-    @override
-    @with_prompt_template
-    async def run(
-        self,
-        instruction: str,
-        environment: BaseEnvironment,
-        context,
-    ) -> None:
-        # Stock Harbor tees OpenCode stdout through a pipe with pipefail. Some
-        # OpenCode versions emit EPIPE on shutdown after a successful answer,
-        # turning a passing task into NonZeroAgentExitCodeError. Write the
-        # stream straight to the log instead.
-        self._instruction = instruction
-        if not self.model_name:
-            raise ValueError("Model name must be in the format provider/model_name")
-
-        env = dict(self.model_connection.env)
-        env["OPENCODE_FAKE_VCS"] = "git"
-        env["XDG_DATA_HOME"] = (
-            self.environment_logs_dir / "opencode" / "xdg-data"
-        ).as_posix()
-        env["XDG_STATE_HOME"] = (
-            self.environment_logs_dir / "opencode" / "xdg-state"
-        ).as_posix()
-
-        if skills_command := self._build_register_skills_command():
-            await self.exec_as_agent(environment, command=skills_command, env=env)
-        if mcp_command := self._build_register_config_command():
-            await self.exec_as_agent(environment, command=mcp_command, env=env)
-
-        output = (self.environment_logs_dir / self._OUTPUT_FILENAME).as_posix()
-        cli_flags = self.build_cli_flags()
-        cli_flags_arg = (cli_flags + " ") if cli_flags else ""
-        resume_flag = "--continue " if self._resume else ""
-        await self.exec_as_agent(
-            environment,
-            command=(
-                "[ -f ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh; "
-                f"opencode --model={shlex.quote(self._execution_model_name())} "
-                f"run --format=json {resume_flag}{cli_flags_arg}--thinking "
-                f"--dangerously-skip-permissions -- {shlex.quote(instruction)} "
-                f"> {shlex.quote(output)} 2>&1 </dev/null || true"
-            ),
-            env=env,
-        )
-        if messages := self._error_messages():
-            raise NonZeroAgentExitCodeError(
-                "OpenCode emitted error event(s): " + "; ".join(messages[:3])
+        # Docker uploads land as root; the agent user must be able to read and
+        # execute the queue and the skill files.
+        default_user = getattr(environment, "default_user", None)
+        if default_user is not None:
+            owner = shlex.quote(str(default_user))
+            await self.exec_as_root(
+                environment,
+                command=f"chown -R {owner} {shlex.quote(config)} {shlex.quote(state)}",
             )
