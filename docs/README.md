@@ -26,6 +26,7 @@ here makes a performance claim.
 | [Plugins](plugins.md) | The four local plugins, their environment, failure modes, and disable switches |
 | [Model routing](model-routing.md) | Roles, provider-agnostic configuration, static matrix, and cost controls |
 | [Skill evaluation](skill-eval.md) | How to run a small with/without experiment before promoting a skill |
+| [EGM review](egm-review.md) | What Google's Elephant-Goldfish Model does, what to adopt, and whether the Harbor adapter is still the right integration |
 | [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
 | [Local benchmark protocol](../bench/protocol.md) | The small B1-B8 regression suite and its pass@1 calculation |
 
@@ -42,6 +43,7 @@ here makes a performance claim.
 | Document | What it answers |
 |---|---|
 | [Security and privacy](security-privacy.md) | What is stored, what leaves the machine, how secrets are handled, and what is not protected |
+| [Process lessons](process-lessons.md) | Dated surprises, costs, rules, and doc updates from completed work |
 | [Troubleshooting](troubleshooting.md) | Install, plugin, queue, permission, Jev, and upgrade errors with a next step |
 | [FAQ](faq.md) | Short answers to the questions a new user asks first |
 | [Design notes](design-notes.md) | Why the queue is Markdown, why the evidence gate exists, rejected alternatives, and the 1.1 and 1.2 previews |
