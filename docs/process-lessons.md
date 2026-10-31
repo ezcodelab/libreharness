@@ -134,3 +134,18 @@ the aggregate. Test-first needs a task that requires a test.
 Doc updated: `docs/coding-expanded-2026-10-31.md`, `bench/coding.md`.
 
 Promote-to-global: yes. A larger task set can reverse a smaller pilot's story.
+
+## 2026-10-31 - Exact-byte regression
+
+Surprise: the `sanitize-git-repo` verifier compares the contaminated files to
+exact decontaminated copies and forbids changing any other file. Current/EGM
+removed the secrets but reformatted YAML and quoted values; Superpowers also
+changed an unlisted Slack webhook and then rewrote an embedded token line.
+
+Rule: use targeted replacement, replace only the value itself, preserve every
+other byte, and change only the files or acceptance set the task names. Report
+an extra issue outside that set instead of fixing it. Do not weaken the verifier.
+
+Doc updated: `docs/coding-exact-bytes.md`, `AGENTS.md`.
+
+Promote-to-global: yes. Exact-content tasks punish helpful scope expansion.
