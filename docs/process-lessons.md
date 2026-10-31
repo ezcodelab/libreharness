@@ -118,3 +118,19 @@ Doc updated: `docs/coding-pilot-2026-10-31.md`, `bench/coding.md`.
 
 Promote-to-global: yes. Report the interval and the missing metric, not just the
 solved count.
+
+## 2026-10-31 - Expanded coding suite
+
+Surprise: on eight Terminal-Bench tasks, stock plain solved 8/8 while current
+and EGM solved 7/8; superpowers and both solved 8/8 but cost more. The two
+harness failures were byte-level `sanitize-git-repo` formatting changes, not
+leaked secrets. No Terminal-Bench task required test authoring; the separate
+local test-first task passed 1.0 on all five arms.
+
+Rule: broaden the task set before adding repetitions. A profile that removes
+benign exceptions can still lose a task; report per-task regressions, not only
+the aggregate. Test-first needs a task that requires a test.
+
+Doc updated: `docs/coding-expanded-2026-10-31.md`, `bench/coding.md`.
+
+Promote-to-global: yes. A larger task set can reverse a smaller pilot's story.

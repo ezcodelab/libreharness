@@ -91,7 +91,9 @@ python3 bench/analyze.py --input bench/results/coding-pilot/runs.csv \
 ```
 
 The result of the first pilot is in
-[`docs/coding-pilot-2026-10-31.md`](../docs/coding-pilot-2026-10-31.md).
+[`docs/coding-pilot-2026-10-31.md`](../docs/coding-pilot-2026-10-31.md). The
+expanded eight-task run is in
+[`docs/coding-expanded-2026-10-31.md`](../docs/coding-expanded-2026-10-31.md).
 
 ## Metrics
 
