@@ -30,5 +30,10 @@ goal-watch cannot change a benchmark run.
 contains this adapter. The model is authenticated by Harbor's stock OpenCode
 integration.
 
+The Docker sandbox does not inherit OpenCode's host auth store. Export the
+provider key in the shell that launches Harbor, for example
+`OLLAMA_API_KEY`, or pass a mode-600 env file with `--env-file`. Do not commit
+the key.
+
 The adapter has not yet been exercised against a live Terminal-Bench task.
 Validate with a one-task smoke run before starting a full dataset.
