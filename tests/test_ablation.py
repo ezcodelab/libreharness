@@ -121,6 +121,72 @@ class AblationTests(unittest.TestCase):
         self.assertEqual(len(data["fixture_sha256"]), 64)
         self.assertNotEqual(data["arms"][0]["prompt_sha256"], data["arms"][1]["prompt_sha256"])
 
+    def test_dry_run_accepts_four_named_arms(self) -> None:
+        out = Path("bench/results/test-ablation-four-arms")
+        shutil.rmtree(out, ignore_errors=True)
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                arm_paths = {}
+                for name in ("egm", "superpowers", "both"):
+                    path = Path(temp) / f"{name}.json"
+                    path.write_text(
+                        json.dumps(
+                            {
+                                "feature": name,
+                                "label": name,
+                                "prompt": f"Review as {name}.",
+                            }
+                        ),
+                        encoding="utf-8",
+                    )
+                    arm_paths[name] = path
+                with patch.object(ablation.subprocess, "run") as run:
+                    code = ablation.main(
+                        [
+                            "--dry-run",
+                            "--out",
+                            str(out),
+                            "--arm",
+                            f"current={ROOT / 'bench/features/ablation/baseline.json'}",
+                            "--arm",
+                            f"egm={arm_paths['egm']}",
+                            "--arm",
+                            f"superpowers={arm_paths['superpowers']}",
+                            "--arm",
+                            f"both={arm_paths['both']}",
+                        ]
+                    )
+                self.assertEqual(code, 0)
+                run.assert_not_called()
+                data = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+        finally:
+            shutil.rmtree(out, ignore_errors=True)
+        self.assertEqual(
+            [arm["name"] for arm in data["arms"]],
+            ["current", "egm", "superpowers", "both"],
+        )
+
+    def test_duplicate_arm_name_is_rejected(self) -> None:
+        with self.assertRaises(SystemExit):
+            ablation.main(
+                [
+                    "--dry-run",
+                    "--arm",
+                    "same=bench/features/ablation/baseline.json",
+                    "--arm",
+                    "same=bench/features/ablation/comprehension.json",
+                ]
+            )
+
+    def test_missing_arm_file_is_rejected(self) -> None:
+        with self.assertRaises(SystemExit):
+            ablation.main(["--dry-run", "--arm", "missing=/no/such/feature.json"])
+
+    def test_directory_arm_file_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaises(SystemExit):
+                ablation.main(["--dry-run", "--arm", f"dir={temp}"])
+
     def test_self_check_passes_and_rejects_a_bad_expectation(self) -> None:
         self.assertEqual(ablation.main(["--self-check"]), 0)
         sample = json.loads(

@@ -14,8 +14,9 @@ A two-task Harbor pilot is recorded in
 shows no quality delta.
 
 For a fast before/after check of one review feature, use the seeded-spec
-ablation runner in [`ablation.md`](ablation.md). It compares two declarative
-prompt arms, scores findings against five seeded defects, and runs in minutes.
+ablation runner in [`ablation.md`](ablation.md). It compares two or more
+declarative prompt arms, scores findings against five seeded defects, and runs
+in minutes.
 It is a feature-level supplement, not a public score.
 
 The local suite answers three questions:
@@ -49,7 +50,7 @@ bench/
 ├── runner.py          plan or run one task repetition
 ├── ablation.py        fast review-feature ablation and scoring
 ├── ablation.md        how the ablation works and how to add a feature
-├── features/ablation/ declarative baseline and candidate prompts
+├── features/ablation/ declarative arm prompts
 ├── analyze.py         summarize a results directory
 ├── tasks/             one fixed prompt and rubric per category, B1 to B8
 ├── fixtures/          fixture repositories and the ablation spec

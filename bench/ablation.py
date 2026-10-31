@@ -35,6 +35,7 @@ DEFAULT_CANDIDATE = ROOT / "features/ablation/comprehension.json"
 DEFAULT_FINDINGS = ROOT / "fixtures/ablation/sample-findings.json"
 DEFAULT_MODEL = "provider/model"
 DEFAULT_TIMEOUT = 300
+ARM_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 
 def sha256(path: Path) -> str:
@@ -52,8 +53,8 @@ def display_path(path: Path) -> str:
 def load_json(path: Path) -> object:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError as error:
-        raise SystemExit(f"missing file: {path}") from error
+    except OSError as error:
+        raise SystemExit(f"cannot read {path}: {error}") from error
     except json.JSONDecodeError as error:
         raise SystemExit(f"invalid JSON in {path}: {error}") from error
 
@@ -66,6 +67,36 @@ def load_feature(path: Path) -> dict:
         if not isinstance(data.get(key), str) or not data[key].strip():
             raise SystemExit(f"{path}: missing non-empty {key}")
     return data
+
+
+def parse_arm(value: str) -> tuple[str, Path]:
+    name, separator, path = value.partition("=")
+    name = name.strip()
+    path = path.strip()
+    if not separator or not name or not path:
+        raise SystemExit(f"invalid --arm {value!r}; expected NAME=FEATURE_JSON")
+    if not ARM_NAME.fullmatch(name):
+        raise SystemExit(
+            f"invalid arm name {name!r}; use lowercase letters, digits, and hyphens"
+        )
+    return name, Path(path)
+
+
+def load_arms(args: argparse.Namespace) -> list[tuple[str, Path, dict]]:
+    if args.arm:
+        arms: list[tuple[str, Path, dict]] = []
+        seen: set[str] = set()
+        for value in args.arm:
+            name, path = parse_arm(value)
+            if name in seen:
+                raise SystemExit(f"duplicate arm name: {name}")
+            seen.add(name)
+            arms.append((name, path, load_feature(path)))
+        return arms
+    return [
+        ("baseline", args.baseline, load_feature(args.baseline)),
+        ("candidate", args.candidate, load_feature(args.candidate)),
+    ]
 
 
 def load_defects(path: Path) -> list[dict]:
@@ -400,6 +431,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     mode.add_argument("--self-check", action="store_true", help="score the sample findings; call no model")
     mode.add_argument("--live", action="store_true", help="invoke OpenCode against a paid provider")
     parser.add_argument("--model", default=DEFAULT_MODEL, help="provider/model for a live run")
+    parser.add_argument(
+        "--arm",
+        action="append",
+        metavar="NAME=FEATURE_JSON",
+        help="repeatable named arm; overrides --baseline and --candidate",
+    )
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE, help="baseline feature JSON")
     parser.add_argument("--candidate", type=Path, default=DEFAULT_CANDIDATE, help="candidate feature JSON")
     parser.add_argument("--fixture", type=Path, default=DEFAULT_FIXTURE, help="seeded design spec")
@@ -425,14 +462,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    spec = args.fixture.read_text(encoding="utf-8")
     defects = load_defects(args.defects)
-    baseline = load_feature(args.baseline)
-    candidate = load_feature(args.candidate)
-    arms = [
-        ("baseline", args.baseline, baseline),
-        ("candidate", args.candidate, candidate),
-    ]
 
     if args.self_check:
         sample = load_json(args.findings)
@@ -460,6 +490,11 @@ def main(argv: list[str] | None = None) -> int:
                     return 1
         return 0
 
+    try:
+        spec = args.fixture.read_text(encoding="utf-8")
+    except OSError as error:
+        raise SystemExit(f"cannot read {args.fixture}: {error}") from error
+    arms = load_arms(args)
     data = manifest(
         status="live" if args.live else "dry-run",
         model=args.model,
