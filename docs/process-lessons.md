@@ -85,3 +85,20 @@ Doc updated: `bench/ablation.md`, `docs/self-improvement-2026-10-31.md`.
 
 Promote-to-global: yes. A benchmark's labels are part of the instrument; audit
 them before trusting a ranking.
+
+## 2026-10-31 - Coding runner path bugs
+
+Surprise: the coding wrapper pointed `PYTHONPATH` at `bench/` and passed a
+relative Harbor `-o` while running with `cwd=bench/`. Every LibreHarness arm
+failed to import, and Harbor wrote jobs to `bench/bench/results` while the
+wrapper read `bench/results`.
+
+Rule: test the actual subprocess env and cwd, not only the parser. Point
+`PYTHONPATH` at the repo root, use an absolute jobs directory, and assert both
+in a live-path test. Add the wrong output path to `.gitignore` as defense in
+depth.
+
+Doc updated: `bench/coding.md`, `tests/test_coding.py`, `.gitignore`.
+
+Promote-to-global: yes. A benchmark wrapper that cannot import the thing under
+test is measuring nothing.
