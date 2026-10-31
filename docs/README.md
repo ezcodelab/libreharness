@@ -27,6 +27,7 @@ here makes a performance claim.
 | [Model routing](model-routing.md) | Roles, provider-agnostic configuration, static matrix, and cost controls |
 | [Skill evaluation](skill-eval.md) | How to run a small with/without experiment before promoting a skill |
 | [EGM review](egm-review.md) | What Google's Elephant-Goldfish Model does, what to adopt, and whether the Harbor adapter is still the right integration |
+| [Superpowers review](superpowers-review.md) | What Superpowers does, which skills fit, and the four-arm comparison design |
 | [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
 | [Local benchmark protocol](../bench/protocol.md) | The small B1-B8 regression suite and its pass@1 calculation |
 
