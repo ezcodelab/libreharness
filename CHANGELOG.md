@@ -1,0 +1,81 @@
+<!-- SPDX-License-Identifier: MIT -->
+
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+This is the local release candidate line. Nothing here has been published.
+
+## [1.0.0-rc.1] - 2026-10-30
+
+Status: unreleased local candidate. No public repository, tag, release
+artifact, or benchmark result exists for this version.
+
+### Added
+
+- A Markdown work queue in `bin/tasks.py`: tasks, goals, dependencies, lanes,
+  ownership checks, atomic writes, a generated board, and a workflow metrics
+  log.
+- A risk-scaled engineering workflow in `AGENTS.md` and the `engineering-loop`
+  skill: intake, gate only what applies, choose one path, prove the claim, and
+  close with evidence.
+- Five portable skills: `engineering-loop`, `goal`, `parallel-lanes`,
+  `ui-design`, and `work-queue`.
+- Agents for read-only exploration, bounded implementation, integration, and
+  independent challenge.
+- Commands for goal intake, briefs, lanes, review, integration, close,
+  handoff, harvest, takeover, queue inspection, UI review, and tuning.
+- Four local plugins: `auto-intake`, `close-reminder`, `goal-watch`, and
+  `security-guard`.
+- Jev advisory clients for diff review, goal-plan critique, and close triage.
+  The client reads `JEV_MODEL`, `JEV_ENDPOINT`, `JEV_MODELS_URL`, `JEV_API_KEY`,
+  and `JEV_KEY_FILE`, and supports `--mock` and `--dry-run` for review and
+  plan.
+- A documentation set covering install, quickstart, concepts, workflow,
+  commands, skills, plugins, model routing, skill evaluation, Jev, the adapter
+  contract, calibration, security and privacy, troubleshooting, FAQ, and
+  design notes.
+- Unit tests for the queue and Node tests for the bundled plugins and example
+  plugins. The tests use temporary state and mocks and do not call a live
+  model.
+
+### Changed
+
+- The queue, plugins, and commands resolve code from `HARNESS_HOME` and
+  mutable state from `HARNESS_STATE`.
+- The example config is provider-agnostic. It contains no model ID and no key.
+  The core does not hardcode a model.
+- Jev has no default model. A live call requires `JEV_MODEL`.
+- The public tree is sanitized: no private knowledge base, personal tasks,
+  hostnames, credentials, or private calibration diffs.
+
+### Security
+
+- The Jev client refuses secret-shaped diff or task input unless the caller
+  explicitly allows it.
+- `auto-intake` refuses secret-shaped prompts and redacts secret-shaped and
+  PII-shaped text in task titles.
+- The local plugins never block a session when their configuration is missing.
+
+### Known limitations
+
+- No benchmark has been run. The repository makes no performance claim.
+- Windows is not supported in 1.0.0. The queue uses `fcntl`, so it is POSIX
+  only.
+- The intended helper set includes scripts that are not all present in this
+  candidate: `bin/doctor.py`, `bin/check_spdx.py`, and `bin/scan_private.py`.
+  The install guide gives a manual check when a helper is absent.
+- The shared Jev module `bin/jev_common.py` is not present. The three clients
+  share functions by importing from `bin/jev_review.py`.
+- `JEV_MODE` is a documented contract value but is not read by the rc.1
+  clients. Use `--mock` and `--dry-run`, and treat a missing key as exit 3.
+- `bin/jev_triage.py` has no mock mode.
+- `close-reminder` desktop notifications use `notify-send` and are Linux only.
+  Other platforms silently fall back to no notification.
+- The example plugins contain example model IDs that may rotate or disappear.
+- CI workflows are present, but publication CI has not been run or verified.

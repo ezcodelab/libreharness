@@ -1,0 +1,2 @@
+# Add local-only patterns here. This file is ignored by git.
+# Example: an operator-specific hostname or home path.

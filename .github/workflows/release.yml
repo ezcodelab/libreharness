@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: MIT
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify tag
+        run: git verify-tag "$GITHUB_REF_NAME"
+      - name: Full checks
+        run: |
+          python3 -m unittest discover -s tests -p 'test_*.py' -v
+          python3 bin/docs_lint.py . --skills-dir skills
+          python3 bin/check_spdx.py --root .
+          python3 bin/scan_private.py --root .
+      - name: Archive
+        run: |
+          git archive --format=tar.gz --prefix="libreharness-${GITHUB_REF_NAME}/" -o "libreharness-${GITHUB_REF_NAME}.tar.gz" HEAD
+          sha256sum "libreharness-${GITHUB_REF_NAME}.tar.gz" > SHA256SUMS
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" "libreharness-${GITHUB_REF_NAME}.tar.gz" SHA256SUMS --verify-tag --notes-file CHANGELOG.md

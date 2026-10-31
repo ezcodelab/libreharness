@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Synthetic test fixtures"
+paths = ['''tests/fixtures/.*''']

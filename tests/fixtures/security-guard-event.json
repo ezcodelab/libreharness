@@ -1,0 +1,20 @@
+{
+  "tool": "write",
+  "input": {
+    "path": "probe.py",
+    "content": "import yaml\nconfig = yaml.load(stream)\n"
+  },
+  "result": {
+    "output": {
+      "operation": "write",
+      "target": "probe.py",
+      "existed": false
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "Created file successfully: probe.py"
+      }
+    ]
+  }
+}

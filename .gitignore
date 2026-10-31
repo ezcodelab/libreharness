@@ -1,0 +1,16 @@
+node_modules
+package-lock.json
+bun.lock
+state/
+.gitleaks.toml.local
+.env
+.env.*
+*.key
+auth.json
+bench/results/*
+!bench/results/.gitkeep
+__pycache__/
+.pytest_cache/
+.venv/
+dist/
+coverage/

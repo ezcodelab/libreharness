@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: MIT
+name: Nightly
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Full history secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Online link check
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress "**/*.md"
+          fail: true
+      - name: Dependency audit
+        run: |
+          if [ -f package.json ]; then npm audit --audit-level=moderate; else echo "no package manifest"; fi
+      - name: Jev model check
+        if: ${{ secrets.JEV_API_KEY != '' }}
+        env:
+          JEV_API_KEY: ${{ secrets.JEV_API_KEY }}
+          JEV_MODEL: ${{ vars.JEV_MODEL }}
+          JEV_ENDPOINT: ${{ vars.JEV_ENDPOINT }}
+        run: python3 bin/jev_review.py --check
+      - name: Jev skipped
+        if: ${{ secrets.JEV_API_KEY == '' }}
+        run: echo "JEV_API_KEY not configured; live Jev check skipped"

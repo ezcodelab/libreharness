@@ -1,0 +1,45 @@
+<!-- SPDX-License-Identifier: MIT -->
+
+# NOTICE
+
+LibreHarness
+Copyright (c) 2026 LibreHarness contributors
+
+This project is licensed under the MIT License. Documentation under
+`docs/**/*.md` is licensed under CC BY 4.0; see `docs/LICENSE`.
+
+## Jev client origin
+
+The Jev client in `bin/jev_review.py`, `bin/jev_plan.py`, and
+`bin/jev_triage.py` is project code, not a vendor SDK. It targets a
+typed-question HTTP interface and does not include model weights, model files,
+or a hosted service.
+
+`JEV_ENDPOINT` points at an external inference service. The service, its
+availability, its terms, and its billing are separate from this repository. No
+service credential or model is distributed here.
+
+## Dependency boundary
+
+Nothing in this list is bundled in the repository.
+
+| Dependency | Role | Distribution |
+|---|---|---|
+| OpenCode | The host application that loads agents, commands, skills, and plugins | Installed by the user, separate project |
+| `@opencode-ai/plugin` | Development dependency for plugin types and tests | Not bundled; license and version per upstream package |
+| Jev inference endpoint | External service called by the Jev client | Not bundled; separate service and terms |
+| Provider models | Models selected by the user in OpenCode or by `JEV_MODEL` | Not bundled; separate provider terms |
+| External npm plugins named in user configuration | Optional user-installed plugins | Not bundled, not endorsed, and not supported |
+
+The Python code uses the standard library only. The bundled Node plugins use
+Node built-ins only. See `package.json` for the development dependency version.
+
+## Third-party source
+
+No third-party source code is copied into this repository. If a future change
+adapts a snippet, record the source, version, license, and URL here.
+
+## Trademarks
+
+The project name and any future logo are not licensed for use by forks. Forks
+must use a different name. No logo is shipped in 1.0.0.

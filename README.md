@@ -1,0 +1,136 @@
+<!-- SPDX-License-Identifier: MIT -->
+
+# LibreHarness
+
+A durable work queue, a risk-scaled engineering workflow, reusable agents,
+commands, and skills, local OpenCode plugins, and an advisory typed-question
+reviewer called Jev.
+
+**Status: 1.0.0-rc.1, local release candidate. Benchmark unrun.**
+This tree has not been published. No performance, cost, or quality claim is
+backed by a benchmark yet. Treat the harness as a workflow to evaluate, not as
+a proven improvement.
+
+## What it is
+
+The harness gives an OpenCode user a small, inspectable system for work that
+outlives one chat:
+
+- A Markdown work queue with tasks, goals, dependencies, lanes, evidence, and
+  a generated board.
+- A workflow that scales process to risk: trivial changes skip the queue,
+  nontrivial changes get a brief, a review, and evidence.
+- Five portable skills: engineering loop, goal loop, parallel lanes, UI
+  design, and work queue.
+- Agents for exploration, implementation, integration, and independent
+  challenge.
+- Commands for goal intake, briefs, lanes, review, integration, close,
+  handoff, and tuning.
+- Four local plugins: automatic task intake, close reminder, continuation
+  watcher, and an advisory security scan.
+- Jev, a first-class advisory layer that asks typed questions about a diff, a
+  plan, or a close state and returns structured answers.
+
+The queue is stdlib Python plus POSIX file locking. There is no database, no
+server, and no third-party Python package. Local plugins use Node built-ins.
+
+## Why it exists
+
+Chat sessions lose context, and "done" often means "the model said so". The
+harness makes three things durable:
+
+1. **State.** A task is a file. It survives a session, a model switch, and a
+   crash. The board is generated from the files, not hand-maintained.
+2. **Evidence.** A task cannot be marked done with "tests pass" or "none". It
+   needs a command and result, a measured check, or an explicit `[T]` with a
+   plan.
+3. **Review proportional to risk.** A typo does not need a committee. A change
+   to auth, secrets, data, or a public API gets a closer look. Jev is one
+   input, never the deciding gate.
+
+## 60-second quickstart
+
+From a checkout, with no Jev key:
+
+```sh
+export HARNESS_HOME="$PWD"
+export HARNESS_STATE="$(mktemp -d)"
+ID=$(python3 "$HARNESS_HOME/bin/tasks.py" new "Try the harness" \
+  --scope "Create and close one task." \
+  --acceptance "- board lists the task")
+python3 "$HARNESS_HOME/bin/tasks.py" claim "$ID" --owner me
+python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" review
+python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" done \
+  --evidence "python3 bin/tasks.py board: task listed"
+python3 "$HARNESS_HOME/bin/tasks.py" board
+```
+
+The last command writes `work/BOARD.md` under the temporary state root and
+prints its path. Remove that root when you are done. The full walkthrough is in
+[docs/quickstart.md](docs/quickstart.md).
+
+## Jev, the advisory layer
+
+Jev sends a task and a diff, a goal plan, or a close state to a typed-question
+endpoint. It returns scores on seven quality axes, a ship/scope/test verdict, a
+plan gap, or a close-triage lesson. The answers are structured, so they can be
+compared and calibrated instead of read as a chat opinion.
+
+Jev is advisory. It never merges, closes, or blocks a task by itself. The
+operator or reviewing agent decides.
+
+The client does not hardcode a model. Set `JEV_MODEL` to a model your endpoint
+offers. `JEV_ENDPOINT` and `JEV_KEY_FILE` are configurable. A missing key is a
+skip at the workflow level: the quickstart and the full test suite do not need
+one. See [docs/jev.md](docs/jev.md).
+
+## Status and support
+
+| Item | Status in 1.0.0-rc.1 |
+|---|---|
+| Release | Local candidate, not published |
+| Benchmark | Not run; no results are shipped |
+| Platform | Linux and macOS |
+| Windows | Not supported in 1.0.0; 1.1 preview planned |
+| Python | 3.10 or newer |
+| Node | 20 or newer, for plugin tests and optional plugins |
+| OpenCode | 2.x |
+| CI | Workflows are present in the tree; publication CI has not been verified |
+| Support | Best effort, no SLA, no bounty |
+
+The supported scope is the queue, commands, agents, five skills, the four
+bundled local plugins, the Jev client, and the documented install path.
+Third-party plugins, custom providers, custom Jev adapters, Windows, and
+private knowledge integrations are outside 1.0.0 support.
+
+## License
+
+| Path | License |
+|---|---|
+| Code in `bin/`, `plugins/`, `tests/`, `agents/`, `commands/`, `skills/`, and JSON configuration | MIT |
+| Narrative documentation under `docs/**/*.md` | CC BY 4.0 |
+| `README.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `GOVERNANCE.md`, `CHANGELOG.md` | MIT |
+| `LICENSE` | MIT license text |
+| `NOTICE` | Factual notices |
+| `docs/LICENSE` | CC BY 4.0 legal code for `docs/**/*.md` |
+
+Code snippets inside documentation are MIT. The surrounding prose is CC BY
+4.0. See [LICENSE](LICENSE), [NOTICE](NOTICE), and [docs/LICENSE](docs/LICENSE).
+
+## Non-goals
+
+- A hosted service, model proxy, model provider, or account system.
+- Publishing a private knowledge base, personal tasks, transcripts, logs, or
+  calibration data.
+- Replacing OpenCode or becoming a general multi-agent framework in 1.0.0.
+- Windows support in 1.0.0.
+- A claim that the harness is faster, cheaper, or better before the benchmark
+  protocol has been run and reviewed.
+- A guarantee that Jev's advice is correct. It is evidence, not a gate.
+
+## Documentation
+
+Start at [docs/README.md](docs/README.md). For a clean install, read
+[docs/install.md](docs/install.md). For the first task, read
+[docs/quickstart.md](docs/quickstart.md). For the design rationale, read
+[docs/design-notes.md](docs/design-notes.md).

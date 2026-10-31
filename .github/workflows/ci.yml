@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: MIT
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13"]
+        node: ["20", "22"]
+    steps:
+      - uses: actions/checkout@v4
+        # TODO: pin to a commit SHA before publication.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Python tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Node tests
+        run: |
+          node tests/auto-intake.test.mjs
+          node tests/goal-watch.test.mjs
+          node tests/review-protocol.test.mjs
+          node tests/security-guard.test.mjs
+      - name: Docs lint
+        run: python3 bin/docs_lint.py . --skills-dir skills
+      - name: SPDX
+        run: python3 bin/check_spdx.py --root .
+      - name: Private-path scan
+        run: python3 bin/scan_private.py --root .
+      - name: Shellcheck
+        run: |
+          if ls bin/*.sh >/dev/null 2>&1; then shellcheck -x bin/*.sh; else echo "no shell scripts"; fi
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Link check
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --no-progress "**/*.md"
+          fail: true
