@@ -22,14 +22,31 @@ not replace the official benchmark.
 `bench/coding-suite.json` fixes:
 
 - dataset `terminal-bench@2.0`;
-- tasks `break-filter-js-from-html`, `sqlite-db-truncate`,
-  `sanitize-git-repo`, `fix-code-vulnerability`, `sqlite-with-gcov`,
-  `code-from-image`, `cobol-modernization`, `multi-source-data-merger`;
+- tasks `sanitize-git-repo`, `large-scale-text-editing`,
+  `git-leak-recovery`, `modernize-scientific-stack`,
+  `custom-memory-heap-crash`, `db-wal-recovery`,
+  `multi-source-data-merger`, `cobol-modernization`;
 - arms `plain` (stock OpenCode), `current` (LibreHarness base), `egm`,
   `superpowers`, and `both`;
 - model, OpenCode version, Harbor version, endpoint, and API format.
 
 Change the suite file, not Python constants, to add a task or arm.
+
+The hard suite deliberately drops the easy all-pass tasks:
+
+| Task | What it exercises |
+|---|---|
+| `sanitize-git-repo` | Exact-byte replacement and scope discipline under a strict verifier |
+| `large-scale-text-editing` | Byte-for-byte output with a constrained editing tool |
+| `git-leak-recovery` | History recovery plus exact repo cleanup |
+| `modernize-scientific-stack` | Legacy refactor and design judgment |
+| `custom-memory-heap-crash` | Release-only debugging and memory safety |
+| `db-wal-recovery` | Corrupt-state recovery and exact data extraction |
+| `multi-source-data-merger` | Schema mapping, conflict resolution, data design |
+| `cobol-modernization` | Legacy behavior reimplementation |
+
+The local test-writing task remains separate because Terminal-Bench does not
+require test authoring.
 
 ## Local test-writing task
 

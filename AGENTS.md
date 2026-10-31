@@ -10,6 +10,14 @@
   `master`.
 - Prefer the smallest complete change. Do not expand scope or improve unrelated
   code.
+- When a task asks to replace specific values in existing files, use targeted
+  string replacement and preserve every other byte. Replace only the value
+  itself; do not rewrite the containing line, embedded diff, or file structure.
+  Do not reformat, reserialize, quote, or reflow unrelated content. Check
+  `git diff` before finishing.
+- When a task names the files or acceptance set to change, do not edit outside
+  it. If you find a related issue outside that set, report it; the task owner
+  decides whether to widen the scope.
 - Do not claim a test, build, lint, or check passed unless you ran it and saw
   the result.
 - If requirements are ambiguous or a decision is hard to reverse, ask before

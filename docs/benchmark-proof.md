@@ -107,19 +107,27 @@ it is a smoke by design.
 
 ## Predeclared promotion rule
 
-Before a run, write down:
+The hard run uses `terminal-bench-hard-v1` (eight tasks), five arms, and n=3.
+The baseline is `plain`. The threshold is fixed before the run:
 
-- the primary outcome and the task set;
-- the minimum effect that would matter;
-- the token, cost, and wall budgets;
-- the accepted exception rate;
-- the profiles that may be promoted;
-- the held-out tasks, if any.
+- a candidate must solve **at least two more tasks** than plain (25 percentage
+  points on eight tasks), with **no task regression**;
+- the paired 95% task-clustered interval must have a **lower bound above zero**;
+- total cost must be no more than **1.25x plain**, mean wall no more than
+  **1.5x plain**, and there must be **no unsolved exception**;
+- a solved trial with a benign agent exception is recorded but does not count
+  as a failed task;
+- the separate test-writing task must score 1.0 with `test_first = 1`;
+- the result must repeat on held-out tasks before promotion.
 
-A profile is promoted only if it clears the statistical rule, stays within the
-budgets, has no unresolved P0/P1 review finding, and repeats on held-out tasks.
-A profile that wins one aggregate but loses a task class stays optional. A
-neutral or negative result is published with the same care as a positive one.
+**Ceiling rule.** If plain solves seven or eight of the eight tasks, or if every
+arm solves all eight, the pair is at ceiling and the result is uninformative for
+that comparison. More repetitions on a ceiling task do not create separation.
+The report must say so and the profile is not promoted from it.
+
+No composite score. A profile that wins one aggregate but loses a task class
+stays optional. A neutral or negative result is published with the same care as
+a positive one.
 
 ## Data availability
 
