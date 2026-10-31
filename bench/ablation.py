@@ -341,6 +341,7 @@ def run_arm(
     command = [
         "opencode",
         "run",
+        "--standalone",
         "--format=json",
         "--model",
         model,
@@ -358,6 +359,16 @@ def run_arm(
     stderr = ""
     try:
         with tempfile.TemporaryDirectory(prefix="libreharness-ablation-") as workspace:
+            # Keep the host's OpenCode auth store, but not its plugins, global
+            # AGENTS.md, agents, commands, or skills. Without this, the host
+            # auto-intake plugin turns the review prompt into a LibreHarness
+            # task and the benchmark measures the harness instead of the prompt.
+            config_home = Path(workspace) / "config"
+            state_home = Path(workspace) / "state"
+            config_home.mkdir()
+            state_home.mkdir()
+            environment["XDG_CONFIG_HOME"] = str(config_home)
+            environment["XDG_STATE_HOME"] = str(state_home)
             result = subprocess.run(
                 command,
                 cwd=workspace,

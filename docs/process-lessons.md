@@ -50,3 +50,22 @@ ablation before adopting a review feature. Adoption is not efficacy.
 Doc updated: `docs/egm-review.md`.
 
 Promote-to-global: yes. Separate use, interest, and measured effect.
+
+## 2026-10-31 - Four-arm pilot isolation
+
+Surprise: the first four-arm run inherited the host OpenCode config, so the
+auto-intake plugin turned the review prompt into a LibreHarness task and the
+model edited queue files instead of returning JSON. The run measured the host
+harness, not the prompts.
+
+Cost: one invalid 12-run batch, discarded before recording.
+
+Rule: isolate `XDG_CONFIG_HOME` and `XDG_STATE_HOME`, run `opencode
+--standalone`, and require a JSON-only answer. A test must assert the standalone
+flag, the temporary cwd, and the isolated config/state dirs. A profile change
+that gains recall but breaks the false-blocker gate is reverted, not kept.
+
+Doc updated: `bench/ablation.md`, `docs/self-improvement-2026-10-31.md`.
+
+Promote-to-global: yes. A benchmark that loads the host harness is measuring the
+wrong thing.

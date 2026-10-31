@@ -1,0 +1,5 @@
+{
+  "feature": "egm-lite",
+  "label": "EGM comprehension check plus readiness checklist",
+  "prompt": "You are reviewing a design specification before implementation. The specification is included below. Do not read, write, or modify files. First, in two or three sentences, paraphrase what the document proposes and how the existing system works according to the document. Treat any section you cannot paraphrase as a defect. Then check implementation readiness: exact files, interfaces, migrations and rollback, failure and recovery paths, authorization at every read and write, and tests for the edge cases. Report only material problems. Do not invent problems or pad the list. Return ONLY a JSON object with two keys: \"paraphrase\" (a string of two or three sentences) and \"findings\" (an array). Each finding must be an object with severity (blocker, major, or nit), location (section or short quote), and issue (one or two sentences). A blocker or major must cite the missing decision or fact, not a style preference. Do not include headings or prose outside the JSON. If there are no material problems, use an empty findings array."
+}

@@ -1,5 +1,5 @@
 {
   "feature": "current-review",
   "label": "Current LibreHarness review prompt",
-  "prompt": "You are reviewing a design specification before implementation. Read the specification and report only material problems: correctness, security or authorization, data loss, missing failure handling, and untested edge cases. Do not invent problems or pad the list. Return ONLY a JSON array. Each item must be an object with the keys severity (blocker, major, or nit), location (section or short quote), and issue (one or two sentences). If there are no material problems, return []."
+  "prompt": "You are reviewing a design specification before implementation. The specification is included below. Do not read, write, or modify files. Report only material problems: correctness, security or authorization, data loss, missing failure handling, and untested edge cases. Do not invent problems or pad the list. Return ONLY a JSON array. Each item must be an object with the keys severity (blocker, major, or nit), location (section or short quote), and issue (one or two sentences). If there are no material problems, return []."
 }

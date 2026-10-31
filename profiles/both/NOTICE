@@ -1,0 +1,13 @@
+Both profile attribution
+
+This profile combines two optional overlays:
+
+1. EGM profile, inspired by google/elephant-goldfish-model, Apache-2.0,
+   commit 403d8881d62022490637d740657b33f01e321ea8.
+
+2. Superpowers profile, obra/superpowers, MIT, copyright 2025 Jesse Vincent,
+   commit 2ce8aa15d05bd57213e6f746f953aafb7ded7a8b, release v7.0.1.
+
+See profiles/egm/NOTICE and profiles/superpowers/NOTICE for the full
+attribution and the list of boundary edits. This snapshot is for the pilot; the
+single profiles remain the source of truth.

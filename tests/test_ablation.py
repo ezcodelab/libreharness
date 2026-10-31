@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 import importlib.util
 import json
+import os
 import shutil
 import tempfile
 import unittest
@@ -208,7 +209,9 @@ class AblationTests(unittest.TestCase):
         shutil.rmtree(out, ignore_errors=True)
         failure = SimpleNamespace(returncode=1, stdout="", stderr="provider down")
         try:
-            with patch.object(ablation.subprocess, "run", return_value=failure):
+            with patch.object(
+                ablation.subprocess, "run", return_value=failure
+            ) as run:
                 code = ablation.main(
                     [
                         "--live",
@@ -218,6 +221,10 @@ class AblationTests(unittest.TestCase):
                         str(out),
                     ]
                 )
+                call = run.call_args_list[0]
+                env = call.kwargs["env"]
+                command = call.args[0]
+                cwd = call.kwargs["cwd"]
             self.assertEqual(code, 1)
             rows = (out / "runs.csv").read_text(encoding="utf-8")
             stderr = (out / "runs/baseline-r1/stderr.txt").read_text(encoding="utf-8")
@@ -225,6 +232,12 @@ class AblationTests(unittest.TestCase):
             shutil.rmtree(out, ignore_errors=True)
         self.assertIn("exit 1", rows)
         self.assertIn("provider down", stderr)
+        self.assertIn("--standalone", command)
+        self.assertIn("XDG_CONFIG_HOME", env)
+        self.assertIn("XDG_STATE_HOME", env)
+        self.assertNotEqual(env["XDG_CONFIG_HOME"], os.environ.get("XDG_CONFIG_HOME"))
+        self.assertNotEqual(Path(cwd).resolve(), ROOT.resolve())
+        self.assertTrue(Path(cwd).name.startswith("libreharness-ablation-"))
 
 
 if __name__ == "__main__":

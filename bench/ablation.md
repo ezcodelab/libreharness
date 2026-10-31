@@ -30,8 +30,10 @@ runner exits non-zero; it is not treated as a negative review result.
 
 A full Harbor task took 7 to 13 minutes in the pilot and cost up to $0.09. A
 review-only fixture runs in seconds to a few minutes and isolates the review
-step. Each arm runs in a fresh temporary workspace with no project instructions,
-so every arm sees the same input. That makes it practical to test a prompt or
+step. Each arm runs in a fresh temporary workspace with its own XDG config and
+state directories, so host plugins, AGENTS.md, agents, commands, and skills do
+not load. The host auth store stays in the data directory. Every arm sees the
+same input. That makes it practical to test a prompt or
 checklist change before adopting this kind of EGM feature. Harbor remains the
 public headline because only it measures whether the finished code solves a
 task.
@@ -62,22 +64,21 @@ Dry run, no model call:
 python3 bench/ablation.py --dry-run
 ```
 
-Four-arm CLI shape. The `superpowers` and `both` prompt files are added by the
-profile tasks; until then this uses the two current files so the command runs
-today:
+Four-arm dry run:
 
 ```sh
 python3 bench/ablation.py --dry-run --out bench/results/four-arm-dry \
   --arm current=bench/features/ablation/baseline.json \
-  --arm egm=bench/features/ablation/comprehension.json \
-  --arm superpowers=bench/features/ablation/baseline.json \
-  --arm both=bench/features/ablation/comprehension.json
+  --arm egm=bench/features/ablation/egm.json \
+  --arm superpowers=bench/features/ablation/superpowers.json \
+  --arm both=bench/features/ablation/both.json
 ```
 
-Replace the last two paths with `superpowers.json` and `both.json` when the
-profile tasks land them. Arm names are lowercase letters, digits, and hyphens.
-Duplicate names and missing feature files are rejected before any model call.
-`--arm` overrides `--baseline` and `--candidate`.
+The four prompts are data files. `comprehension.json` is the older two-arm
+candidate; the four-arm names use `egm.json`, `superpowers.json`, and
+`both.json`. Arm names are lowercase letters, digits, and hyphens. Duplicate
+names and missing feature files are rejected before any model call. `--arm`
+overrides `--baseline` and `--candidate`.
 
 The manifest records the fixture hash, defect hash, model, feature labels,
 prompt hashes, repetition count, timeout, and planned commands.
@@ -140,6 +141,9 @@ before a claim.
 
 Raw data: `bench/results/ablation-2026-10-31-live/` (ignored by git).
 
+The four-arm pilot and its rejected improvement are in
+[`docs/self-improvement-2026-10-31.md`](../docs/self-improvement-2026-10-31.md).
+
 ## Adoption rule
 
 Adopt an arm only when, against the current or baseline arm:
@@ -159,9 +163,10 @@ a valid outcome.
 - One synthetic spec and one model do not generalize.
 - The fixture is visible to the reviewer; this measures review behavior, not
   resistance to a hidden benchmark.
-- A fresh temporary workspace removes project instructions, but OpenCode still
-  loads the operator's global config, agents, and skills. Freeze that config for
-  a publishable comparison.
+- The runner isolates XDG config and state. The host data and cache directories
+  still hold auth, the local database, storage, and cached packages; they do not
+  hold instructions, but they make the environment machine-specific. Record the
+  OpenCode version, provider, and host setup for a comparison.
 - Regex scoring is coarse. It rewards the seeded vocabulary. The rules require
   the gap wording, not just the topic word, but they are still a proxy.
 - One repetition is a smoke, not a statistical result. Use three repetitions

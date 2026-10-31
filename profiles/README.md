@@ -45,8 +45,9 @@ profiles/<name>/
 
 | Profile | Hypothesis | Status |
 |---|---|---|
-| `egm` | A zero-context comprehension check, a readiness checklist, and convergence rules catch more design defects | Planned |
-| `superpowers` | Selected Superpowers process skills improve planning, TDD, debugging, and verification | Planned |
+| `egm` | A zero-context comprehension check, a readiness checklist, and convergence rules catch more design defects | Active |
+| `superpowers` | Selected Superpowers process skills improve planning, TDD, debugging, and verification | Active |
+| `both` | EGM review and Superpowers process skills complement each other enough to justify the extra cost | Pilot snapshot |
 
 The `current` arm is the base runtime with no profile. The `both` arm applies
 both overlays and is expected to have the highest process cost. It must beat
