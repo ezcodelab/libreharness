@@ -1,0 +1,45 @@
+Superpowers profile attribution
+
+Source:
+  obra/superpowers
+  https://github.com/obra/superpowers
+  commit 2ce8aa15d05bd57213e6f746f953aafb7ded7a8b
+  release v7.0.1
+  Copyright 2025 Jesse Vincent
+  MIT License. The full license text is in LICENSE.
+
+Vendored skills:
+  using-superpowers
+  brainstorming (SKILL.md only)
+  writing-plans
+  test-driven-development (SKILL.md and writing-good-tests.md)
+  systematic-debugging (SKILL.md, root-cause-tracing.md,
+    defense-in-depth.md, condition-based-waiting.md)
+  verification-before-completion
+  requesting-code-review (SKILL.md and code-reviewer.md)
+  receiving-code-review
+
+Removed from the vendored copy:
+  brainstorming/scripts/, brainstorming/visual-companion.md,
+  brainstorming/builder-check-prompt.md, images and telemetry,
+  systematic-debugging scripts and pressure-test files,
+  using-superpowers harness reference files,
+  executing-plans, subagent-driven-development, dispatching-parallel-agents,
+  finishing-a-development-branch, writing-skills, diagnosing-superpowers,
+  and using-git-worktrees.
+
+The selected Markdown is copied with an SPDX header and a text-only profile
+bootstrap. No executable asset is included.
+
+Boundary edits made for this profile:
+  writing-plans: plan location changed to the task Plan; execution handoff
+    changed to the LibreHarness queue/goal; excluded skill names removed.
+  brainstorming: visual-companion offer and server references removed;
+    builder-check prompt file reference replaced with a fresh-subagent check;
+    spec location changed to the task Plan/design doc.
+  systematic-debugging: find-polluter.sh and example.ts references replaced
+    with ordinary tools; namespaced skill names made plain.
+  requesting-code-review: example plan path changed to the task Plan.
+  all selected skills: the superpowers: namespace prefix was removed because
+    this profile does not install the plugin's dynamic tool mapping.
+
