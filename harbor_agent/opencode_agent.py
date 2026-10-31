@@ -20,8 +20,13 @@ import os
 import shlex
 from dataclasses import replace
 from pathlib import Path
+from typing import override
 
 from harbor.agents.agent_auth_resolution import ProviderAccess
+from harbor.agents.installed.base import (
+    NonZeroAgentExitCodeError,
+    with_prompt_template,
+)
 from harbor.agents.installed.opencode import OpenCode
 from harbor.environments.base import BaseEnvironment
 
@@ -109,3 +114,53 @@ class OpenCodeLibreHarness(OpenCode):
             str(self.harness_path / "AGENTS.md"),
             f"{config}/AGENTS.md",
         )
+
+    @override
+    @with_prompt_template
+    async def run(
+        self,
+        instruction: str,
+        environment: BaseEnvironment,
+        context,
+    ) -> None:
+        # Stock Harbor tees OpenCode stdout through a pipe with pipefail. Some
+        # OpenCode versions emit EPIPE on shutdown after a successful answer,
+        # turning a passing task into NonZeroAgentExitCodeError. Write the
+        # stream straight to the log instead.
+        self._instruction = instruction
+        if not self.model_name:
+            raise ValueError("Model name must be in the format provider/model_name")
+
+        env = dict(self.model_connection.env)
+        env["OPENCODE_FAKE_VCS"] = "git"
+        env["XDG_DATA_HOME"] = (
+            self.environment_logs_dir / "opencode" / "xdg-data"
+        ).as_posix()
+        env["XDG_STATE_HOME"] = (
+            self.environment_logs_dir / "opencode" / "xdg-state"
+        ).as_posix()
+
+        if skills_command := self._build_register_skills_command():
+            await self.exec_as_agent(environment, command=skills_command, env=env)
+        if mcp_command := self._build_register_config_command():
+            await self.exec_as_agent(environment, command=mcp_command, env=env)
+
+        output = (self.environment_logs_dir / self._OUTPUT_FILENAME).as_posix()
+        cli_flags = self.build_cli_flags()
+        cli_flags_arg = (cli_flags + " ") if cli_flags else ""
+        resume_flag = "--continue " if self._resume else ""
+        await self.exec_as_agent(
+            environment,
+            command=(
+                "[ -f ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh; "
+                f"opencode --model={shlex.quote(self._execution_model_name())} "
+                f"run --format=json {resume_flag}{cli_flags_arg}--thinking "
+                f"--dangerously-skip-permissions -- {shlex.quote(instruction)} "
+                f"> {shlex.quote(output)} 2>&1 </dev/null || true"
+            ),
+            env=env,
+        )
+        if messages := self._error_messages():
+            raise NonZeroAgentExitCodeError(
+                "OpenCode emitted error event(s): " + "; ".join(messages[:3])
+            )
