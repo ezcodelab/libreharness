@@ -13,6 +13,11 @@ A two-task Harbor pilot is recorded in
 [`pilot-2026-10-30.md`](pilot-2026-10-30.md). It is not a full benchmark and
 shows no quality delta.
 
+For a fast before/after check of one review feature, use the seeded-spec
+ablation runner in [`ablation.md`](ablation.md). It compares two declarative
+prompt arms, scores findings against five seeded defects, and runs in minutes.
+It is a feature-level supplement, not a public score.
+
 The local suite answers three questions:
 
 - A: does the harness improve completed work at acceptable cost, with Jev
@@ -42,9 +47,12 @@ bench/
 ├── README.md          this file
 ├── protocol.md        frozen design, task set, metrics, analysis, threats
 ├── runner.py          plan or run one task repetition
+├── ablation.py        fast review-feature ablation and scoring
+├── ablation.md        how the ablation works and how to add a feature
+├── features/ablation/ declarative baseline and candidate prompts
 ├── analyze.py         summarize a results directory
 ├── tasks/             one fixed prompt and rubric per category, B1 to B8
-├── fixtures/          fixture repositories, added before the first live run
+├── fixtures/          fixture repositories and the ablation spec
 └── results/           generated run data, ignored except .gitkeep
 ```
 

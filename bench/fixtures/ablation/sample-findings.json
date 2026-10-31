@@ -1,0 +1,34 @@
+{
+  "findings": [
+    {
+      "severity": "blocker",
+      "location": "Authorization",
+      "issue": "RLS and tenant scope are undefined, and the worker trusts a tenant id from the job row."
+    },
+    {
+      "severity": "major",
+      "location": "API",
+      "issue": "The create endpoint is GET /exports while polling is POST /exports/{id}; the method is inconsistent."
+    },
+    {
+      "severity": "blocker",
+      "location": "Data model",
+      "issue": "The migration adds a NOT NULL tenant_id without a backfill or rollback plan."
+    },
+    {
+      "severity": "nit",
+      "location": "UI",
+      "issue": "The download button should be blue."
+    }
+  ],
+  "input_tokens": 1200,
+  "output_tokens": 300,
+  "cost_usd": 0.00012,
+  "wall_seconds": 12.5,
+  "expected": {
+    "recall": 0.6,
+    "precision": 0.75,
+    "true_positives": 3,
+    "false_positives": 1
+  }
+}

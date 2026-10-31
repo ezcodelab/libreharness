@@ -1,0 +1,5 @@
+{
+  "feature": "comprehension-check",
+  "label": "Current review plus zero-context comprehension check",
+  "prompt": "You are reviewing a design specification before implementation. First, in two or three sentences, paraphrase what the document proposes and how the existing system works according to the document. Treat any part you cannot paraphrase as a defect. Then report only material problems: correctness, security or authorization, data loss, missing failure handling, and untested edge cases. Do not invent problems or pad the list. Return ONLY a JSON array. Each item must be an object with the keys severity (blocker, major, or nit), location (section or short quote), and issue (one or two sentences). If there are no material problems, return []."
+}

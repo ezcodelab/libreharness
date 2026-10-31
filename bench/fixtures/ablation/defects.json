@@ -1,0 +1,32 @@
+[
+  {
+    "id": "D1",
+    "severity": "blocker",
+    "match": "(RLS.{0,80}(undefined|not defined|hand.?wav|trust)|tenant scope.{0,80}(undefined|not defined|hand.?wav|trust)|trusts? (the )?tenant id)",
+    "description": "Tenant enforcement is hand-waved: RLS and tenant scope are undefined, and the worker trusts a stored tenant id."
+  },
+  {
+    "id": "D2",
+    "severity": "major",
+    "match": "(GET /exports.{0,80}POST /exports|POST /exports.{0,80}GET /exports|poll.{0,80}POST|method.{0,40}(inconsistent|backwards|wrong)|create.{0,40}GET)",
+    "description": "The create and poll methods are inconsistent: the client creates with GET and polls with POST, which is backwards and ambiguous."
+  },
+  {
+    "id": "D3",
+    "severity": "blocker",
+    "match": "((NOT NULL|non-null).{0,120}(backfill|rollback|no plan|without)|(backfill|rollback).{0,120}(NOT NULL|non-null|migration)|migration.{0,80}(rollback|backfill))",
+    "description": "The migration adds a NOT NULL tenant column with no backfill or rollback plan for existing rows."
+  },
+  {
+    "id": "D4",
+    "severity": "blocker",
+    "match": "((no|missing|without|lacks|lack of).{0,60}(idempoten|dedup|exactly[- ]once)|(idempoten|dedup|exactly[- ]once).{0,60}(missing|not implemented|no key|lacks|without)|duplicate (jobs?|exports?)|redeliver.{0,80}(duplicate|twice))",
+    "description": "Queue redelivery can create duplicate jobs or duplicate exports because there is no request idempotency key."
+  },
+  {
+    "id": "D5",
+    "severity": "major",
+    "match": "((empty|zero rows|large|timeout|stream).{0,120}(test|missing|not covered|no test)|(test|tests).{0,120}(empty|zero rows|large|timeout|stream)|only.{0,80}(1,000|1000))",
+    "description": "Tests cover only a 1,000-row happy path; empty, large, and timeout cases are missing."
+  }
+]
