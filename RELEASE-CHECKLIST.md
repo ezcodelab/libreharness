@@ -24,16 +24,19 @@ organization, two similar repositories, and an npm package.
 - [x] Queue round trip in a temporary state root: create, claim, review, done
   with evidence, generated board.
 - [x] Jev mock review without a key or network call.
-- [x] Python queue tests: 16 passed.
+- [x] Python queue tests: 16 passed; the Harbor adapter configure test passed
+  under a Harbor venv and is skipped when Harbor is not installed.
 - [x] Node tests: auto-intake, goal-watch, review-protocol, security-guard,
   installer.
-- [x] Docs lint: 60 Markdown files, no problems.
+- [x] Docs lint: 61 Markdown files, no problems.
 - [x] SPDX headers: all checked files pass.
 - [x] Private-path scan: no findings.
 - [x] Benchmark runner `--dry-run`, score no-data path, and analyzer no-data
   path.
 - [x] External benchmark selected: Terminal-Bench 2.0 via Harbor. Plain
   OpenCode is the before baseline; the local B1-B8 suite is only a supplement.
+- [x] Harbor adapter imports as `harbor_agent.opencode_agent:OpenCodeLibreHarness`,
+  passes `harbor agent auth`, and uploads the expected paths in a fake sandbox.
 - [x] No `free-explore` or `flash-fallback` code remains.
 
 ## Not proven
@@ -44,6 +47,8 @@ organization, two similar repositories, and an npm package.
   and the same local commands pass.
 - [ ] Terminal-Bench 2.0 via Harbor has not been run. No plain or LibreHarness
   resolution rate exists. The local B1-B8 suite also has no fixtures or run data.
+- [ ] The `harbor_agent` adapter has not been exercised against a live Harbor
+  task; only static inspection and syntax checks exist.
 - [ ] Live Jev endpoint call. Only the mock path was exercised.
 - [ ] `JEV_MODE` is documented as an adapter contract but is not read by the
   rc.1 clients.

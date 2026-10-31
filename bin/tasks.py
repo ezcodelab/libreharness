@@ -32,7 +32,7 @@ from pathlib import Path
 ROOT = Path(
     os.environ.get(
         "HARNESS_STATE",
-        Path(__file__).resolve().parents[1],
+        Path.home() / ".local/state/libreharness",
     )
 ).expanduser()
 WORK = ROOT / "work"

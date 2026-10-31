@@ -27,7 +27,9 @@ def check_command(name: str) -> list[str]:
 
 
 def check_state(root: Path) -> list[str]:
-    state = Path(os.environ.get("HARNESS_STATE", root / "state")).expanduser()
+    state = Path(
+        os.environ.get("HARNESS_STATE", Path.home() / ".local/state/libreharness")
+    ).expanduser()
     if root == state or root in state.parents:
         return [f"HARNESS_STATE must be outside the checkout: {state}"]
     try:
@@ -110,7 +112,10 @@ def main() -> int:
         return 1
     print("doctor: OK")
     print(f"  checkout: {root}")
-    print(f"  state: {Path(os.environ.get('HARNESS_STATE', root / 'state')).expanduser()}")
+    print(
+        "  state: "
+        f"{Path(os.environ.get('HARNESS_STATE', Path.home() / '.local/state/libreharness')).expanduser()}"
+    )
     return 0
 
 

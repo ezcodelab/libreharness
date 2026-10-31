@@ -82,9 +82,10 @@ harbor run -d terminal-bench@2.0 -a opencode -m <provider>/<model>
 ```
 
 The before baseline is plain OpenCode on the same tasks, model, and
-environment. The after result is OpenCode with LibreHarness installed. Cost,
-tokens, and wall time are reported alongside resolution rate, not blended into a
-score.
+environment. The after result uses the local Harbor adapter
+`harbor_agent.opencode_agent:OpenCodeLibreHarness`, which installs the workflow
+files in the sandbox. Cost, tokens, and wall time are reported alongside
+resolution rate, not blended into a score.
 
 The small B1-B8 suite is a local regression supplement only. Its
 `bench/score.py` is not the public headline. See

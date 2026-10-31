@@ -95,20 +95,24 @@ The **before** baseline is plain OpenCode on the same dataset, same model, and
 same environment. The **after** result is OpenCode with LibreHarness installed
 in the same task environment. Both use the same Harbor version and task hashes.
 
-## Integration gap
+## Integration
 
-Harbor's `opencode` agent supports skills and an `opencode_config` overlay, but
-it does not install the full LibreHarness runtime (queue, commands, plugins,
-`AGENTS.md`) automatically. To benchmark the complete harness:
+The local adapter is `harbor_agent.opencode_agent:OpenCodeLibreHarness`. It
+installs OpenCode through Harbor and uploads the LibreHarness workflow files
+(`AGENTS.md`, agents, commands, skills, and queue bin) into the sandbox. It
+deliberately skips the local UI plugins so auto-intake, close reminders, and
+goal-watch cannot alter a benchmark task.
 
-1. Create a Harbour agent adapter `opencode-libreharness` that installs the
-   LibreHarness release candidate in the sandbox and points OpenCode at it.
-2. Or bake the harness into the Terminal-Bench task image and keep the stock
-   `opencode` agent. This is simpler but couples the image to the harness.
-3. Keep the plain arm on stock `opencode`, with no harness files.
+```sh
+PYTHONPATH="$PWD" harbor run \
+  -d terminal-bench@2.0 \
+  -a harbor_agent.opencode_agent:OpenCodeLibreHarness \
+  -m <provider>/<model>
+```
 
-The adapter is the cleaner comparison and should be the next implementation
-task.
+The plain arm remains stock `-a opencode`. The adapter has not been exercised
+against a live Harbor task yet; run one task as a smoke test before a full
+dataset.
 
 ## Commands to validate
 

@@ -19,7 +19,8 @@
     "skills",
     "plugins",
     "bin",
-    "docs"
+    "docs",
+    "harbor_agent"
   ],
   "engines": {
     "node": ">=20",
