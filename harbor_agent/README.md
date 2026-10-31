@@ -53,6 +53,36 @@ It inherits Harbor's stock OpenCode install and `run()` loop. It adds only:
 It deliberately does not upload the local UI plugins, so auto-intake, close
 reminders, and goal-watch cannot change a benchmark run.
 
+## Profiles
+
+An optional profile overlay is applied after the base runtime:
+
+```sh
+PYTHONPATH="$PWD" harbor run \
+  -d terminal-bench@2.0 \
+  -a harbor_agent.opencode_agent:OpenCodeLibreHarness \
+  -m ollama-cloud/deepseek-v4.1-flash \
+  --base-url https://ollama.com/v1 \
+  --api-key-name OLLAMA_API_KEY \
+  --api-format openai_chat_completions \
+  --ak version=1.19.5 \
+  --ak profile=egm
+```
+
+`profile` loads `profiles/<name>/` from the LibreHarness checkout, or from
+`LIBREHARNESS_PROFILE`. The base runtime is uploaded first, then the profile
+adds `agents/`, `commands/`, and `skills/`. A profile `AGENTS.md` is appended to
+the base file, not substituted for it. Names that collide with a base skill,
+command, or agent are rejected. No profile means the base runtime only.
+
+The adapter writes `profile.json` into the trial's agent logs with the profile
+name, source path, and a SHA-256 per source file. That is the profile manifest
+for the run; it records the profile source, including its `README.md` and
+`NOTICE`, while the sandbox renames `NOTICE` to
+`LIBREHARNESS-PROFILE-NOTICE`. `LIBREHARNESS_PROFILE` is the environment
+fallback when `--ak profile=...` is not convenient; an explicit `profile=`
+wins.
+
 ## Post-fix smoke
 
 `2026-10-31__14-33-39`: `break-filter-js-from-html`, reward 1.0, no exception,

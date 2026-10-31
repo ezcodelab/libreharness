@@ -22,16 +22,20 @@ reminders, and goal-watch cannot alter a benchmark task.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import re
 import shlex
+import tempfile
 from dataclasses import replace
 from pathlib import Path
-from typing import override
+from typing import Annotated, override
 
 from harbor.agents.agent_auth_resolution import ProviderAccess
-from harbor.agents.installed.opencode import OpenCode
+from harbor.agents.installed.opencode import OpenCode, OpenCodeOptions
 from harbor.environments.base import BaseEnvironment
+from pydantic import Field
 
 _STOCK_RUN_TAIL = re.compile(
     r"(?P<head>.*?)\s+2>&1\s+</dev/null\s+\|\s+stdbuf\s+-oL\s+tee\s+"
@@ -43,6 +47,8 @@ _STOP_EVENT = (
     r'.*"reason"[[:space:]]*:[[:space:]]*"stop"'
 )
 _EPIPE = "EPIPE"
+_PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+_PROFILE_FOLDERS = ("agents", "commands", "skills")
 
 
 def rewrite_opencode_run_command(command: str) -> str:
@@ -73,8 +79,17 @@ def rewrite_opencode_run_command(command: str) -> str:
     )
 
 
+class LibreHarnessOptions(OpenCodeOptions):
+    profile: Annotated[
+        str | None,
+        Field(default=None, description="Optional profiles/<name> overlay."),
+    ] = None
+
+
 class OpenCodeLibreHarness(OpenCode):
     """OpenCode plus the LibreHarness agents, commands, skills, and queue."""
+
+    options_model = LibreHarnessOptions
 
     # OpenCode's native Ollama provider reads OLLAMA_API_KEY. Harbor's stock
     # OpenCode mapping only looks for OPENAI_API_KEY, which made the first
@@ -105,6 +120,7 @@ class OpenCodeLibreHarness(OpenCode):
         self,
         *args,
         harness_path: str | Path | None = None,
+        profile: str | None = None,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -121,6 +137,41 @@ class OpenCodeLibreHarness(OpenCode):
                 raise FileNotFoundError(
                     f"LibreHarness runtime missing {required} in {self.harness_path}"
                 )
+
+        selected = (profile or os.environ.get("LIBREHARNESS_PROFILE") or "").strip()
+        self.profile = selected or None
+        self.profile_path: Path | None = None
+        if self.profile:
+            if not _PROFILE_NAME.fullmatch(self.profile):
+                raise ValueError(
+                    f"invalid profile name {self.profile!r}; "
+                    "use lowercase letters, digits, and hyphens"
+                )
+            self.profile_path = self.harness_path / "profiles" / self.profile
+            if self.profile_path.is_symlink():
+                raise ValueError(
+                    f"profile {self.profile!r} must be a directory, not a symlink"
+                )
+            if not self.profile_path.is_dir():
+                raise FileNotFoundError(
+                    f"LibreHarness profile not found: {self.profile_path}"
+                )
+            for path in self.profile_path.rglob("*"):
+                if path.is_symlink():
+                    raise ValueError(
+                        f"profile {self.profile!r} contains a symlink: "
+                        f"{path.relative_to(self.profile_path).as_posix()}"
+                    )
+            for folder in _PROFILE_FOLDERS:
+                source = self.profile_path / folder
+                if not source.is_dir():
+                    continue
+                for child in source.iterdir():
+                    if (self.harness_path / folder / child.name).exists():
+                        raise ValueError(
+                            f"profile {self.profile!r} collides with base "
+                            f"{folder}/{child.name}"
+                        )
 
     @staticmethod
     def name() -> str:
@@ -181,6 +232,8 @@ class OpenCodeLibreHarness(OpenCode):
             str(self.harness_path / "AGENTS.md"),
             f"{config}/AGENTS.md",
         )
+        if self.profile:
+            await self._upload_profile(environment, config)
 
         # Docker uploads land as root; the agent user must be able to read and
         # execute the queue and the skill files.
@@ -191,3 +244,55 @@ class OpenCodeLibreHarness(OpenCode):
                 environment,
                 command=f"chown -R {owner} {shlex.quote(config)} {shlex.quote(state)}",
             )
+
+    async def _upload_profile(self, environment: BaseEnvironment, config: str) -> None:
+        assert self.profile is not None
+        assert self.profile_path is not None
+
+        for folder in _PROFILE_FOLDERS:
+            source = self.profile_path / folder
+            if source.is_dir():
+                await environment.upload_dir(str(source), f"{config}/{folder}")
+
+        profile_agents = self.profile_path / "AGENTS.md"
+        if profile_agents.is_file():
+            merged = (
+                (self.harness_path / "AGENTS.md").read_text(encoding="utf-8").rstrip()
+                + f"\n\n---\n\n# Optional profile: {self.profile}\n\n"
+                + profile_agents.read_text(encoding="utf-8").strip()
+                + "\n"
+            )
+            with tempfile.TemporaryDirectory(
+                prefix="libreharness-profile-"
+            ) as temp:
+                merged_path = Path(temp) / "AGENTS.md"
+                merged_path.write_text(merged, encoding="utf-8")
+                await environment.upload_file(str(merged_path), f"{config}/AGENTS.md")
+
+        notice = self.profile_path / "NOTICE"
+        if notice.is_file():
+            await environment.upload_file(
+                str(notice),
+                f"{config}/LIBREHARNESS-PROFILE-NOTICE",
+            )
+
+        files = {
+            path.relative_to(self.profile_path).as_posix(): hashlib.sha256(
+                path.read_bytes()
+            ).hexdigest()
+            for path in sorted(self.profile_path.rglob("*"))
+            if path.is_file()
+        }
+        self.logs_dir.mkdir(parents=True, exist_ok=True)
+        (self.logs_dir / "profile.json").write_text(
+            json.dumps(
+                {
+                    "name": self.profile,
+                    "source": f"profiles/{self.profile}",
+                    "files": files,
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
