@@ -24,11 +24,11 @@ organization, two similar repositories, and an npm package.
 - [x] Queue round trip in a temporary state root: create, claim, review, done
   with evidence, generated board.
 - [x] Jev mock review without a key or network call.
-- [x] Python queue tests: 16 passed; the Harbor adapter configure test passed
-  under a Harbor venv and is skipped when Harbor is not installed.
+- [x] Full Python suite: 30 tests passed, including 5 Harbor adapter tests and
+  9 ablation tests. The adapter tests are skipped when Harbor is not installed.
 - [x] Node tests: auto-intake, goal-watch, review-protocol, security-guard,
   installer.
-- [x] Docs lint: 62 Markdown files, no problems.
+- [x] Docs lint: 66 Markdown files, no problems.
 - [x] SPDX headers: all checked files pass.
 - [x] Private-path scan: no findings.
 - [x] Benchmark runner `--dry-run`, score no-data path, and analyzer no-data
@@ -37,6 +37,9 @@ organization, two similar repositories, and an npm package.
   OpenCode is the before baseline; the local B1-B8 suite is only a supplement.
 - [x] Harbor adapter imports as `harbor_agent.opencode_agent:OpenCodeLibreHarness`,
   passes `harbor agent auth`, and uploads the expected paths in a fake sandbox.
+- [x] Harbor adapter overlay upload is wired through `setup()`, the hook Harbor
+  0.25.0 calls. An install-only job (`2026-10-31__14-11-55`) shows the overlay
+  `mkdir` after OpenCode 1.19.5 installs.
 - [x] No `free-explore` or `flash-fallback` code remains.
 
 ## Not proven
@@ -45,11 +48,13 @@ organization, two similar repositories, and an npm package.
   provider credentials, so this was not run.
 - [ ] GitHub Actions workflows were not executed on GitHub. They were inspected
   and the same local commands pass.
-- [ ] Terminal-Bench 2.0 via Harbor is not a full run. A two-task pilot passed
-  on both arms with no quality delta; one task was cancelled by the outer
-  timeout. The local B1-B8 suite has no fixtures or run data.
-- [x] The `harbor_agent` adapter completed live Harbor trials on
-  gpt2-codegolf and break-filter-js-from-html with clean harness exits.
+- [ ] Terminal-Bench 2.0 via Harbor is not a full run. The two-task pilot was
+  adapter-only: its `configure()` overlay upload was dead code, so it did not
+  run LibreHarness. It is not a harness result. One task was cancelled by the
+  outer timeout. The local B1-B8 suite has no fixtures or run data.
+- [ ] A live Harbor task after the `setup()` overlay fix has not run. The
+  install-only job proves the upload calls, but the model run and auth mapping
+  remain unproven. Run the one-task smoke in a shell with `OLLAMA_API_KEY`.
 - [ ] Live Jev endpoint call. Only the mock path was exercised.
 - [ ] `JEV_MODE` is documented as an adapter contract but is not read by the
   rc.1 clients.

@@ -108,13 +108,21 @@ export OLLAMA_API_KEY=...
 PYTHONPATH="$PWD" harbor run \
   -d terminal-bench@2.0 \
   -a harbor_agent.opencode_agent:OpenCodeLibreHarness \
-  -m ollama-cloud/deepseek-v4.1-flash
+  -m ollama-cloud/deepseek-v4.1-flash \
+  --base-url https://ollama.com/v1 \
+  --api-key-name OLLAMA_API_KEY \
+  --api-format openai_chat_completions \
+  --ak version=1.19.5
 ```
 
 The Docker sandbox does not inherit OpenCode's host auth store, so the key must
 be in the shell that launches Harbor or supplied through `--env-file`. The plain
-arm remains stock `-a opencode`. The adapter has not completed a live trial
-yet; run one task as a smoke test before a full dataset.
+arm remains stock `-a opencode`.
+
+The adapter has completed live trials, but the first pilot did not upload the
+harness overlay because `configure()` is not a Harbor 0.25.0 hook. The adapter
+now uploads from `setup()`; an install-only job proves the upload calls. A fresh
+live task after that fix is still required before a full dataset.
 
 ## Commands to validate
 
