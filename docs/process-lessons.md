@@ -102,3 +102,19 @@ Doc updated: `bench/coding.md`, `tests/test_coding.py`, `.gitignore`.
 
 Promote-to-global: yes. A benchmark wrapper that cannot import the thing under
 test is measuring nothing.
+
+## 2026-10-31 - Five-arm coding pilot
+
+Surprise: every LibreHarness arm solved 3/3 on the three-task pilot, while stock
+plain solved 2/3. The paired difference is +33.3 pp but the task-clustered 95%
+interval is [+0.0, +100.0] pp, so it is inconclusive. No arm wrote tests, so the
+test-first metric says nothing about Superpowers on these tasks.
+
+Rule: a three-task, one-repetition coding pilot is a smoke, not proof. A
+test-first metric needs a task that requires a failing test first. Do not
+promote a profile from a positive point estimate whose interval touches zero.
+
+Doc updated: `docs/coding-pilot-2026-10-31.md`, `bench/coding.md`.
+
+Promote-to-global: yes. Report the interval and the missing metric, not just the
+solved count.

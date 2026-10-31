@@ -348,8 +348,9 @@ def print_summary(rows: list[dict], tasks: list[str]) -> None:
     print("| Arm | Task | Reward | Exception | Cost USD | Tokens | Wall s | Test-first | Test files | Error |")
     print("|---|---|---:|---|---:|---:|---:|---|---:|---|")
     for row in rows:
+        reward = "n/a" if row["reward"] == "" else row["reward"]
         print(
-            f"| {row['arm']} | {row['task']} | {row['reward'] or 'n/a'} | "
+            f"| {row['arm']} | {row['task']} | {reward} | "
             f"{row['exception'] or '-'} | ${float(row['cost_usd']):.4f} | "
             f"{int(row['input_tokens']) + int(row['output_tokens'])} | "
             f"{float(row['wall_seconds']):.1f} | {row['test_first']} | "

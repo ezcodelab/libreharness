@@ -22,7 +22,9 @@ It is a feature-level supplement, not a public score.
 For coding outcomes, [`coding.py`](coding.py) runs a fixed Terminal-Bench suite
 through Harbor across stock OpenCode and the LibreHarness profiles. It records
 reward, exceptions, tokens, cost, wall time, and a test-first heuristic. See
-[`coding.md`](coding.md).
+[`coding.md`](coding.md). The first five-arm pilot is in
+[`docs/coding-pilot-2026-10-31.md`](../docs/coding-pilot-2026-10-31.md); it is
+a pilot, not proof.
 
 The local suite answers three questions:
 

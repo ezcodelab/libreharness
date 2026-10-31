@@ -1,9 +1,9 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Coding benchmark
 
-Status: **pilot runner, no result yet.** This is the coding-outcome benchmark
-for LibreHarness. It runs a fixed Terminal-Bench suite through Harbor and
-records the verifier reward, exceptions, tokens, cost, wall time, and a
+Status: **pilot result recorded; not proof.** This is the coding-outcome
+benchmark for LibreHarness. It runs a fixed Terminal-Bench suite through Harbor
+and records the verifier reward, exceptions, tokens, cost, wall time, and a
 test-first heuristic.
 
 ## Why this exists
@@ -50,6 +50,16 @@ directories stay under that output, outside the public tree.
 
 Use `--repetitions 3` for a comparison. The pilot default is 1 because a
 three-task, five-arm run at n=3 is already 45 trials.
+
+Paired analysis:
+
+```sh
+python3 bench/analyze.py --input bench/results/coding-pilot/runs.csv \
+  --baseline plain --candidate current --bootstrap 2000 --seed 0
+```
+
+The result of the first pilot is in
+[`docs/coding-pilot-2026-10-31.md`](../docs/coding-pilot-2026-10-31.md).
 
 ## Metrics
 
