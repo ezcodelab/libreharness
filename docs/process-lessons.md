@@ -69,3 +69,19 @@ Doc updated: `bench/ablation.md`, `docs/self-improvement-2026-10-31.md`.
 
 Promote-to-global: yes. A benchmark that loads the host harness is measuring the
 wrong thing.
+
+## 2026-10-31 - Benchmark feedback
+
+Surprise: the second fixture's first regex set credited a data-model finding to
+the key-exposure defect, and the aggregate table hid failed rows as zero-recall
+runs. Tightening the regexes changed the fixture-B ranking.
+
+Rule: report false positives by severity, exclude errored rows from aggregate
+means, require gap polarity in every fixture rule, and keep per-run rows and the
+min-max spread. A scoring change is rescored from saved findings, not presented
+as a new model run.
+
+Doc updated: `bench/ablation.md`, `docs/self-improvement-2026-10-31.md`.
+
+Promote-to-global: yes. A benchmark's labels are part of the instrument; audit
+them before trusting a ranking.

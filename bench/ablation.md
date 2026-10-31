@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Feature ablation benchmark
 
-Status: **scaffold and self-check, no live result.** This is a fast supplement
-to the Harbor/Terminal-Bench headline, not a public score.
+Status: **pilot run on two fixtures, not a public score.** This is a fast
+supplement to the Harbor/Terminal-Bench headline.
 
 ## What it answers
 
@@ -20,10 +20,12 @@ design specification. The default is two:
 For a four-arm comparison, pass `--arm` once per arm. The runner records every
 arm in the same manifest and `runs.csv`.
 
-The output is recall, precision, input and output tokens, cache-read tokens,
-cost, and wall time. Output tokens include reasoning tokens; cache reads are
-reported separately. It is designed for an iteration loop of minutes, not a
-full coding task. A failed or timed-out arm is recorded with an `error` and the
+The output is recall, precision, false positives split by severity, input and
+output tokens, cache-read tokens, cost, and wall time. Output tokens include
+reasoning tokens; cache reads are reported separately. The console prints the
+aggregate table, every per-run row, and the min-max spread; `runs.csv` keeps the
+same per-run data. It is designed for an iteration loop of minutes, not a full
+coding task. A failed or timed-out arm is recorded with an `error` and the
 runner exits non-zero; it is not treated as a negative review result.
 
 ## Why one spec instead of a code task
@@ -45,10 +47,16 @@ bench/
 ├── ablation.py              runner, scorer, self-check
 ├── features/ablation/
 │   ├── baseline.json        current review prompt
-│   └── comprehension.json   candidate prompt
+│   ├── comprehension.json   older two-arm candidate
+│   ├── egm.json             EGM-lite review prompt
+│   ├── superpowers.json     Superpowers evidence prompt
+│   ├── superpowers-gaps.json rejected every-gap candidate
+│   └── both.json            combined review prompt
 └── fixtures/ablation/
-    ├── spec.md              seeded design document
-    ├── defects.json         five seeded defects and match rules
+    ├── spec.md              seeded design document A
+    ├── defects.json         five seeded defects for A
+    ├── spec-b.md            seeded API-key rotation design B
+    ├── defects-b.json       five seeded defects for B
     └── sample-findings.json deterministic scoring sample
 ```
 
@@ -76,12 +84,27 @@ python3 bench/ablation.py --dry-run --out bench/results/four-arm-dry \
 
 The four prompts are data files. `comprehension.json` is the older two-arm
 candidate; the four-arm names use `egm.json`, `superpowers.json`, and
-`both.json`. Arm names are lowercase letters, digits, and hyphens. Duplicate
-names and missing feature files are rejected before any model call. `--arm`
-overrides `--baseline` and `--candidate`.
+`both.json`. `superpowers-gaps.json` keeps the rejected every-gap hypothesis as
+a separate candidate. Arm names are lowercase letters, digits, and hyphens.
+Duplicate names and missing feature files are rejected before any model call.
+`--arm` overrides `--baseline` and `--candidate`.
 
-The manifest records the fixture hash, defect hash, model, feature labels,
-prompt hashes, repetition count, timeout, and planned commands.
+Second fixture:
+
+```sh
+python3 bench/ablation.py --dry-run --out bench/results/four-arm-b \
+  --fixture bench/fixtures/ablation/spec-b.md \
+  --defects bench/fixtures/ablation/defects-b.json \
+  --arm current=bench/features/ablation/baseline.json \
+  --arm egm=bench/features/ablation/egm.json \
+  --arm superpowers=bench/features/ablation/superpowers.json \
+  --arm both=bench/features/ablation/both.json
+```
+
+`--seed` randomizes the run order and records it in the manifest. The seed and
+the `run_order` list are written even for a dry run. The manifest also records
+the fixture hash, defect hash, model, feature labels, prompt hashes, repetition
+count, timeout, and planned commands.
 
 Self-check, no model call:
 
@@ -90,8 +113,20 @@ python3 bench/ablation.py --self-check
 ```
 
 It scores `sample-findings.json` and prints recall, precision, true positives,
-false positives, tokens, and wall time. The sample carries expected values, so
-a scoring regression exits non-zero.
+false positives, false blockers, false majors, false nits, tokens, and wall
+time. The sample carries expected values, so a scoring regression exits
+non-zero.
+
+Rescore a saved run after a scoring-rule change, with no model call:
+
+```sh
+python3 bench/ablation.py --rescore \
+  --out path/to/saved-run \
+  --defects bench/fixtures/ablation/defects-b.json
+```
+
+It reads `runs.csv` and each `runs/<arm>-r<rep>/findings.json`, writes
+`runs-rescored.csv`, and prints the same aggregate, per-run, and spread tables.
 
 Live run:
 
@@ -116,6 +151,11 @@ is counted as a duplicate and does not change precision.
 recall    = matched defects / seeded defects
 precision = true positives / (true positives + false positives)
 ```
+
+False positives are also split by the finding's declared severity:
+`false_blockers`, `false_majors`, and `false_nits`. Recall is reported by seeded
+defect severity. A blocker-labeled finding that matches a seeded major is a true
+positive, not a false blocker.
 
 The match rules are a deterministic proxy, not a substitute for reading the raw
 findings. A finding can use different words and still be correct; a broad regex
@@ -144,23 +184,19 @@ Raw data: `bench/results/ablation-2026-10-31-live/` (ignored by git).
 The four-arm pilot and its rejected improvement are in
 [`docs/self-improvement-2026-10-31.md`](../docs/self-improvement-2026-10-31.md).
 
-## Adoption rule
+## Promotion rule
 
-Adopt an arm only when, against the current or baseline arm:
-
-- it finds at least one more seeded blocker;
-- it uses no more than twice the baseline review tokens;
-- it adds no more than one false blocker per review;
-- the raw findings support the score.
-
-When comparing `both` against two single overlays, use the separate cost budget
-in `docs/superpowers-review.md`, not this single-arm rule. Otherwise record the
-result as neutral or negative and do not adopt the feature. A neutral result is
-a valid outcome.
+The canonical predeclared promotion rule is in
+[`docs/self-improvement-2026-10-31.md`](../docs/self-improvement-2026-10-31.md).
+The runner produces the metrics; it does not decide. A profile that wins recall
+but loses precision or the false-blocker gate stays optional. Do not promote
+from one fixture, and do not change the default without the rule's held-out
+evidence.
 
 ## Limits
 
-- One synthetic spec and one model do not generalize.
+- Two synthetic specs and one model do not generalize. A clean no-defect fixture
+  and a larger authored set are still missing.
 - The fixture is visible to the reviewer; this measures review behavior, not
   resistance to a hidden benchmark.
 - The runner isolates XDG config and state. The host data and cache directories
@@ -171,6 +207,9 @@ a valid outcome.
   the gap wording, not just the topic word, but they are still a proxy.
 - One repetition is a smoke, not a statistical result. Use three repetitions
   before a claim, and still report the sample size.
+- Aggregate means exclude rows with an `error`; failed rows remain in the
+  per-run table and the Errors count. A no-JSON answer is now an error, not a
+  zero-finding result.
 - The runner does not replace Harbor, Terminal-Bench, hidden tests, or human
   review.
 - The 2026-10-31 host smoke is one repetition on a different OpenCode version.

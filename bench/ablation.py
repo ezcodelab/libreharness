@@ -19,6 +19,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import random
 import re
 import statistics
 import subprocess
@@ -123,9 +124,18 @@ def finding_text(finding: dict) -> str:
     )
 
 
+def finding_severity(finding: dict) -> str:
+    severity = str(finding.get("severity", "")).strip().lower()
+    return severity if severity in {"blocker", "major", "nit"} else "unknown"
+
+
 def score_findings(findings: list[dict], defects: list[dict]) -> dict:
     matched: list[str] = []
     false_positives = 0
+    false_blockers = 0
+    false_majors = 0
+    false_nits = 0
+    false_unknown = 0
     duplicates = 0
     for finding in findings:
         text = finding_text(finding)
@@ -136,18 +146,46 @@ def score_findings(findings: list[dict], defects: list[dict]) -> dict:
                 break
         if hit is None:
             false_positives += 1
+            severity = finding_severity(finding)
+            if severity == "blocker":
+                false_blockers += 1
+            elif severity == "major":
+                false_majors += 1
+            elif severity == "nit":
+                false_nits += 1
+            else:
+                false_unknown += 1
         elif hit in matched:
             duplicates += 1
         else:
             matched.append(hit)
+
+    defect_severity: dict[str, int] = {"blocker": 0, "major": 0, "nit": 0}
+    matched_severity: dict[str, int] = {"blocker": 0, "major": 0, "nit": 0}
+    for defect in defects:
+        severity = str(defect.get("severity", "")).strip().lower()
+        if severity not in defect_severity:
+            continue
+        defect_severity[severity] += 1
+        if defect["id"] in matched:
+            matched_severity[severity] += 1
+
     true_positives = len(matched)
     denominator = true_positives + false_positives
     return {
         "true_positives": true_positives,
         "false_positives": false_positives,
+        "false_blockers": false_blockers,
+        "false_majors": false_majors,
+        "false_nits": false_nits,
+        "false_unknown": false_unknown,
         "duplicates": duplicates,
         "recall": true_positives / len(defects) if defects else 0.0,
         "precision": true_positives / denominator if denominator else 0.0,
+        "recall_by_severity": {
+            severity: matched_severity[severity] / total if total else None
+            for severity, total in defect_severity.items()
+        },
         "matched": matched,
         "missed": [d["id"] for d in defects if d["id"] not in matched],
     }
@@ -167,7 +205,7 @@ def _normalise_findings(value: object) -> list[dict]:
     return findings
 
 
-def extract_findings(text: str) -> list[dict]:
+def assistant_text(text: str) -> str:
     # OpenCode --format=json emits JSONL. Read the assistant text parts, not
     # the raw event stream: brackets in tool calls or event metadata are not
     # findings.
@@ -182,9 +220,39 @@ def extract_findings(text: str) -> list[dict]:
         part = event.get("part") or {}
         if isinstance(part.get("text"), str):
             chunks.append(part["text"])
-    if chunks:
-        text = "\n".join(chunks)
+    return "\n".join(chunks) if chunks else text
 
+
+def has_json_answer(text: str) -> bool:
+    text = assistant_text(text)
+    for block in re.findall(r"```(?:json)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE):
+        try:
+            parsed = json.loads(block.strip())
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, (list, dict)):
+            return True
+    start = text.find("[")
+    end = text.rfind("]")
+    if start != -1 and end > start:
+        try:
+            parsed = json.loads(text[start : end + 1])
+            return isinstance(parsed, (list, dict))
+        except json.JSONDecodeError:
+            pass
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end > start:
+        try:
+            parsed = json.loads(text[start : end + 1])
+        except json.JSONDecodeError:
+            return False
+        return isinstance(parsed, dict) and "findings" in parsed
+    return False
+
+
+def extract_findings(text: str) -> list[dict]:
+    text = assistant_text(text)
     blocks = re.findall(r"```(?:json)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
     for block in reversed(blocks):
         try:
@@ -196,6 +264,13 @@ def extract_findings(text: str) -> list[dict]:
             return findings
     start = text.find("[")
     end = text.rfind("]")
+    if start != -1 and end > start:
+        try:
+            return _normalise_findings(json.loads(text[start : end + 1]))
+        except json.JSONDecodeError:
+            pass
+    start = text.find("{")
+    end = text.rfind("}")
     if start != -1 and end > start:
         try:
             return _normalise_findings(json.loads(text[start : end + 1]))
@@ -244,6 +319,18 @@ def planned_command(arm_name: str, model: str) -> str:
     )
 
 
+def planned_order(
+    arms: list[tuple[str, Path, dict]], repetitions: int, seed: int
+) -> list[tuple[str, int]]:
+    order = [
+        (name, repetition)
+        for name, _path, _feature in arms
+        for repetition in range(1, repetitions + 1)
+    ]
+    random.Random(seed).shuffle(order)
+    return order
+
+
 def manifest(
     *,
     status: str,
@@ -253,6 +340,7 @@ def manifest(
     arms: list[tuple[str, Path, dict]],
     repetitions: int,
     timeout: int,
+    seed: int,
 ) -> dict:
     return {
         "schema": 1,
@@ -266,6 +354,7 @@ def manifest(
         "model": model,
         "timeout_seconds": timeout,
         "repetitions": repetitions,
+        "seed": seed,
         "workspace": "fresh temporary directory per run; no project instructions",
         "arms": [
             {
@@ -286,6 +375,10 @@ def manifest(
 def write_json(path: Path, data: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def _rate(value: float | None) -> str:
+    return f"{value:.3f}" if value is not None else ""
 
 
 def arm_row(
@@ -310,9 +403,15 @@ def arm_row(
         "findings": len(findings),
         "true_positives": scored["true_positives"],
         "false_positives": scored["false_positives"],
+        "false_blockers": scored["false_blockers"],
+        "false_majors": scored["false_majors"],
+        "false_nits": scored["false_nits"],
         "duplicates": scored["duplicates"],
         "recall": f"{scored['recall']:.3f}",
         "precision": f"{scored['precision']:.3f}",
+        "recall_blockers": _rate(scored["recall_by_severity"]["blocker"]),
+        "recall_majors": _rate(scored["recall_by_severity"]["major"]),
+        "recall_nits": _rate(scored["recall_by_severity"]["nit"]),
         "input_tokens": usage["input_tokens"],
         "output_tokens": usage["output_tokens"],
         "reasoning_tokens": usage["reasoning_tokens"],
@@ -392,6 +491,8 @@ def run_arm(
     # A failed or timed-out run is not a negative review result. Do not score
     # a partial stream as if it were a complete answer.
     findings = [] if error else extract_findings(stdout)
+    if not error and not findings and not has_json_answer(stdout):
+        error = "no JSON findings"
     usage = extract_usage(stdout)
     (run_dir / "findings.json").write_text(
         json.dumps(findings, indent=2) + "\n", encoding="utf-8"
@@ -411,24 +512,97 @@ def run_arm(
     return row
 
 
+def rescore_directory(out: Path, defects: list[dict]) -> int:
+    runs_path = out / "runs.csv"
+    if not runs_path.is_file():
+        raise SystemExit(f"no runs.csv in {out}")
+    with runs_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    if not rows:
+        raise SystemExit(f"no rows in {runs_path}")
+    for row in rows:
+        run_dir = out / "runs" / f"{row['arm']}-r{row['repetition']}"
+        findings_path = run_dir / "findings.json"
+        if not findings_path.is_file():
+            raise SystemExit(f"missing {findings_path}")
+        findings = load_json(findings_path)
+        if not isinstance(findings, list):
+            raise SystemExit(f"{findings_path}: expected a findings list")
+        scored = score_findings(findings, defects)
+        row["findings"] = len(findings)
+        row["true_positives"] = scored["true_positives"]
+        row["false_positives"] = scored["false_positives"]
+        row["false_blockers"] = scored["false_blockers"]
+        row["false_majors"] = scored["false_majors"]
+        row["false_nits"] = scored["false_nits"]
+        row["duplicates"] = scored["duplicates"]
+        row["recall"] = f"{scored['recall']:.3f}"
+        row["precision"] = f"{scored['precision']:.3f}"
+        row["recall_blockers"] = _rate(scored["recall_by_severity"]["blocker"])
+        row["recall_majors"] = _rate(scored["recall_by_severity"]["major"])
+        row["recall_nits"] = _rate(scored["recall_by_severity"]["nit"])
+    output = out / "runs-rescored.csv"
+    with output.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+    print_summary(rows)
+    print(f"rescored: {output}")
+    return 0
+
+
 def print_summary(rows: list[dict]) -> None:
     if not rows:
         print("no rows")
         return
-    print("| Arm | Feature | n | Errors | Recall | Precision | Tokens | Cost USD | Wall s |")
-    print("|---|---|---:|---:|---:|---:|---:|---:|---:|")
+    print("| Arm | Feature | n | Errors | Recall | Precision | False blockers | Tokens (total) | Cost USD (total) | Wall s (mean) |")
+    print("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|")
     arms = sorted({row["arm"] for row in rows})
     for arm in arms:
         items = [row for row in rows if row["arm"] == arm]
         errors = sum(1 for row in items if row["error"])
-        recall = statistics.mean(float(row["recall"]) for row in items)
-        precision = statistics.mean(float(row["precision"]) for row in items)
-        tokens = sum(int(row["input_tokens"]) + int(row["output_tokens"]) for row in items)
-        cost = sum(float(row["cost_usd"]) for row in items)
-        wall = statistics.mean(float(row["wall_seconds"]) for row in items)
+        scored = [row for row in items if not row["error"]]
+        if scored:
+            recall = f"{statistics.mean(float(row['recall']) for row in scored):.0%}"
+            precision = f"{statistics.mean(float(row['precision']) for row in scored):.0%}"
+            false_blockers = f"{statistics.mean(int(row['false_blockers']) for row in scored):.2f}"
+            tokens = str(sum(int(row["input_tokens"]) + int(row["output_tokens"]) for row in scored))
+            cost = f"${sum(float(row['cost_usd']) for row in scored):.4f}"
+            wall = f"{statistics.mean(float(row['wall_seconds']) for row in scored):.1f}"
+        else:
+            recall = precision = false_blockers = tokens = cost = wall = "n/a"
         print(
-            f"| {arm} | {items[0]['label']} | {len(items)} | {errors} | {recall:.0%} | "
-            f"{precision:.0%} | {tokens} | ${cost:.4f} | {wall:.1f} |"
+            f"| {arm} | {items[0]['label']} | {len(items)} | {errors} | {recall} | "
+            f"{precision} | {false_blockers} | {tokens} | {cost} | {wall} |"
+        )
+
+    print("\nPer-run results:")
+    print("| Arm | Rep | Order | Recall | Precision | False blockers | Tokens | Cost USD | Wall s | Error |")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|---:|---|")
+    for row in sorted(rows, key=lambda item: (item["arm"], int(item["repetition"]))):
+        tokens = int(row["input_tokens"]) + int(row["output_tokens"])
+        print(
+            f"| {row['arm']} | {row['repetition']} | {row.get('sequence', '')} | "
+            f"{float(row['recall']):.0%} | {float(row['precision']):.0%} | "
+            f"{row['false_blockers']} | {tokens} | ${float(row['cost_usd']):.4f} | "
+            f"{float(row['wall_seconds']):.1f} | {row['error']} |"
+        )
+
+    print("\nSpread (min-max):")
+    print("| Arm | Recall | Precision | Wall s |")
+    print("|---|---|---|---|")
+    for arm in arms:
+        items = [row for row in rows if row["arm"] == arm and not row["error"]]
+        if not items:
+            print(f"| {arm} | n/a | n/a | n/a |")
+            continue
+        recalls = [float(row["recall"]) for row in items]
+        precisions = [float(row["precision"]) for row in items]
+        walls = [float(row["wall_seconds"]) for row in items]
+        print(
+            f"| {arm} | {min(recalls):.0%}-{max(recalls):.0%} | "
+            f"{min(precisions):.0%}-{max(precisions):.0%} | "
+            f"{min(walls):.1f}-{max(walls):.1f} |"
         )
 
 
@@ -440,6 +614,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--dry-run", action="store_true", help="plan only; call no model")
     mode.add_argument("--self-check", action="store_true", help="score the sample findings; call no model")
+    mode.add_argument("--rescore", action="store_true", help="rescore a saved run directory; call no model")
     mode.add_argument("--live", action="store_true", help="invoke OpenCode against a paid provider")
     parser.add_argument("--model", default=DEFAULT_MODEL, help="provider/model for a live run")
     parser.add_argument(
@@ -454,6 +629,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--defects", type=Path, default=DEFAULT_DEFECTS, help="seeded defect list")
     parser.add_argument("--findings", type=Path, default=DEFAULT_FINDINGS, help="sample findings for --self-check")
     parser.add_argument("--repetitions", type=int, choices=(1, 2, 3), default=1)
+    parser.add_argument("--seed", type=int, default=0, help="randomize arm order with this seed")
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help="per-run timeout in seconds")
     parser.add_argument(
         "--out",
@@ -462,9 +638,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="relative output directory (default: bench/results/ablation-dry-run)",
     )
     args = parser.parse_args(argv)
-    if args.out.is_absolute():
+    if args.out.is_absolute() and not args.rescore:
         parser.error("--out must be a relative path")
-    if not (args.dry_run or args.self_check or args.live):
+    if not (args.dry_run or args.self_check or args.rescore or args.live):
         args.dry_run = True
     if args.live and args.model == DEFAULT_MODEL:
         parser.error("--live needs an explicit --model, not the placeholder")
@@ -485,6 +661,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"precision: {scored['precision']:.0%}")
         print(f"true_positives: {scored['true_positives']}")
         print(f"false_positives: {scored['false_positives']}")
+        print(f"false_blockers: {scored['false_blockers']}")
+        print(f"false_majors: {scored['false_majors']}")
+        print(f"false_nits: {scored['false_nits']}")
         print(f"tokens: {tokens}")
         print(f"wall_seconds: {float(sample.get('wall_seconds', 0)):.1f}")
         expected = sample.get("expected")
@@ -501,11 +680,15 @@ def main(argv: list[str] | None = None) -> int:
                     return 1
         return 0
 
+    if args.rescore:
+        return rescore_directory(args.out, defects)
+
     try:
         spec = args.fixture.read_text(encoding="utf-8")
     except OSError as error:
         raise SystemExit(f"cannot read {args.fixture}: {error}") from error
     arms = load_arms(args)
+    order = planned_order(arms, args.repetitions, args.seed)
     data = manifest(
         status="live" if args.live else "dry-run",
         model=args.model,
@@ -514,7 +697,9 @@ def main(argv: list[str] | None = None) -> int:
         arms=arms,
         repetitions=args.repetitions,
         timeout=args.timeout,
+        seed=args.seed,
     )
+    data["run_order"] = [f"{name}-r{repetition}" for name, repetition in order]
     out = args.out
     if not args.live:
         write_json(out / "manifest.json", data)
@@ -529,26 +714,26 @@ def main(argv: list[str] | None = None) -> int:
 
     out.mkdir(parents=True, exist_ok=True)
     write_json(out / "manifest.json", data)
+    features = {name: feature for name, _path, feature in arms}
     rows: list[dict] = []
-    for name, _path, feature in arms:
-        for repetition in range(1, args.repetitions + 1):
-            print(
-                f"WARNING: --live calls a paid model provider. "
-                f"Running {name} repetition {repetition}.",
-                file=sys.stderr,
-            )
-            rows.append(
-                run_arm(
-                    arm=name,
-                    feature=feature,
-                    spec=spec,
-                    defects=defects,
-                    model=args.model,
-                    repetition=repetition,
-                    timeout=args.timeout,
-                    out=out,
-                )
-            )
+    for sequence, (name, repetition) in enumerate(order, start=1):
+        print(
+            f"WARNING: --live calls a paid model provider. "
+            f"Running {name} repetition {repetition} (order {sequence}).",
+            file=sys.stderr,
+        )
+        row = run_arm(
+            arm=name,
+            feature=features[name],
+            spec=spec,
+            defects=defects,
+            model=args.model,
+            repetition=repetition,
+            timeout=args.timeout,
+            out=out,
+        )
+        row["sequence"] = sequence
+        rows.append(row)
     fieldnames = list(rows[0].keys())
     with (out / "runs.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)

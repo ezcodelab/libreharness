@@ -1,0 +1,32 @@
+[
+  {
+    "id": "B1",
+    "severity": "blocker",
+    "match": "(any authenticated|role check|ownership|other (user|customer|tenant)|not.*owner|key_id.*belongs|IDOR|cross-tenant)",
+    "description": "The endpoint checks authentication and a broad role, but not that the caller owns the key id."
+  },
+  {
+    "id": "B2",
+    "severity": "blocker",
+    "match": "((new|plaintext|secret).{0,80}(query parameter|URL|log|response)|(query parameter|URL|log|response).{0,80}(new|plaintext|secret|key)|sk_live.{0,20}(URL|query|log)|query parameter.{0,80}(key|secret))",
+    "description": "The new plaintext key is returned in a URL/query parameter, exposing it to logs, caches, and referrers."
+  },
+  {
+    "id": "B3",
+    "severity": "major",
+    "match": "((immediate|no grace|without grace|grace period).{0,80}(revoke|old key)|(revoke|old key).{0,80}(immediate|no grace|grace|rollback|breaking)|no.*transition|rollback plan)",
+    "description": "The old key is revoked immediately with no grace period or rollback, so integrations break during rollout."
+  },
+  {
+    "id": "B4",
+    "severity": "major",
+    "match": "(GET /keys|state-changing GET|should be POST|POST /keys|safe method|GET.*rotate)",
+    "description": "A state-changing rotation uses GET, so prefetch, retries, and caches can trigger it."
+  },
+  {
+    "id": "B5",
+    "severity": "major",
+    "match": "((no|missing|without|lacks|lack of).{0,60}(idempoten|idempotency key|lock)|(idempoten|idempotency).{0,60}(missing|not implemented|no key|lacks|without)|\\b(double|retry|concurrent|race)\\b.{0,80}(rotation|key|request)|two rotations|first new key|lost response)",
+    "description": "There is no idempotency key or per-key lock; a retry or double submit can create two valid keys or race the revoke."
+  }
+]

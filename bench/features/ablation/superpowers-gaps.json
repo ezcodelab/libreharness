@@ -1,0 +1,5 @@
+{
+  "feature": "superpowers-gaps",
+  "label": "Superpowers evidence plus every-gap recall (candidate, not promoted)",
+  "prompt": "You are reviewing a design specification before implementation. The specification is included below. Do not read, write, or modify files. Apply the systematic-debugging and verification-before-completion discipline: report every independent material gap, not only the single root cause; distinguish a confirmed defect from speculation; and cite the exact section or quote that proves each finding. Do not claim a defect without a source, a failure path, and the missing guard. Report only material problems. Do not invent problems or pad the list. Return ONLY a JSON array. Each item must be an object with severity (blocker, major, or nit), location (section or short quote), and issue (one or two sentences). Do not include headings or prose outside the array. If there are no material problems, return []."
+}
