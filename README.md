@@ -93,8 +93,8 @@ The small B1-B8 suite is a local regression supplement only. Its
 [bench/protocol.md](bench/protocol.md). A two-task pilot is recorded in
 [bench/pilot-2026-10-30.md](bench/pilot-2026-10-30.md); it is adapter-only, not
 a harness result, and shows no quality delta. The earlier adapter overlay upload
-was dead code; the `setup()` fix now uploads it, but a fresh live task is still
-required.
+was dead code; the `setup()` fix now uploads it, and a post-fix one-task smoke
+passed. The full dataset is still unrun.
 
 ## Jev, the advisory layer
 

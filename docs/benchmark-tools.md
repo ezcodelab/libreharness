@@ -121,8 +121,9 @@ arm remains stock `-a opencode`.
 
 The adapter has completed live trials, but the first pilot did not upload the
 harness overlay because `configure()` is not a Harbor 0.25.0 hook. The adapter
-now uploads from `setup()`; an install-only job proves the upload calls. A fresh
-live task after that fix is still required before a full dataset.
+now uploads from `setup()`; an install-only job proves the upload calls. A
+post-fix one-task smoke also passed: reward 1.0, no exception, overlay `mkdir`
+present, and the EPIPE false failure removed. The full dataset is still unrun.
 
 ## Commands to validate
 

@@ -53,6 +53,16 @@ It inherits Harbor's stock OpenCode install and `run()` loop. It adds only:
 It deliberately does not upload the local UI plugins, so auto-intake, close
 reminders, and goal-watch cannot change a benchmark run.
 
+## Post-fix smoke
+
+`2026-10-31__14-33-39`: `break-filter-js-from-html`, reward 1.0, no exception,
+4m 14s, $0.0215. The trial log shows the overlay `mkdir`; the log still starts
+with EPIPE, and the guard tolerated it because a completed stop event followed.
+
+`2026-10-31__14-38-12`: stock plain OpenCode on the same task, reward 1.0, but
+`NonZeroAgentExitCodeError` from the same EPIPE. One task and one repetition;
+this proves the false failure is removed, not that the harness is better.
+
 ## Drift guard
 
 `tests/test_harbor_adapter.py` has a source-contract test. It fails when

@@ -52,9 +52,12 @@ organization, two similar repositories, and an npm package.
   adapter-only: its `configure()` overlay upload was dead code, so it did not
   run LibreHarness. It is not a harness result. One task was cancelled by the
   outer timeout. The local B1-B8 suite has no fixtures or run data.
-- [ ] A live Harbor task after the `setup()` overlay fix has not run. The
-  install-only job proves the upload calls, but the model run and auth mapping
-  remain unproven. Run the one-task smoke in a shell with `OLLAMA_API_KEY`.
+- [x] A live Harbor task after the `setup()` overlay fix passed on
+  `break-filter-js-from-html`: reward 1.0, no exception, 4m 14s, $0.0215, and the
+  trial log shows the overlay `mkdir`. The stock plain arm also reached reward
+  1.0 but recorded the EPIPE `NonZeroAgentExitCodeError`; the adapter tolerated
+  the same EPIPE after a completed stop. This is one task, not a quality claim.
+- [ ] The full Terminal-Bench task set and n=3 repetitions are still unrun.
 - [ ] Live Jev endpoint call. Only the mock path was exercised.
 - [ ] `JEV_MODE` is documented as an adapter contract but is not read by the
   rc.1 clients.
