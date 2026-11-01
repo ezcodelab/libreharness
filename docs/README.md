@@ -33,6 +33,7 @@ here makes a performance claim.
 | [Coding pilot](coding-pilot-2026-10-31.md) | Five-arm, three-task Terminal-Bench pilot with a paired interval |
 | [Expanded coding pilot](coding-expanded-2026-10-31.md) | Five-arm, eight-task run with test-writing and design-heavy coverage |
 | [Exact-byte recheck](coding-exact-bytes.md) | Why sanitize-git-repo failed and the workflow rule that preserves exact content |
+| [Hard coding run](coding-hard-run-2026-10-31.md) | n=3 hard-suite result: ceiling on six tasks, no promotion |
 | [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
 | [Local benchmark protocol](../bench/protocol.md) | The small B1-B8 regression suite and its pass@1 calculation |
 

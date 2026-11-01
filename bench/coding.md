@@ -111,6 +111,8 @@ The result of the first pilot is in
 [`docs/coding-pilot-2026-10-31.md`](../docs/coding-pilot-2026-10-31.md). The
 expanded eight-task run is in
 [`docs/coding-expanded-2026-10-31.md`](../docs/coding-expanded-2026-10-31.md).
+The n=3 hard run is in
+[`docs/coding-hard-run-2026-10-31.md`](../docs/coding-hard-run-2026-10-31.md).
 
 ## Metrics
 

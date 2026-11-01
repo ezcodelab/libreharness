@@ -149,3 +149,18 @@ an extra issue outside that set instead of fixing it. Do not weaken the verifier
 Doc updated: `docs/coding-exact-bytes.md`, `AGENTS.md`.
 
 Promote-to-global: yes. Exact-content tasks punish helpful scope expansion.
+
+## 2026-10-31 - Hard suite ceiling
+
+Surprise: six of eight hard tasks were 3/3 for every arm; every arm solved
+23/24. The only separation was sanitize-git-repo (plain 2/3, harness 3/3) and
+large-scale-text-editing (plain 3/3, current/EGM/both 2/3). The large-scale
+failures omitted the required `:wq`/`:x` exit command.
+
+Rule: when most tasks are all-pass, the suite is at ceiling; replace the tasks,
+do not add repetitions. Check explicit format and exit requirements before
+finishing. Keep the predeclared threshold and report a tie.
+
+Doc updated: `docs/coding-hard-run-2026-10-31.md`.
+
+Promote-to-global: yes. A ceilinged benchmark cannot rank harnesses.
