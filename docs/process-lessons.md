@@ -164,3 +164,20 @@ finishing. Keep the predeclared threshold and report a tie.
 Doc updated: `docs/coding-hard-run-2026-10-31.md`.
 
 Promote-to-global: yes. A ceilinged benchmark cannot rank harnesses.
+
+## 2026-11-01 - Hard-v2 is not a ceiling, but not a win
+
+Surprise: the replacement suite broke the all-pass ceiling. `dna-assembly` was
+the only clear profile gain (plain 0/3, profiles 1-2/3). `large-scale-text-editing`
+was a regression for every LibreHarness arm (plain 2/3, profiles 1/3). Still no
+profile met the threshold: current tied plain at 19/24, EGM/both/superpowers
+solved 18/24.
+
+Rule: when the suite separates, inspect the task-level wins and losses before
+adding repetitions. A single strong task gain does not outweigh multiple
+regressions. Keep the predeclared threshold; a tie is not a promotion.
+
+Doc updated: `docs/coding-hard-v2-2026-11-01.md`.
+
+Promote-to-global: yes. Task-level variance is the signal; aggregate ties hide
+it.

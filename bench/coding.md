@@ -112,6 +112,8 @@ expanded eight-task run is in
 [`docs/coding-expanded-2026-10-31.md`](../docs/coding-expanded-2026-10-31.md).
 The n=3 hard run is in
 [`docs/coding-hard-run-2026-10-31.md`](../docs/coding-hard-run-2026-10-31.md).
+The hard-v2 replacement run is in
+[`docs/coding-hard-v2-2026-11-01.md`](../docs/coding-hard-v2-2026-11-01.md).
 
 ## Metrics
 
