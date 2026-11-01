@@ -1,15 +1,15 @@
 {
-  "name": "terminal-bench-hard-v1",
+  "name": "terminal-bench-hard-v2",
   "dataset": "terminal-bench@2.0",
   "tasks": [
     "sanitize-git-repo",
     "large-scale-text-editing",
-    "git-leak-recovery",
-    "modernize-scientific-stack",
-    "custom-memory-heap-crash",
-    "db-wal-recovery",
-    "multi-source-data-merger",
-    "cobol-modernization"
+    "gpt2-codegolf",
+    "llm-inference-batching-scheduler",
+    "dna-assembly",
+    "protein-assembly",
+    "make-mips-interpreter",
+    "path-tracing"
   ],
   "arms": [
     {

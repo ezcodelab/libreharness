@@ -107,7 +107,7 @@ it is a smoke by design.
 
 ## Predeclared promotion rule
 
-The hard run uses `terminal-bench-hard-v1` (eight tasks), five arms, and n=3.
+The hard run uses `terminal-bench-hard-v2` (eight tasks), five arms, and n=3.
 The baseline is `plain`. The threshold is fixed before the run:
 
 - a candidate must solve **at least two more tasks** than plain (25 percentage
