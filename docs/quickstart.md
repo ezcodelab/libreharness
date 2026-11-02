@@ -68,12 +68,12 @@ harbor run -d terminal-bench@2.0 -a opencode -m <provider>/<model>
 ```
 
 The headline is **resolution rate**. Report tokens, wall time, and cost beside
-it. The local B1-B8 suite is only a fast regression supplement. See
-[benchmark-tools.md](benchmark-tools.md).
+it. See [benchmark-tools.md](benchmark-tools.md) and the
+[benchmark proof protocol](benchmark-proof.md).
 
 ## Next
 
 - [Install options](install.md)
 - [Workflow](workflow.md)
 - [Model routing](model-routing.md)
-- [Benchmark protocol](../bench/protocol.md)
+- [Benchmark code](../bench/README.md)

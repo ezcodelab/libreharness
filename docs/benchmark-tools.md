@@ -8,8 +8,8 @@ Question: is there already a tool for benchmarking an OpenCode-based coding
 harness, so LibreHarness does not invent a private benchmark?
 
 Answer: **yes. Use Harbor with Terminal-Bench 2.0 for the headline.** Keep the
-small B1-B8 suite only as a LibreHarness workflow supplement, not as the public
-comparison.
+local review ablation and coding runner as workflow supplements, not as the
+public comparison.
 
 ## Recommendation
 
@@ -20,7 +20,7 @@ comparison.
 | `anomalyco/opencode-bench` | Real repositories and OpenCode support, but LLM-judge scoring, no deterministic hidden tests, and no license metadata |
 | `opencode-agent-evaluator` | Useful OpenCode token tracing on Phoenix/Chimera, but a small synthetic suite with no public standard |
 | `coding-agent-eval-harness` | Agent adapters and a composite score, but not a recognized public benchmark |
-| Local B1-B8 suite | Keep for fast harness regression only; do not publish its score as the headline |
+| Local review ablation and coding runner | Feature-level regression only; do not publish their score as the headline |
 
 ## Evidence
 
@@ -119,11 +119,10 @@ The Docker sandbox does not inherit OpenCode's host auth store, so the key must
 be in the shell that launches Harbor or supplied through `--env-file`. The plain
 arm remains stock `-a opencode`.
 
-The adapter has completed live trials, but the first pilot did not upload the
-harness overlay because `configure()` is not a Harbor 0.25.0 hook. The adapter
-now uploads from `setup()`; an install-only job proves the upload calls. A
-post-fix one-task smoke also passed: reward 1.0, no exception, overlay `mkdir`
-present, and the EPIPE false failure removed. The full dataset is still unrun.
+The adapter has completed live trials; no dataset result is shipped. It uploads
+the workflow files from `setup()` and keeps the stock OpenCode run loop. See
+[`harbor_agent/README.md`](../harbor_agent/README.md) for the integration. The
+full dataset is still unrun.
 
 ## Commands to validate
 
@@ -140,8 +139,9 @@ agent auth resolution. No live run was made in this review.
 ## Decision
 
 Adopt Harbor + Terminal-Bench 2.0. Retire the custom five-hundred-task ambition
-and the private B1-B8 suite as the headline. The local B1-B8 suite may remain a
-fast smoke test, but its score is not comparable to public agent results.
+and the private local suite as the headline. The review ablation and coding
+runner may remain fast smoke tests, but their scores are not comparable to
+public agent results.
 
 Sources were checked on 2026-10-30. Re-check the Harbor release, Terminal-Bench
 version, and OpenCode adapter before publishing a score.

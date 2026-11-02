@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Summarize benchmark runs.csv data without inventing missing numbers.
+"""Summarize coding benchmark runs.csv without inventing missing numbers.
 
-With no runs.csv, prints a clear no-results message and exits 0. The local B1-B8
-scaffold computes counts, pass rates, and medians. The coding runner also gets a
-paired per-task difference and a task-clustered bootstrap confidence interval.
+With no runs.csv, prints a clear no-results message and exits 0. The report
+keeps resolution, exceptions, cost, tokens, and wall time separate, and adds a
+paired per-task difference with a task-clustered bootstrap interval.
 """
 
 from __future__ import annotations
@@ -18,8 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_INPUT = ROOT / "results"
-REQUIRED = ("run_id", "comparison", "arm", "task_id", "task_pass", "hidden_pass")
-# shortcut: medians only, add paired tests and price-table cost before a release claim.
+REQUIRED = ("arm", "task", "reward")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -57,19 +56,6 @@ def number(value: str | None) -> float | None:
         return None
 
 
-def flag(value: str | None, where: str) -> int:
-    text = "" if value is None else str(value).strip().lower()
-    if text in {"1", "true", "yes"}:
-        return 1
-    if text in {"0", "false", "no"}:
-        return 0
-    raise SystemExit(f"{where}: expected 0 or 1, got {value!r}")
-
-
-def median(values: list[float]) -> str:
-    return f"{statistics.median(values):.2f}" if values else "n/a"
-
-
 def display(path: Path) -> str:
     try:
         return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
@@ -83,17 +69,10 @@ def load_rows(files: list[Path]) -> list[dict]:
         with path.open(newline="", encoding="utf-8") as handle:
             reader = csv.DictReader(handle)
             columns = reader.fieldnames or []
-            if "task" in columns and "reward" in columns:
-                rows.extend(dict(row) for row in reader)
-                continue
             missing = [name for name in REQUIRED if name not in columns]
             if missing:
                 raise SystemExit(f"{display(path)}: missing columns: {', '.join(missing)}")
-            for index, row in enumerate(reader, start=2):
-                where = f"{display(path)}:{index}"
-                row["task_pass"] = flag(row.get("task_pass"), where)
-                row["hidden_pass"] = flag(row.get("hidden_pass"), where)
-                rows.append(row)
+            rows.extend(dict(row) for row in reader)
     return rows
 
 
@@ -203,7 +182,7 @@ def main(argv: list[str] | None = None) -> int:
     if not files:
         print(f"No benchmark results found at {display(path)}.")
         print("Status: protocol and scaffold only. No run data, no summary, no claim.")
-        print("Run a live repetition with bench/runner.py --live, score it with the evaluator, then rerun this script.")
+        print("Run a live repetition with bench/coding.py --live, then rerun this script.")
         return 0
 
     rows = load_rows(files)
@@ -211,40 +190,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"No benchmark rows found in {', '.join(display(file) for file in files)}.")
         print("Status: no results, no claim.")
         return 0
-    if "task" in rows[0] and "reward" in rows[0]:
-        return coding_report(
-            rows, args.baseline, args.candidate, args.bootstrap, args.seed
-        )
-
-    groups: dict[tuple[str, str, str], list[dict]] = {}
-    for row in rows:
-        key = (row["comparison"], row["task_id"], row["arm"])
-        groups.setdefault(key, []).append(row)
-
-    print("Benchmark summary from " + ", ".join(display(file) for file in files))
-    print()
-    print("| Comparison | Task | Arm | n | task_pass | hidden_pass | median wall s | median tokens | median cost USD |")
-    print("|---|---|---|---|---|---|---|---|---|")
-    for (comparison, task, arm), items in sorted(groups.items()):
-        count = len(items)
-        task_pass = sum(item["task_pass"] for item in items)
-        hidden_pass = sum(item["hidden_pass"] for item in items)
-        walls = [value for item in items if (value := number(item.get("wall_seconds"))) is not None]
-        tokens = []
-        for item in items:
-            prompt = number(item.get("input_tokens"))
-            completion = number(item.get("output_tokens"))
-            if prompt is not None and completion is not None:
-                tokens.append(prompt + completion)
-        costs = [value for item in items if (value := number(item.get("cost_usd"))) is not None]
-        print(
-            f"| {comparison} | {task} | {arm} | {count} | {task_pass}/{count} | "
-            f"{hidden_pass}/{count} | {median(walls)} | {median(tokens)} | {median(costs)} |"
-        )
-    print()
-    print("Medians only. Paired tests, confidence intervals, and sensitivity analysis are not automated here.")
-    print("See bench/protocol.md before making a claim.")
-    return 0
+    return coding_report(
+        rows, args.baseline, args.candidate, args.bootstrap, args.seed
+    )
 
 
 if __name__ == "__main__":

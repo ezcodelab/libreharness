@@ -46,11 +46,11 @@ needed, a profile. It gets the same tasks and settings.
 
 ## Suites
 
-**Coding headline.** Terminal-Bench 2.0 via Harbor. The three-task
-[`bench/coding-suite.json`](../bench/coding-suite.json) set is a smoke/pilot,
-not a leaderboard. A publishable claim uses the full dataset or a fixed,
-publicly named subset large enough to estimate resolution rate; the subset,
-task hashes, and selection rule are frozen before the run.
+**Coding headline.** Terminal-Bench 2.0 via Harbor. The eight-task
+[`bench/coding-suite.json`](../bench/coding-suite.json) set is a fixed smoke and
+pilot suite, not a leaderboard. A publishable claim uses the full dataset or a
+fixed, publicly named subset large enough to estimate resolution rate; the
+subset, task hashes, and selection rule are frozen before the run.
 
 **Review signal.** The seeded review fixtures in
 [`bench/fixtures/ablation/`](../bench/fixtures/ablation/) measure whether a
@@ -94,7 +94,7 @@ do not create new tasks.
 `runs.csv`:
 
 ```sh
-python3 bench/analyze.py --input bench/results/coding-pilot/runs.csv \
+python3 bench/analyze.py --input bench/results/coding/runs.csv \
   --baseline plain --candidate current --bootstrap 2000 --seed 0
 ```
 - A claim needs the lower bound of the interval above zero. A point estimate
@@ -102,13 +102,13 @@ python3 bench/analyze.py --input bench/results/coding-pilot/runs.csv \
 - Report the per-task table and the flipped tasks. An average cannot hide a
   regression on a task class.
 
-The three-task pilot cannot support a claim. Its interval will be too wide, and
-it is a smoke by design.
+The local eight-task suite cannot support a claim. Its interval will be too
+wide, and it is a smoke by design.
 
 ## Predeclared promotion rule
 
-The hard run uses `terminal-bench-hard-v2` (eight tasks), five arms, and n=3.
-The baseline is `plain`. The threshold is fixed before the run:
+A hard-suite run uses `terminal-bench-hard-v2` (eight tasks), five arms, and
+n=3. The baseline is `plain`. The threshold is fixed before the run:
 
 - a candidate must solve **at least two more tasks** than plain (25 percentage
   points on eight tasks), with **no task regression**;
@@ -117,7 +117,6 @@ The baseline is `plain`. The threshold is fixed before the run:
   **1.5x plain**, and there must be **no unsolved exception**;
 - a solved trial with a benign agent exception is recorded but does not count
   as a failed task;
-- the separate test-writing task must score 1.0 with `test_first = 1`;
 - the result must repeat on held-out tasks before promotion.
 
 **Ceiling rule.** If plain solves seven or eight of the eight tasks, or if every

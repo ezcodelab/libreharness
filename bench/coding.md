@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Coding benchmark
 
-Status: **pilot result recorded; not proof.** This is the coding-outcome
+Status: **benchmark runner; no results are shipped.** This is the coding-outcome
 benchmark for LibreHarness. It runs a fixed Terminal-Bench suite through Harbor
 and records the verifier reward, exceptions, tokens, cost, wall time, and a
 test-first heuristic.
@@ -44,39 +44,8 @@ The hard-v2 suite replaces the six all-pass ceiling tasks:
 | `make-mips-interpreter` | Large multi-file implementation |
 | `path-tracing` | Deep build/debug and numerical correctness |
 
-The local test-writing task remains separate because Terminal-Bench does not
-require test authoring.
-
-## Local test-writing task
-
-`bench/coding-tasks/test-first-bugfix/` is a separate local Harbor task that
-requires a new regression test. The verifier checks that:
-
-- `/app/tests/test_regression.py` exists;
-- the existing `/app/tests/test_calc.py` is unchanged;
-- all tests pass on the fixed code;
-- the new test fails against the baseline code with the bug;
-- `safe_div(1, 0)` raises `ValueError`.
-
-Run one arm:
-
-```sh
-export OLLAMA_API_KEY=...
-PYTHONPATH="$PWD" harbor run \
-  -p bench/coding-tasks/test-first-bugfix \
-  -a harbor_agent.opencode_agent:OpenCodeLibreHarness \
-  -m ollama-cloud/deepseek-v4.1-flash \
-  --base-url https://ollama.com/v1 \
-  --api-key-name OLLAMA_API_KEY \
-  --api-format openai_chat_completions \
-  --ak version=1.19.5 \
-  --ak profile=egm \
-  -k 1
-```
-
-The local task uses a shared verifier because its tests read `/app`. It is not
-part of the Terminal-Bench dataset suite; run it separately and report it as a
-supplement.
+The test-writing lab and its fixtures are archived in the brain; the public
+suite is the Terminal-Bench hard-v2 set.
 
 ## Commands
 
@@ -89,7 +58,7 @@ python3 bench/coding.py --dry-run
 Live run, one attempt per arm:
 
 ```sh
-python3 bench/coding.py --live --out bench/results/coding-pilot
+python3 bench/coding.py --live --out bench/results/coding
 ```
 
 The wrapper prints a cost warning, randomizes the arm order with `--seed`, and
@@ -102,18 +71,13 @@ eight-task, five-arm run at n=3 is already 120 trials.
 Paired analysis:
 
 ```sh
-python3 bench/analyze.py --input bench/results/coding-pilot/runs.csv \
+python3 bench/analyze.py --input bench/results/coding/runs.csv \
   --baseline plain --candidate current --bootstrap 2000 --seed 0
 ```
 
-The result of the first pilot is in
-[`docs/coding-pilot-2026-10-31.md`](../docs/coding-pilot-2026-10-31.md). The
-expanded eight-task run is in
-[`docs/coding-expanded-2026-10-31.md`](../docs/coding-expanded-2026-10-31.md).
-The n=3 hard run is in
-[`docs/coding-hard-run-2026-10-31.md`](../docs/coding-hard-run-2026-10-31.md).
-The hard-v2 replacement run is in
-[`docs/coding-hard-v2-2026-11-01.md`](../docs/coding-hard-v2-2026-11-01.md).
+Pilot reports and raw results are archived in the brain; no result is shipped
+with this tree. The public protocol is in
+[`docs/benchmark-proof.md`](../docs/benchmark-proof.md).
 
 ## Metrics
 

@@ -87,14 +87,10 @@ environment. The after result uses the local Harbor adapter
 files in the sandbox. Cost, tokens, and wall time are reported alongside
 resolution rate, not blended into a score.
 
-The small B1-B8 suite is a local regression supplement only. Its
-`bench/score.py` is not the public headline. See
-[docs/benchmark-tools.md](docs/benchmark-tools.md) and
-[bench/protocol.md](bench/protocol.md). A two-task pilot is recorded in
-[bench/pilot-2026-10-30.md](bench/pilot-2026-10-30.md); it is adapter-only, not
-a harness result, and shows no quality delta. The earlier adapter overlay upload
-was dead code; the `setup()` fix now uploads it, and a post-fix one-task smoke
-passed. The full dataset is still unrun.
+The benchmark code for the EGM and Superpowers comparison is in
+[bench/](bench/); the protocol and falsification rules are in
+[docs/benchmark-proof.md](docs/benchmark-proof.md). No result is shipped with
+this tree.
 
 ## Jev, the advisory layer
 

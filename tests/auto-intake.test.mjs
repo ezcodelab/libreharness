@@ -11,7 +11,11 @@ const root = join(tmpdir(), `auto-intake-${process.pid}`);
 const taskCli = (...args) =>
   execFileSync("python3", [join(root, "bin/tasks.py"), ...args], {
     encoding: "utf8",
-    env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1" },
+    env: {
+      ...process.env,
+      HARNESS_STATE: root,
+      PYTHONDONTWRITEBYTECODE: "1",
+    },
   }).trim();
 rmSync(root, { recursive: true, force: true });
 mkdirSync(join(root, "bin"), { recursive: true });

@@ -197,15 +197,13 @@ positives on the same seeded recall, which is a useful signal but not enough to
 adopt. A v2 fixture with clearer match rules and three repetitions is needed
 before a claim.
 
-Raw data: `bench/results/ablation-2026-10-31-live/` (ignored by git).
-
-The four-arm pilot and its rejected improvement are in
-[`docs/self-improvement-2026-10-31.md`](../docs/self-improvement-2026-10-31.md).
+The four-arm pilot and its rejected improvement are archived in the brain.
+Raw data stays in the ignored local results directory and is not shipped.
 
 ## Promotion rule
 
 The canonical predeclared promotion rule is in
-[`docs/self-improvement-2026-10-31.md`](../docs/self-improvement-2026-10-31.md).
+[`docs/benchmark-proof.md`](../docs/benchmark-proof.md).
 The runner produces the metrics; it does not decide. A profile that wins recall
 but loses precision or the false-blocker gate stays optional. Do not promote
 from one fixture, and do not change the default without the rule's held-out
@@ -233,7 +231,7 @@ evidence.
 - The 2026-10-31 host smoke is one repetition on a different OpenCode version.
   It is not a quality claim. Do not cite a gain from this scaffold.
 
-For the EGM review that motivated the comprehension arm, see
-[`docs/egm-review.md`](../docs/egm-review.md). For the public benchmark, see
-[`docs/benchmark-tools.md`](../docs/benchmark-tools.md) and
-[`bench/protocol.md`](protocol.md).
+For the public benchmark protocol, see
+[`docs/benchmark-proof.md`](../docs/benchmark-proof.md) and
+[`docs/benchmark-tools.md`](../docs/benchmark-tools.md). The EGM research and
+pilot reports are archived in the brain.

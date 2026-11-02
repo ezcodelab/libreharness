@@ -26,17 +26,8 @@ here makes a performance claim.
 | [Plugins](plugins.md) | The four local plugins, their environment, failure modes, and disable switches |
 | [Model routing](model-routing.md) | Roles, provider-agnostic configuration, static matrix, and cost controls |
 | [Skill evaluation](skill-eval.md) | How to run a small with/without experiment before promoting a skill |
-| [EGM review](egm-review.md) | What Google's Elephant-Goldfish Model does, what to adopt, and whether the Harbor adapter is still the right integration |
-| [Superpowers review](superpowers-review.md) | What Superpowers does, which skills fit, and the four-arm comparison design |
-| [Self-improvement pilot](self-improvement-2026-10-31.md) | Four-arm review pilot, Harbor check, and the rejected Superpowers change |
 | [Benchmark proof protocol](benchmark-proof.md) | What would make an “objectively best” claim valid, and what would falsify it |
-| [Coding pilot](coding-pilot-2026-10-31.md) | Five-arm, three-task Terminal-Bench pilot with a paired interval |
-| [Expanded coding pilot](coding-expanded-2026-10-31.md) | Five-arm, eight-task run with test-writing and design-heavy coverage |
-| [Exact-byte recheck](coding-exact-bytes.md) | Why sanitize-git-repo failed and the workflow rule that preserves exact content |
-| [Hard coding run](coding-hard-run-2026-10-31.md) | n=3 hard-suite result: ceiling on six tasks, no promotion |
-| [Hard-v2 coding run](coding-hard-v2-2026-11-01.md) | n=3 replacement suite: no ceiling, 19/24 vs 18-19/24, no promotion |
 | [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
-| [Local benchmark protocol](../bench/protocol.md) | The small B1-B8 regression suite and its pass@1 calculation |
 
 ## Jev
 
@@ -51,7 +42,7 @@ here makes a performance claim.
 | Document | What it answers |
 |---|---|
 | [Security and privacy](security-privacy.md) | What is stored, what leaves the machine, how secrets are handled, and what is not protected |
-| [Process lessons](process-lessons.md) | Dated surprises, costs, rules, and doc updates from completed work |
+| [Process lessons](process-lessons.md) | The project ledger format; experiment lessons stay in the local brain archive |
 | [Troubleshooting](troubleshooting.md) | Install, plugin, queue, permission, Jev, and upgrade errors with a next step |
 | [FAQ](faq.md) | Short answers to the questions a new user asks first |
 | [Design notes](design-notes.md) | Why the queue is Markdown, why the evidence gate exists, rejected alternatives, and the 1.1 and 1.2 previews |

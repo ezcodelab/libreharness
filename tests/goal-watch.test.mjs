@@ -18,7 +18,11 @@ process.env.GOAL_WATCH_TASKS = join(root, "bin", "tasks.py");
 const tasks = (...args) =>
   execFileSync("python3", [join(root, "bin/tasks.py"), ...args], {
     encoding: "utf8",
-    env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1" },
+    env: {
+      ...process.env,
+      HARNESS_STATE: root,
+      PYTHONDONTWRITEBYTECODE: "1",
+    },
   }).trim();
 const goal = tasks(
   "goal",
