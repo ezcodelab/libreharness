@@ -1,9 +1,9 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Feature ablation benchmark
 
-Status: **pilot run on two seeded fixtures, not a public score.** The clean
-fixture and fixture C are added but not yet run across all arms. This is a fast
-supplement to the Harbor/Terminal-Bench headline.
+Status: **benchmark runner; no results are shipped.** This is a fast supplement
+to the Harbor/Terminal-Bench headline. Experiment reports and raw results stay
+outside the public tree.
 
 ## What it answers
 
@@ -31,7 +31,7 @@ runner exits non-zero; it is not treated as a negative review result.
 
 ## Why one spec instead of a code task
 
-A full Harbor task took 7 to 13 minutes in the pilot and cost up to $0.09. A
+A full Harbor task takes minutes to tens of minutes and costs money. A
 review-only fixture runs in seconds to a few minutes and isolates the review
 step. Each arm runs in a fresh temporary workspace with its own XDG config and
 state directories, so host plugins, AGENTS.md, agents, commands, and skills do
@@ -151,7 +151,7 @@ Live run:
 ```sh
 python3 bench/ablation.py --live \
   --model ollama-cloud/deepseek-v4.1-flash \
-  --out bench/results/ablation-2026-10-31
+  --out bench/results/ablation
 ```
 
 `--live` prints a cost warning and invokes OpenCode once per arm. It requires an
@@ -180,25 +180,8 @@ findings. A finding can use different words and still be correct; a broad regex
 can also accept a vague finding. Read the per-run `findings.json` before making
 a decision.
 
-## Host smoke, 2026-10-31
-
-This is a host smoke, not a benchmark result. It ran on OpenCode 2.2.4, not the
-Harbor pin of 1.19.5, with one repetition and the current fixture.
-
-| Arm | Recall | Precision | Tokens | Cost USD | Wall s |
-|---|---:|---:|---:|---:|---:|
-| baseline | 60% | 27% | 17,232 | $0.0041 | 17.8 |
-| candidate | 60% | 38% | 17,024 | $0.0040 | 11.6 |
-
-Both arms matched D1, D3, and D4 under the regex. Manual review of the raw
-findings shows both also identified D2 (the create/poll method problem), but the
-regex did not credit it; D5 was missed. The candidate produced fewer false
-positives on the same seeded recall, which is a useful signal but not enough to
-adopt. A v2 fixture with clearer match rules and three repetitions is needed
-before a claim.
-
-The four-arm pilot and its rejected improvement are archived in the brain.
-Raw data stays in the ignored local results directory and is not shipped.
+Experiment reports and raw results are archived outside the public tree. The
+runner produces data; it does not decide whether a feature is promoted.
 
 ## Promotion rule
 
@@ -211,8 +194,8 @@ evidence.
 
 ## Limits
 
-- Two synthetic specs and one model do not generalize. A clean no-defect fixture
-  and a larger authored set are still missing.
+- Three seeded synthetic specs and one model do not generalize. A larger
+  authored set is still missing.
 - The fixture is visible to the reviewer; this measures review behavior, not
   resistance to a hidden benchmark.
 - The runner isolates XDG config and state. The host data and cache directories
@@ -228,10 +211,8 @@ evidence.
   zero-finding result.
 - The runner does not replace Harbor, Terminal-Bench, hidden tests, or human
   review.
-- The 2026-10-31 host smoke is one repetition on a different OpenCode version.
-  It is not a quality claim. Do not cite a gain from this scaffold.
 
 For the public benchmark protocol, see
 [`docs/benchmark-proof.md`](../docs/benchmark-proof.md) and
 [`docs/benchmark-tools.md`](../docs/benchmark-tools.md). The EGM research and
-pilot reports are archived in the brain.
+experiment reports are archived outside the public tree.

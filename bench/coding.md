@@ -31,7 +31,7 @@ not replace the official benchmark.
 
 Change the suite file, not Python constants, to add a task or arm.
 
-The hard-v2 suite replaces the six all-pass ceiling tasks:
+The hard-v2 task set:
 
 | Task | What it exercises |
 |---|---|
@@ -44,8 +44,8 @@ The hard-v2 suite replaces the six all-pass ceiling tasks:
 | `make-mips-interpreter` | Large multi-file implementation |
 | `path-tracing` | Deep build/debug and numerical correctness |
 
-The test-writing lab and its fixtures are archived in the brain; the public
-suite is the Terminal-Bench hard-v2 set.
+The public suite is the Terminal-Bench hard-v2 set. The earlier test-writing
+lab and its fixtures are archived outside the public tree.
 
 ## Commands
 
@@ -103,8 +103,8 @@ agent made no observable write. It is a heuristic, not proof of TDD:
   test-first;
 - test quality is not graded here. The verifier says whether the task works.
 
-Test quality and human correction time are later metrics. A reviewer can add a
-manual column to the pilot report; do not invent a number.
+Test quality and human correction time are later metrics. A reviewer can record
+them as a separate column; do not invent a number.
 
 ## Fairness
 
@@ -122,7 +122,7 @@ manual column to the pilot report; do not invent a number.
 
 ## Limits
 
-- Three tasks are not the Terminal-Bench leaderboard.
+- Eight tasks are not the Terminal-Bench leaderboard.
 - The test-first heuristic can miss shell-based test creation.
 - Test quality, review findings, and human correction time are not automated.
 - Harbor reward is binary per task; the wrapper does not invent a composite
@@ -133,7 +133,7 @@ manual column to the pilot report; do not invent a number.
 ## Next
 
 1. Run the eight-task suite at n=1 and inspect failures.
-2. Add a fourth task that requires tests, so test-first behavior is exercised.
-3. Run n=3 with the same suite and publish raw jobs and `runs.csv`.
-4. Add a paired analysis with a bootstrap confidence interval before making a
-   claim.
+2. Run n=3 with the same suite and review the paired per-task interval from
+   `bench/analyze.py`.
+3. Publish raw jobs, `runs.csv`, the manifest, and task hashes only under the
+   benchmark-proof protocol.
