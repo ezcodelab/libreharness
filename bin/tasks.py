@@ -1498,8 +1498,25 @@ def reap_task(
                 "outcome": "would-remove",
                 "reason": "clean and merged",
             }
-        run_git(["worktree", "remove", str(worktree)], repo)
-        run_git(["branch", "-D", branch], repo)
+        try:
+            run_git(["worktree", "remove", str(worktree)], repo)
+        except SystemExit as exc:
+            return {
+                "task": task_id,
+                "outcome": "retained",
+                "reason": f"worktree removal failed: {exc}",
+            }
+        try:
+            run_git(["branch", "-D", branch], repo)
+        except SystemExit as exc:
+            task["meta"]["worktree"] = ""
+            append_log(task, f"worktree reaped; branch remains: {branch}")
+            write_task(task)
+            return {
+                "task": task_id,
+                "outcome": "retained",
+                "reason": f"worktree removed; branch remains: {exc}",
+            }
         task["meta"]["worktree"] = ""
         task["meta"]["branch"] = ""
         append_log(task, f"lane reaped: {branch}")

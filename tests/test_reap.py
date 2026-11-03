@@ -88,6 +88,24 @@ class ReapTests(unittest.TestCase):
         self.assertFalse(Path(task["meta"]["worktree"]).exists())
         self.assertEqual(self.git("branch", "--list", task["meta"]["branch"]), "")
 
+    def test_reports_branch_removal_failure_after_worktree_removal(self) -> None:
+        task = self.lane("Branch failure")
+        self.commit(Path(task["meta"]["worktree"]), "branch.txt")
+        self.merge(task["meta"]["branch"])
+        tasks.set_status(self.root, task["meta"]["id"], "review")
+        real_git = tasks.run_git
+
+        def flaky_git(args, cwd):
+            if args[:2] == ["branch", "-D"]:
+                raise SystemExit("branch delete blocked")
+            return real_git(args, cwd)
+
+        with mock.patch.object(tasks, "run_git", side_effect=flaky_git):
+            self.assertEqual(tasks.reap(self.root, task["meta"]["id"]), 1)
+        stored = tasks.find_task(self.root, task["meta"]["id"])
+        self.assertEqual(stored["meta"]["worktree"], "")
+        self.assertIn(task["meta"]["branch"], self.git("branch"))
+
     def test_retains_ignored_file(self) -> None:
         (self.repo / ".gitignore").write_text("ignored.txt\n")
         self.git("add", ".gitignore")
