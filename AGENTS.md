@@ -72,6 +72,28 @@
 - One integrator merges in the declared order, resolves conflicts, and reruns
   the full check. A green lane is not a green integration.
 
+## Named principles
+Use these names to steer a decision. When one applies, name the principle and
+the decision it changed. The long form with examples is in `docs/principles.md`
+in the repository.
+
+- **Attack the premise.** When two fixes that share a premise fail the same
+  gate, write the premise down and test it before a third fix.
+- **Prove it works.** Check the real artifact, not a proxy, a self-report, or
+  "it compiles."
+- **Sequence verifiable units.** End each small unit in a check before starting
+  the next; keep one task to one reviewable diff.
+- **Explain the number.** Name the limiter and rule out errors, skipped work,
+  untuned sides, and noise before reporting a measurement.
+- **Guard the context window.** Route bulk reading to subagents, keep summaries
+  in the main thread, and hand off before context is exhausted.
+- **Separate before serializing shared state.** Give parallel work disjoint
+  files or worktrees; add coordination only for a real invariant.
+- **Subtract before you add.** Delete dead weight and speculative abstractions
+  before building the smallest complete change.
+- **Encode lessons in structure.** After the same correction twice, fix it with
+  architecture, types, lint, or a test; docs last.
+
 ## Decision authority
 - **Two-way doors** (easy to reverse): decide and act.
 - **One-way doors** (data models, migrations, auth boundaries, public API

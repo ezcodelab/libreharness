@@ -79,6 +79,43 @@ Secondary:
 No composite score. Do not blend a quality gain with a cost saving into one
 number.
 
+## Before reporting a number
+
+Before a measured number becomes a claim, answer these seven questions from a
+run, not from a guess about the code. If an answer is unknown, the result is
+inconclusive, not a win.
+
+1. **What limits it?** Name the resource or code path that bounds the result,
+   such as a core, a lock, the disk, the network, or the load generator. Get it
+   from a profile or system counters, not from reading the code. If you cannot
+   say why the result is not twice as good, you do not know what you measured.
+2. **Were both sides tuned?** Compare release builds, production flags, data
+   sizes, caches, connection pools, and versions. If one side ran on defaults,
+   you compared configurations, not implementations.
+3. **Does it break a limit?** Check bytes per second against disk and network
+   bandwidth, operations against core count, and the saved time against the
+   time the changed piece took.
+4. **Did it error?** Count failures, timeouts, retries, and wrong output. Fast
+   rejections and slow retries can both make a number meaningless.
+5. **Does it reproduce?** For a standalone number, run alternating sides at
+   least five times, then report the median and range. A gap smaller than
+   run-to-run variation is not a difference. A benchmark claim still follows
+   the repetition rule below.
+6. **Does it matter end to end?** Measure the path a user waits on with
+   realistic data and concurrency. A helper that is 1% of the request cannot
+   make the request 100% faster.
+7. **Did the work happen?** Confirm the code path ran inside the timed region:
+   the request reached the server, the rows were written, the bytes were read,
+   and the result was used. Lazy code and timeouts can produce numbers for work
+   that never happened.
+
+The verdict is faster, slower, no measurable difference, or inconclusive. Give
+the number with its unit, run count, range, and limiter. Keep the detailed
+evidence in a linked artifact, not only in prose.
+
+The checklist format is adapted from Cursor's pstack (MIT). The statistical
+protocol in this document remains authoritative for a benchmark claim.
+
 ## Statistical rule
 
 The unit of analysis is the task. Repetitions estimate within-task noise; they

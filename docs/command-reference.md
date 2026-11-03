@@ -152,7 +152,9 @@ tree, and reviews the merged diff. It does not push, force-push, or deploy.
 
 Final review, optional Jev triage, one lesson entry, and a done transition with
 evidence. Missing evidence keeps the task active. Jev never blocks the close by
-itself.
+itself. A repeated correction is encoded at the highest level that works
+(architecture, types, lint, test, docs) and the check is proved on the past
+mistake.
 
 ### `/handoff`
 
@@ -192,10 +194,12 @@ and Keep. No code edits.
 /tune
 ```
 
-Runs the docs lint and reads the queue report and metrics. It proposes
-deletions first, then at most five patches to `AGENTS.md` or a skill, each with
-the evidence and the target. It stops for approval and promotes nothing in the
-turn.
+Runs the docs lint and reads the queue report and metrics. It mines repeated
+corrections and fixes each class at the highest level that works: architecture,
+types, lint, test, or docs. It proposes deletions first, then at most five
+patches to `AGENTS.md`, a skill, or the named principles, each with the
+evidence, the target, and a proof that the check fails on a real past mistake.
+It stops for approval and promotes nothing in the turn.
 
 ## Queue CLI
 

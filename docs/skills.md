@@ -3,17 +3,18 @@
 # Skills
 
 Skills are reusable procedures that OpenCode advertises to the model and loads
-on demand. The harness ships five. They are process, not product code.
+on demand. The harness ships six. They are process, not product code.
 
-## The five skills
+## The six skills
 
 | Skill | Trigger | Lines in rc.1 |
 |---|---|---|
-| [engineering-loop](../skills/engineering-loop/SKILL.md) | Nontrivial work: external API, secrets or auth, schema or data, security tradeoff, multi-file design, or "done" means production behavior | 119 |
-| [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, run the queue, stop on a one-way door or blocker | 80 |
-| [parallel-lanes](../skills/parallel-lanes/SKILL.md) | Split work across two or three agents or sessions; define slices, ownership, worktrees, merge order, and integration | 73 |
-| [ui-design](../skills/ui-design/SKILL.md) | UI or UX work: layout, component, styling, visual review, or interface copy | 88 |
-| [work-queue](../skills/work-queue/SKILL.md) | Work that is nontrivial, spans sessions, or runs in parallel; create and maintain durable tasks | 81 |
+| [engineering-loop](../skills/engineering-loop/SKILL.md) | Nontrivial work: external API, secrets or auth, schema or data, security tradeoff, multi-file design, or "done" means production behavior | 120 |
+| [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, run the queue, stop on a one-way door or blocker | 81 |
+| [parallel-lanes](../skills/parallel-lanes/SKILL.md) | Split work across two or three agents or sessions; define slices, ownership, worktrees, merge order, and integration | 74 |
+| [ui-design](../skills/ui-design/SKILL.md) | UI or UX work: layout, component, styling, visual review, or interface copy | 89 |
+| [verification](../skills/verification/SKILL.md) | A change needs proof against the real app and the project lacks a scripted way to drive it; generate a project-local verification recipe | 116 |
+| [work-queue](../skills/work-queue/SKILL.md) | Work that is nontrivial, spans sessions, or runs in parallel; create and maintain durable tasks | 82 |
 
 Line counts are for the current candidate and will drift. The budget is
 enforced by the lint, not by this table.
@@ -51,8 +52,8 @@ into a skill.
 
 | Limit | Default | Current |
 |---|---|---|
-| Number of skills | 8 | 5 |
-| Lines per skill | 120 | 119 maximum |
+| Number of skills | 8 | 6 |
+| Lines per skill | 120 | 120 maximum |
 
 ```sh
 python3 bin/docs_lint.py . --skills-dir skills

@@ -20,8 +20,8 @@ outlives one chat:
   a generated board.
 - A workflow that scales process to risk: trivial changes skip the queue,
   nontrivial changes get a brief, a review, and evidence.
-- Five portable skills: engineering loop, goal loop, parallel lanes, UI
-  design, and work queue.
+- Six portable skills: engineering loop, goal loop, parallel lanes, UI
+  design, verification, and work queue.
 - Agents for exploration, implementation, integration, and independent
   challenge.
 - Commands for goal intake, briefs, lanes, review, integration, close,
@@ -121,7 +121,7 @@ one. See [docs/jev.md](docs/jev.md).
 | CI | Workflows are present in the tree; publication CI has not been verified |
 | Support | Best effort, no SLA, no bounty |
 
-The supported scope is the queue, commands, agents, five skills, the four
+The supported scope is the queue, commands, agents, six skills, the four
 bundled local plugins, the Jev client, and the documented install path.
 Third-party plugins, custom providers, custom Jev adapters, Windows, and
 private knowledge integrations are outside 1.0.0 support.

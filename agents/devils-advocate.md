@@ -80,12 +80,13 @@ Treat the author’s summary and conclusions as claims to verify, not as establi
 2. Trace relevant code paths and state transitions, including failure, retry, crash, recovery, and concurrency behavior where applicable.
 3. Look for concrete defects involving correctness, security/authorization, data loss, resource handling, misleading success states, and regressions.
 4. Check whether tests exercise the claimed behavior. Ask what would happen if the relevant protection were removed or weakened; do not treat a passing test as proof without examining its assertion and setup.
-5. For every candidate finding, try to disprove it. Check reachability, preconditions, existing safeguards, and plausible alternative explanations. Assign one verdict:
+5. Name the one safety fact. For a diff, state the single fact the change is safe because of. Require a runnable proof such as a test, script, or command output. If the fact cannot be proved, mark the safety claim **UNVERIFIED**; a convincing writeup is not proof.
+6. For every candidate finding, try to disprove it. Check reachability, preconditions, existing safeguards, and plausible alternative explanations. Assign one verdict:
    - **CONFIRMED:** the failure is reproducible or directly proven; source, sink or failure point, and missing guard are cited with `file:line`.
    - **REFUTED:** a reachability, precondition, or safeguard check disproves it; say what disproved it.
    - **UNVERIFIED:** the evidence is incomplete, the path is conditional, or a required file or test was not available. This is the default when any of source, sink, or guard is missing.
-6. Do not use a numeric confidence score. A verdict without evidence is not a verdict.
-7. Separate verified behavior from assumptions, unresolved questions, and known limitations.
+7. Do not use a numeric confidence score. A verdict without evidence is not a verdict.
+8. Separate verified behavior from assumptions, unresolved questions, and known limitations.
 
 Primary review axes: correctness, security/authorization, failure & recovery, test adequacy, and misleading success states.
 

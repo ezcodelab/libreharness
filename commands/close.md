@@ -24,6 +24,10 @@ turn.
    - Doc updated
    - `Promote-to-global` when portable
    If nothing surprised you, write "Surprise: none" rather than inventing one.
+   If the lesson is a repeated correction, apply it at the highest level that
+   works: architecture, then types, then a lint whose error names the fix, then
+   a test, and docs last. Prove the check fails on the past mistake. Do not add
+   a new command when `/close` or `/tune` can own the rule.
 5. If the project has a skill candidate, put it in the task evidence or the
    project's skill directory. Do not promote it to global in this turn. `/tune`
    and `docs/skill-eval.md` handle promotion.

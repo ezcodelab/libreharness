@@ -45,7 +45,11 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
    **CONFIRMED**, **REFUTED**, or **UNVERIFIED**, with the source, sink or
    failure point, and guard cited as `file:line`. Ask for the six
    silent-failure checks. It reviews; it does not fix.
-6. Verdict:
+6. Name the one safety fact. For every non-trivial diff, state the single fact
+   the change is safe because of. Require a runnable proof such as a test,
+   script, or command output; if it cannot be proved, mark it **UNVERIFIED**.
+   A plausible explanation is not evidence.
+7. Verdict:
    - Only a **CONFIRMED** devils P0/P1 blocks. A P2/P3 confirmed finding is a
      fix or an explicit accepted risk, not an automatic send-back.
    - **UNVERIFIED** is a warning, not a defect. Ask for the missing source,
@@ -61,8 +65,8 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
      not a confirmed defect, and still ask for a rerun after the fix.
    - Jev exit 0 and no confirmed blocking finding → report what passed,
      residual risks, and what remains unproven.
-7. If a task id was used, update the queue (not code):
+8. If a task id was used, update the queue (not code):
    - pass: `tasks.py status <id> review --note "Jev pass; devils: <none|findings>"`;
    - send back: `tasks.py log <id> "review send-back: <one line>"`, leave it
      active.
-8. Show the verdict and stop. Do not promote lessons; `/close` does that.
+9. Show the verdict and stop. Do not promote lessons; `/close` does that.

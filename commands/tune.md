@@ -11,15 +11,21 @@ Tuning turn. Do not do feature work, and do not edit global config yet.
    and `${HARNESS_STATE:-$HOME/.local/state/libreharness}/metrics/workflow-log.csv`.
    Look for rework, stale active tasks, blocked work, and lanes that did not pay
    off.
-3. Propose deletions first: obsolete paths, docs, options, or steps that did not
+3. Mine repeated corrections. Read close lessons, review comments, reverts, and
+   queue logs. A class counts after two occurrences. For each class, fix at the
+   highest level that works: architecture, then types, then a lint whose error
+   names the fix, then a test, and docs last. Prove each new check fails on a
+   real past mistake. Do not add a new command when `/tune` or `/close` can own
+   the rule.
+4. Propose deletions first: obsolete paths, docs, options, or steps that did not
    pay off. Leaner beats more rules.
-4. Propose at most five patches to `AGENTS.md`, the `engineering-loop` skill,
-   the `ui-design` skill, or another skill under `${HARNESS_HOME}/skills/` as a
-   unified diff. For each, quote the evidence, name the target, and say what it
-   replaces or deletes.
-5. Prefer folding a rule into an existing bullet over adding a new one. For a
+5. Propose at most five patches to `AGENTS.md`, the `engineering-loop` skill,
+   the `ui-design` skill, another skill under `${HARNESS_HOME}/skills/`, or the
+   named principles in `docs/principles.md`, as a unified diff. For each, quote
+   the evidence, name the target, and say what it replaces or deletes.
+6. Prefer folding a rule into an existing bullet over adding a new one. For a
    skill promotion, run `docs/skill-eval.md` first and include the trigger rate,
    pass delta, sample size, and limits. A neutral or negative result is a
    deletion candidate, not a promotion.
-6. Stop for approval. Nothing is promoted in this turn.
-7. After the operator approves or rejects, record the date in the metrics file.
+7. Stop for approval. Nothing is promoted in this turn.
+8. After the operator approves or rejects, record the date in the metrics file.

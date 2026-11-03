@@ -22,7 +22,8 @@ here makes a performance claim.
 | Document | What it answers |
 |---|---|
 | [Command reference](command-reference.md) | Every slash command and queue CLI argument |
-| [Skills](skills.md) | The five bundled skills, their triggers, the budget, and how to add one |
+| [Skills](skills.md) | The six bundled skills, their triggers, the budget, and how to add one |
+| [Named principles](principles.md) | Eight short rules for diagnosis, proof, sequencing, measurement, context, parallel state, subtraction, and structural lessons |
 | [Plugins](plugins.md) | The four local plugins, their environment, failure modes, and disable switches |
 | [Model routing](model-routing.md) | Roles, provider-agnostic configuration, static matrix, and cost controls |
 | [Skill evaluation](skill-eval.md) | How to run a small with/without experiment before promoting a skill |

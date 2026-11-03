@@ -11,6 +11,21 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 This is the local release candidate line. Nothing here has been published.
 
+### Added
+
+- A seven-question benchmark number checklist in `docs/benchmark-proof.md`:
+  limiter, tuned sides, physical limits, errors, repeatability, end-to-end
+  relevance, and whether the work happened.
+- Eight named principles in `AGENTS.md`, explained with triggers and examples
+  in `docs/principles.md`.
+- A `verification` skill that generates a project-local `verify-<app>` skill
+  with launch, doctor, drive, evidence, cleanup, helpers, and a feature map,
+  then proves it once end to end.
+- A one-safety-fact check in `/review` and `devils-advocate`: name the fact the
+  change is safe because of and prove it by running code, or mark it unverified.
+- Structural correction in `/tune` and `/close`: fix repeated mistakes at the
+  highest level that works and prove the check on a past mistake.
+
 ## [1.0.0-rc.1] - 2026-10-30
 
 Status: unreleased local candidate. No public repository, tag, release
