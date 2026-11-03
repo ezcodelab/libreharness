@@ -17,7 +17,7 @@ run `/goal`; it routes the request.
 | Split independent work | `/goal go` | Auto-lanes up to three ready children; `/lane` only for manual or existing-task isolation |
 | Stop and resume later | `/handoff <task-id>`, later `/takeover <task-id>` | Durable state transfer, not a transcript |
 | Review a diff | `/review <task-id>` | Jev advisory first, independent challenge only when risk warrants |
-| Finish a task or goal | `/close <task-id>` | Integrates goal lanes, checks evidence, records the lesson, done |
+| Finish a task or goal | `/close <task-id>` | Integrates goal lanes, reviews, reaps clean worktrees, records evidence, done |
 | Review a UI | `/design-review` | Blocking, quick wins, and keep notes; no code edits |
 | Prove real app behavior | `verification` skill | Generates a project-local `verify-<app>` recipe and proves it once |
 | Inspect the queue | `/queue` | Ready tasks, board, or a specific packet |
@@ -50,10 +50,8 @@ command name and want its purpose.
 | `/lane` | You need a manual worktree for an existing task; normal goals auto-lane | Worker packet for one lane |
 | `/takeover` | You are resuming a paused or inherited task | Claims from the handoff and named files |
 | `/review` | A diff exists and needs a check; this is not a finish step | Jev, optional devils-advocate, and a verdict |
-| `/integrate` | Manual/advanced: an explicit branch set must merge; `/close` handles normal goal integration | Ordered merge, full check, merged review |
-| `/close` | A task or goal is ready to finish; it integrates reviewed goal lanes first | Final review, lesson, done with evidence |
+| `/close` | A task or goal is ready to finish; it integrates reviewed goals and reaps clean lanes | Final review, reap, lesson, done with evidence |
 | `/handoff` | You are pausing, switching context, or near the context limit | Under-40-line handoff in the task |
-| `/harvest` | Legacy fallback: no task or diff exists; use `/close` when a task exists | One dated process-ledger entry |
 | `/design-review` | A UI screenshot or reference needs a design pass | Blocking, quick wins, keep |
 | `/tune` | After a work wave, to remove process weight; this is not a finish step | Deletions and up to five evidence-backed patches |
 
@@ -67,11 +65,12 @@ Think in five stages, not twelve commands:
   ready children; `/lane` is the manual escape hatch.
 - **Check:** `/review`, `tasks.py goal-status`. A review is not a finish step.
 - **Finish:** `/close` is the single finish command. For a goal with lanes, it
-  runs `/integrate` first, then the final review and lesson.
+  integrates them inline, runs the final review, and reaps clean merged
+  worktrees. Unfinished children stop the close until they are finished.
 - **Maintain:** `/tune` is periodic process cleanup, not a task finish.
-- **Legacy or manual:** `/harvest` only when there is no task or diff;
-  `/integrate` only for an explicit branch set; `/lane` only for an existing
-  task or a worktree you deliberately want.
+- **Manual escape:** `/lane` only for an existing task or a worktree you
+  deliberately want. `tasks.py reap` and `tasks.py remove-lane` are maintenance
+  tools, not part of the normal finish path.
 
 ## Agents
 
@@ -194,10 +193,9 @@ verification skill -> generated verify-<app> -> run it -> /close with its output
 ## Do not use
 
 - Do not run `/close` before the acceptance checks and evidence exist.
-- Do not run `/tune` during feature work; it is a periodic cleanup turn.
-- Do not run `/harvest` when a task exists; `/close` owns the lesson.
-- Do not run `/integrate` for a normal goal; `/close` handles it.
+- Do not close a goal with active children; finish them first.
 - Do not use `/lane` for a normal goal; `/goal go` auto-lanes.
+- Do not run `/tune` during feature work; it is a periodic cleanup turn.
 - Do not create a lane for shared files or one owner; serialize it instead.
 - Do not run `devils-advocate` on a typo or a routine low-risk diff.
 - Do not generate a verification skill when a direct test or command already

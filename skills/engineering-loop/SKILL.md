@@ -80,21 +80,21 @@ quality axis sends the change back with concrete fixes, not a warning.
 
 The merged tree is reviewed, not just each lane; a green lane is not a green integration.
 
-## 7. Integrate
+## 7. Integrate and reap
 
-One integrator merges in the declared order, resolves conflicts, reruns the
-full check, and records the result. Do not push or force-push without explicit
-approval. If integration cannot be completed, leave the task in `review` or
-`blocked` with the exact failing command.
+`/close` integrates reviewed lanes in the declared order, reruns the full
+check, and reaps clean merged worktrees. One integrator owns the merge; do not
+push or force-push without approval. If integration or reaping cannot complete,
+leave the task `review` or `blocked` with the failing command.
 
-## 8. Harvest
+## 8. Capture the lesson
 
 Append one entry to the project's `docs/process-lessons.md` after every
-completed task. Use `/close`: it runs the final review, Jev triage, appends one
-entry, updates the task, and may stage a project skill under the project's
-`skills/` directory. If there is no queue task or diff and the operator
-stated a preference, `/harvest` is the manual fallback. If nothing surprised
-you, say that in one line — do not invent a discovery.
+completed task. Use `/close`: it integrates, reaps, runs the final review and
+Jev triage, appends one entry, updates the task, and may stage a project skill
+under the project's `skills/` directory. If there is no queue task or diff and
+the operator stated a preference, append it directly to the project ledger. If
+nothing surprised you, say that in one line — do not invent a discovery.
 
 When a gate fails or an approach is rejected, also add or harden a REFUSE or a
 checklist item where it persists (repo decisions, or the gate/coverage doc), so

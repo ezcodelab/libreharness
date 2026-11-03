@@ -14,7 +14,7 @@ a static matrix, and the cost controls that matter.
 | Planner | Strong reasoning, can decompose and spot gaps | Mid or high capability; plans are cheap compared with a wrong build | `/goal` plan mode, Jev plan critique |
 | Implementer | Strong tool use and code editing, follows a bounded scope | Capable model; this is where a weak model costs the most | `implementer` agent |
 | Reviewer | Strong reasoning, skeptical, can cite a source and a sink | Capable model; independent context matters more than speed | `/review`, `devils-advocate` agent |
-| Integrator | Careful merge and test discipline, no guessing on conflicts | Capable model, narrower scope | `integrator` agent, `/integrate` |
+| Integrator | Careful merge and test discipline, no guessing on conflicts | Capable model, narrower scope | `integrator` agent, `/close` integration step |
 | Advisory Jev | Typed-question answering, structured output | Separate endpoint and model; advisory only | `bin/jev_*.py` |
 
 A role is a requirement, not a product name. Any provider that supports the

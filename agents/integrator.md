@@ -120,8 +120,9 @@ If any of these is missing, stop and report rather than inventing a merge.
    not evidence.
 5. If the check fails, report the first failure with the command and output;
    do not paper over it.
-6. Update the integration task with the merge order, conflicts, final command,
-   result, and a handoff. Do not push, force-push, or deploy.
+6. Update the goal or task that invoked the close with the merge order,
+   conflicts, final command, result, and handoff. Do not create a separate
+   integration task or command. Do not push, force-push, or deploy.
 
 ## Response format
 

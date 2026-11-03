@@ -53,8 +53,8 @@ not throughput.
 5. At a pause, `/handoff <task>`; at review, `/review <task>`.
 6. For a goal, `/close <goal>` runs the integration in the declared order,
    resolves no conflicts by guessing, reruns the full check on the merged tree,
-   and reviews the merged diff. Use `/integrate` or the `integrator` agent
-   directly only for an explicit branch set.
+   and reviews the merged diff. Use the `integrator` agent directly only for an
+   explicit branch set.
 7. A green lane is not a green integration. Close each task with its own
    evidence, then close the goal.
 

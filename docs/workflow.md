@@ -36,11 +36,11 @@ run checks  --->  evidence, or [T] with a plan
 /review  --->  Jev advisory + optional independent challenge
   |
   v
-/close  --->  integrate reviewed goal lanes, final review, lesson, done
+/close  --->  integrate lanes, final review, reap clean lanes, lesson, done
 ```
 
-`/lane` and `/integrate` remain manual escape hatches. A normal goal does not
-ask the operator to type either one.
+`/lane` remains a manual escape hatch. A normal goal does not ask the operator
+to type it.
 
 ## 1. Intake
 
@@ -153,33 +153,27 @@ disagreement. A Jev pass does not replace the acceptance check.
 
 `/close <id>` is the single finish command:
 
-- for a goal with lanes, runs `/integrate` on the reviewed lanes first;
-- checks every acceptance item;
-- runs the final review if there is a diff;
+- for a goal, checks `goal-status`; if any child is unfinished, stops and lists
+  it. Finish that child with a follow-up goal or task, then run `/close` again;
+- for a goal with lanes, or a single task with a worktree, integrates inline:
+  read the packets, refuse missing evidence or a failing review, build the merge
+  order, stop on a shared file or conflict, and run the full project check. A
+  single task merges into an integration branch from its base, not into main;
+- runs the final review on the merged diff, or on the single task's diff;
+- for a single task that still has a worktree, moves it to `review` so the
+  reaper can evaluate it;
+- runs `tasks.py reap <id>` to remove clean worktrees whose branch is merged
+  into another branch. Any active, dirty, ignored-file, or unmerged lane is
+  retained and stops the close;
 - runs Jev close triage when configured;
 - appends one dated entry to the project's process ledger;
 - records the evidence with `status <id> done --evidence "<command and result>"`;
 - reports what passed, what remains unproven, and the next action.
 
-A task stays active if evidence is missing. `/review` is a check and `/tune` is
-periodic maintenance; neither is a finish command.
-
-## 8. Integrate (manual/advanced)
-
-Normally `/close <goal-id>` runs this step. Use `/integrate` directly only for an
-explicit branch set or a manual merge. When lanes exist, `/integrate`:
-
-- reads each task packet;
-- refuses a task that is not `review` or `done`, has no evidence, or has a
-  failing review;
-- builds the merge order and checks for shared files;
-- merges in order into one integration branch;
-- stops on a conflict instead of guessing;
-- runs the full project check on the merged tree;
-- runs `/review` on the merged diff;
-- updates each lane and creates an integration record.
-
-A green lane is not a green integration. The merged tree gets the final check.
+A task or goal stays open if evidence is missing, a lane is retained, or a
+review sends back. `/review` is a check and `/tune` is periodic maintenance;
+neither is a finish command. There is no separate operator-facing `/integrate`
+or `/harvest` command.
 
 ## Worked example
 

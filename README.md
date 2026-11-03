@@ -25,7 +25,7 @@ outlives one chat:
 - Agents for exploration, implementation, integration, and independent
   challenge.
 - Commands for queue inspection, goal intake, briefs, lanes, takeover, review,
-  integration, close, handoff, design review, and tuning.
+  close, handoff, design review, and tuning.
 - Four local plugins: automatic task intake, close reminder, continuation
   watcher, and an advisory security scan.
 - Jev, a first-class advisory layer that asks typed questions about a diff, a

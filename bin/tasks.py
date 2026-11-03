@@ -1434,19 +1434,136 @@ def goal_start(
     return result
 
 
+def worktree_repo(worktree: Path) -> Path:
+    common = run_git(["rev-parse", "--git-common-dir"], worktree)
+    common_path = Path(common)
+    if not common_path.is_absolute():
+        common_path = (worktree / common_path).resolve()
+    return common_path.parent
+
+
+def reap_task(
+    root: Path,
+    task: dict,
+    *,
+    repo: Path | None = None,
+    dry_run: bool = False,
+) -> dict:
+    """Remove one clean lane whose branch is merged somewhere else."""
+    meta = task["meta"]
+    task_id = meta["id"]
+    worktree_value = meta.get("worktree", "")
+    if not worktree_value:
+        return {"task": task_id, "outcome": "none", "reason": "no worktree"}
+    worktree = Path(worktree_value).expanduser()
+    if not worktree.exists():
+        return {"task": task_id, "outcome": "none", "reason": "worktree missing"}
+    if meta.get("status") not in ("review", "done", "abandoned"):
+        return {
+            "task": task_id,
+            "outcome": "retained",
+            "reason": f"status is {meta.get('status', 'unknown')}",
+        }
+    try:
+        repo = (repo or worktree_repo(worktree)).resolve()
+    except SystemExit as exc:
+        return {"task": task_id, "outcome": "retained", "reason": str(exc)}
+    try:
+        if run_git(["status", "--porcelain", "--ignored"], worktree):
+            return {
+                "task": task_id,
+                "outcome": "retained",
+                "reason": "dirty or ignored files in worktree",
+            }
+        branch = meta.get("branch", "")
+        if not branch:
+            return {"task": task_id, "outcome": "retained", "reason": "no branch"}
+        contains = run_git(
+            ["branch", "--contains", branch, "--format=%(refname:short)"], repo
+        )
+        others = [
+            line.strip()
+            for line in contains.splitlines()
+            if line.strip() and line.strip() != branch
+        ]
+        if not others:
+            return {
+                "task": task_id,
+                "outcome": "retained",
+                "reason": "branch not merged into another branch",
+            }
+        if dry_run:
+            return {
+                "task": task_id,
+                "outcome": "would-remove",
+                "reason": "clean and merged",
+            }
+        run_git(["worktree", "remove", str(worktree)], repo)
+        run_git(["branch", "-D", branch], repo)
+        task["meta"]["worktree"] = ""
+        task["meta"]["branch"] = ""
+        append_log(task, f"lane reaped: {branch}")
+        write_task(task)
+        return {
+            "task": task_id,
+            "outcome": "removed",
+            "reason": "clean and merged",
+        }
+    except SystemExit as exc:
+        return {"task": task_id, "outcome": "retained", "reason": str(exc)}
+
+
+def reap(
+    root: Path,
+    key: str,
+    *,
+    repo: Path | None = None,
+    dry_run: bool = False,
+    as_json: bool = False,
+) -> int:
+    task = find_task(root, key)
+    if task["meta"].get("kind") == "goal":
+        tasks = children_of(root, task["meta"]["id"])
+    else:
+        tasks = [task]
+    results = [reap_task(root, item, repo=repo, dry_run=dry_run) for item in tasks]
+    removed = [item for item in results if item["outcome"] in ("removed", "would-remove")]
+    retained = [item for item in results if item["outcome"] == "retained"]
+    skipped = [item for item in results if item["outcome"] == "none"]
+    if as_json:
+        print(
+            json.dumps(
+                {
+                    "task": task["meta"]["id"],
+                    "removed": removed,
+                    "retained": retained,
+                    "skipped": skipped,
+                },
+                indent=2,
+            )
+        )
+    else:
+        print(f"reap: {task['meta']['id']}")
+        for item in removed:
+            print(f"  {item['outcome']}: {item['task']} ({item['reason']})")
+        for item in retained:
+            print(f"  retained: {item['task']} ({item['reason']})")
+        for item in skipped:
+            print(f"  skipped: {item['task']} ({item['reason']})")
+        if not removed and not retained and not skipped:
+            print("  no worktrees")
+    if removed and not dry_run:
+        write_board(root)
+    return 1 if retained else 0
+
+
 def remove_lane(root: Path, key: str, *, repo: Path | None = None, force: bool = False) -> None:
     task = find_task(root, key)
     meta = task["meta"]
     worktree = Path(meta.get("worktree", "")).expanduser()
     if not meta.get("worktree") or not worktree.exists():
         raise SystemExit(f"error: {meta.get('id')} has no existing worktree")
-    if repo is None:
-        common = run_git(["rev-parse", "--git-common-dir"], worktree)
-        common_path = Path(common)
-        if not common_path.is_absolute():
-            common_path = (worktree / common_path).resolve()
-        repo = common_path.parent
-    repo = repo.resolve()
+    repo = (repo or worktree_repo(worktree)).resolve()
     if meta.get("status") not in ("review", "done", "abandoned") and not force:
         raise SystemExit(
             f"error: {meta.get('id')} is {meta.get('status')}; move it to review/done first or use --force"
@@ -1567,6 +1684,12 @@ def main() -> int:
     lane.add_argument("--path", default="")
     lane.add_argument("--setup", default="")
     lane.add_argument("--owner", default="")
+
+    reap_parser = sub.add_parser("reap")
+    reap_parser.add_argument("task")
+    reap_parser.add_argument("--repo")
+    reap_parser.add_argument("--dry-run", action="store_true")
+    reap_parser.add_argument("--json", action="store_true")
 
     remove = sub.add_parser("remove-lane")
     remove.add_argument("task")
@@ -1745,6 +1868,14 @@ def main() -> int:
             owner=args.owner,
         )
         return 0
+    if args.command == "reap":
+        return reap(
+            root,
+            args.task,
+            repo=Path(args.repo) if args.repo else None,
+            dry_run=args.dry_run,
+            as_json=args.json,
+        )
     if args.command == "remove-lane":
         remove_lane(
             root,

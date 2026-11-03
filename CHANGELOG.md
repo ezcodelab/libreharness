@@ -25,6 +25,22 @@ This is the local release candidate line. Nothing here has been published.
   change is safe because of and prove it by running code, or mark it unverified.
 - Structural correction in `/tune` and `/close`: fix repeated mistakes at the
   highest level that works and prove the check on a past mistake.
+- `tasks.py reap` removes clean worktrees whose task is review/done/abandoned
+  and whose branch is merged into another branch; active, dirty, or unmerged
+  lanes are retained.
+
+### Changed
+
+- `/close` is the single finish command. For a goal it integrates reviewed
+  lanes, runs the final review, reaps clean worktrees, records the lesson, and
+  closes with evidence. `/review` is a check; `/tune` is periodic maintenance.
+- Goal start auto-creates up to three lanes for ready children; `/lane` is a
+  manual escape hatch.
+
+### Removed
+
+- The operator-facing `/harvest` and `/integrate` commands. Lesson capture is
+  part of `/close`; integration is part of `/close` for a goal.
 
 ## [1.0.0-rc.1] - 2026-10-30
 

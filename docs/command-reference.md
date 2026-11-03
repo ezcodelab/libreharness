@@ -150,34 +150,23 @@ The review order is Jev, then an optional `devils-advocate` pass, then a
 verdict. A Jev exit 3 means "unavailable" and falls back to the independent
 review path. A Jev exit 4 means the model is gone and stops the review.
 
-### `/integrate`
-
-**Use when** an explicit branch set must be merged manually; `/close` handles normal goal integration.
-
-```text
-/integrate <task-id> [<task-id> ...]
-/integrate <branch> [<branch> ...]
-```
-
-Integrates reviewed lanes in a declared order, refuses a task without evidence
-or with a failing review, stops on a conflict, runs the full check on the merged
-tree, and reviews the merged diff. This is the manual path; `/close <goal-id>`
-runs it for a normal goal. It does not push, force-push, or deploy.
-
 ### `/close`
 
-**Use when** a task or goal is ready to finish; it integrates reviewed goal lanes first.
+**Use when** a task or goal is ready to finish; it integrates reviewed goal lanes and reaps clean merged worktrees.
 
 ```text
 /close <task-id>
 ```
 
-The single finish command. It runs `/integrate` first when the task is a goal
-with lanes, then the final review, optional Jev triage, one lesson entry, and a
-done transition with evidence. Missing evidence keeps the task active. Jev never
-blocks the close by itself. A repeated correction is encoded at the highest level
-that works (architecture, types, lint, test, docs) and the check is proved on the
-past mistake.
+The single finish command. For a goal with lanes it integrates the reviewed
+lanes inline; for a single task with a worktree it merges the branch into an
+integration branch from its base. It then runs the final review, reaps clean
+merged worktrees, runs optional Jev triage, records one lesson, and transitions
+to done with evidence. Missing evidence, an unfinished child, or a retained
+dirty/unmerged lane keeps the task or goal open. Jev never blocks the close by
+itself. A repeated correction is encoded at the highest level that works
+(architecture, types, lint, test, docs) and the check is proved on the past
+mistake.
 
 ### `/handoff`
 
@@ -190,19 +179,6 @@ past mistake.
 Writes or replaces the task's Handoff section. It requires a task id. The
 handoff is under 40 lines and uses the fixed fields: State, Decisions, Files,
 Checks, Open, Next, Context. It does not close the task.
-
-### `/harvest`
-
-**Use when** no task or diff exists and you only need a manual lesson; otherwise use `/close`.
-
-```text
-/harvest
-/harvest <operator words>
-```
-
-Legacy manual lesson capture. `/close` is the canonical path. If operator words
-are given, the Rule line quotes them verbatim. It appends one dated entry to the
-project's `docs/process-lessons.md` and stops.
 
 ### `/design-review`
 
@@ -425,6 +401,18 @@ tasks.py remove-lane <task> [--repo <path>] [--force]
 Removes a lane's worktree and branch. It refuses a task that is not `review`,
 `done`, or `abandoned`, a dirty worktree, or a branch not merged into its base,
 unless `--force` is used.
+
+### `reap`
+
+```sh
+tasks.py reap <task-or-goal-id> [--repo <path>] [--dry-run] [--json]
+```
+
+Removes clean worktrees for a task, or for every child of a goal, only when the
+task is `review`, `done`, or `abandoned` and the branch is merged into another
+branch. It retains active, dirty, ignored-file, or unmerged lanes and exits 1 if
+any remain. `/close` calls it after integration and review. `--dry-run` previews
+the result.
 
 ### `report`
 
