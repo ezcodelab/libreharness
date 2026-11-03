@@ -74,11 +74,13 @@ the exact next action. Do not mark a goal done to make the board green.
 
 ## Unattended mode
 
-`goal-watch` runs whenever a goal is marked `--unattended` / `autorun: true`;
-no environment flag or restart. It is bound to the creating session and bounded by
-the goal's `max_continuations` (default 12). On idle it sends one continuation
-prompt. It never creates tasks, marks done, pushes, or deploys. It skips if more
-than one autorun goal is active. Mark the goal blocked/done to stop it.
+`goal-watch` has two jobs. For an `autorun: true` goal, it continues the
+creating session on idle, bounded by `max_continuations` (default 12), and skips
+if more than one autorun goal matches. For any active goal whose children are
+all final, it sends one closable reminder per goal per session, including a goal
+from another session. The operator can reply "close now" to run `/close` or
+"later" to keep it open. The watcher never creates tasks, closes a goal, marks
+anything done, pushes, or deploys.
 
 Without the watcher, the current session still runs the loop until it stops;
 the watcher only resumes after an idle boundary.

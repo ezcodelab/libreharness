@@ -28,7 +28,7 @@ continue.
 |---|---|---|---|---|
 | `auto-intake` | A nontrivial prompt should become an inbox task without retyping | Creates an inbox task from a nontrivial prompt before the model answers | `AUTO_INTAKE=off` | No task is created; the prompt continues |
 | `close-reminder` | A long session should remind you to close finished work | Sends one desktop notification or prompt after real tool work goes quiet | `CLOSE_REMINDER_MODE=off` | No notification; the next session still reminds |
-| `goal-watch` | An active autorun goal should continue after idle | Nudges one active autorun goal to continue after the session goes idle | Do not load the plugin | No continuation; the goal stays active |
+| `goal-watch` | An active goal is closable, or an autorun goal should continue | Reminds once per session when a goal can close; continues one autorun goal with ready children | Do not load the plugin | No reminder or continuation; the goal stays active |
 | `security-guard` | You want an advisory warning after a risky edit pattern | Appends one advisory warning after an edit matches a risky pattern | Do not load the plugin | No warning; the edit proceeds |
 
 ### auto-intake
@@ -98,13 +98,21 @@ node --check plugins/close-reminder.js
 
 ### goal-watch
 
-Watches `session.idle` and nudges a single active goal with `autorun: true`. It
-requires the goal's `session` field to match the idle session, and it never
-creates work or marks anything done.
+Watches `session.idle` for two jobs.
 
-It refuses to act when more than one autorun goal is active. It uses the goal's
-`max_continuations` budget. A missing queue, malformed JSON, or a closing
-session is a no-op, not a crash.
+**Closable reminder.** If any active goal has all children final, it sends one
+reminder per goal per session, including goals created by another session. The
+reminder says the goal is ready to close and asks the operator to reply
+"close now" to run `/close <goal>`, or "later" to keep it open. It never closes
+the goal, marks it done, or repeats the reminder in the same session. The prompt
+tells an unrelated session to ignore it.
+
+**Continuation.** It also nudges one active goal with `autorun: true` and ready
+children, provided the goal's `session` field matches the idle session. It
+refuses to continue when more than one autorun goal matches and uses the goal's
+`max_continuations` budget.
+
+A missing queue, malformed JSON, or a closing session is a no-op, not a crash.
 
 | Variable | Default | Meaning |
 |---|---|---|
@@ -113,9 +121,8 @@ session is a no-op, not a crash.
 | `HARNESS_HOME` | `$HOME/.config/opencode` | Checkout |
 | `HARNESS_STATE` | `$HOME/.local/state/libreharness` | State root |
 
-The environment contract lists `GOAL_WATCH=off`, but the rc.1 plugin does not
-read that variable. To disable it, do not load the file: remove or rename it in
-the plugin directory.
+To disable it, do not load the file: remove or rename it in the plugin
+directory. There is no `GOAL_WATCH=off` switch in this version.
 
 Test:
 

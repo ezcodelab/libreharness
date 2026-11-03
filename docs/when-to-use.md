@@ -91,7 +91,7 @@ These run automatically. Use this table to decide whether to keep them on.
 |---|---|---|
 | `auto-intake` | A nontrivial prompt should become an inbox task without retyping | You do not want prompt capture; set `AUTO_INTAKE=off` |
 | `close-reminder` | A long session should remind you to close finished work | You dislike notifications or prompts; set `CLOSE_REMINDER_MODE=off` |
-| `goal-watch` | An active `autorun` goal should continue after idle | You do not want unattended continuation; do not load it |
+| `goal-watch` | An active goal is closable (reminder) or an autorun goal should continue | You do not want reminders or unattended continuation; do not load it |
 | `security-guard` | You want an advisory warning after a risky edit pattern | You do not want edit-time warnings; do not load it |
 
 Environment and failure modes are in [Plugins](plugins.md).

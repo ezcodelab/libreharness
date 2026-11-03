@@ -254,13 +254,13 @@ def goal_status(root: Path, key: str, as_json: bool = False) -> int:
     return 0
 
 
-def running_goals(root: Path, as_json: bool = False) -> int:
+def running_goals(root: Path, as_json: bool = False, include_all: bool = False) -> int:
     goals = [
         task
         for task in all_tasks(root)
         if task["meta"].get("kind") == "goal"
         and task["meta"].get("status") == "active"
-        and task["meta"].get("autorun") == "true"
+        and (include_all or task["meta"].get("autorun") == "true")
     ]
     if as_json:
         print(json.dumps([task["meta"] for task in goals], indent=2))
@@ -1646,6 +1646,7 @@ def main() -> int:
     goal_start_parser.add_argument("--json", action="store_true")
 
     goals = sub.add_parser("goals")
+    goals.add_argument("--all", action="store_true", help="include non-autorun goals")
     goals.add_argument("--json", action="store_true")
 
     plan = sub.add_parser("plan")
@@ -1762,7 +1763,7 @@ def main() -> int:
             print(json.dumps(result, indent=2))
         return 0
     if args.command == "goals":
-        return running_goals(root, as_json=args.json)
+        return running_goals(root, as_json=args.json, include_all=args.all)
     if args.command == "plan":
         plan_path = Path(args.file).expanduser()
         try:

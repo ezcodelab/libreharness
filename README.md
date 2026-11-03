@@ -26,8 +26,8 @@ outlives one chat:
   challenge.
 - Commands for queue inspection, goal intake, briefs, lanes, takeover, review,
   close, handoff, design review, and tuning.
-- Four local plugins: automatic task intake, close reminder, continuation
-  watcher, and an advisory security scan.
+- Four local plugins: automatic task intake, close reminder, a goal watcher for
+  continuation and closable-goal reminders, and an advisory security scan.
 - Jev, a first-class advisory layer that asks typed questions about a diff, a
   plan, or a close state and returns structured answers.
 

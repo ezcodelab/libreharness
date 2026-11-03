@@ -77,17 +77,44 @@ if (prompts.length !== 0) throw new Error("nudged an unrelated session");
 
 for (let i = 0; i < 3; i += 1) {
   emit({ type: "session.idle", data: { sessionID: "s1" } });
-  await new Promise((r) => setTimeout(r, 150));
+  await new Promise((r) => setTimeout(r, 300));
 }
 if (prompts.length !== 3) throw new Error("per-goal budget was not exhausted");
 emit({ type: "session.idle", data: { sessionID: "s1" } });
-await new Promise((r) => setTimeout(r, 150));
+await new Promise((r) => setTimeout(r, 300));
 if (prompts.length !== 3) throw new Error("nudged past max_continuations");
 
 tasks("goal", "Second goal", "--project", "demo", "--session", "s1", "--unattended");
 emit({ type: "session.idle", data: { sessionID: "s1" } });
 await new Promise((r) => setTimeout(r, 250));
 if (prompts.length !== 3) throw new Error("nudged with two active goals");
+
+const closeGoal = tasks("goal", "Close me", "--project", "demo", "--session", "s1");
+const closeChild = tasks("new", "Done child", "--project", "demo", "--parent", closeGoal);
+tasks("claim", closeChild, "--owner", "test");
+tasks("status", closeChild, "done", "--evidence", "node: done");
+emit({ type: "session.idle", data: { sessionID: "s1" } });
+await new Promise((r) => setTimeout(r, 300));
+if (prompts.length !== 4) throw new Error("closable goal was not reminded");
+if (!prompts[3].text.includes(closeGoal) || !prompts[3].text.includes("ready to close")) {
+  throw new Error("close reminder does not name the goal");
+}
+if (!prompts[3].text.includes("close now") || !prompts[3].text.includes("later")) {
+  throw new Error("close reminder does not offer close now/later");
+}
+emit({ type: "session.idle", data: { sessionID: "s1" } });
+await new Promise((r) => setTimeout(r, 300));
+if (prompts.length !== 4) throw new Error("close reminder repeated in the same session");
+
+emit({ type: "session.idle", data: { sessionID: "s2" } });
+await new Promise((r) => setTimeout(r, 300));
+if (prompts.length !== 5) throw new Error("closable goal was not reminded in another session");
+if (!prompts[4].text.includes(closeGoal) || !prompts[4].text.includes("ignore this reminder")) {
+  throw new Error("cross-session reminder is not scoped");
+}
+emit({ type: "session.idle", data: { sessionID: "s2" } });
+await new Promise((r) => setTimeout(r, 300));
+if (prompts.length !== 5) throw new Error("close reminder repeated in the same second session");
 cleanup();
 
 if (!prompts[0].text.includes(`Continue the active goal ${goal}`)) {

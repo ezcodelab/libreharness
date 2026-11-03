@@ -175,6 +175,10 @@ review sends back. `/review` is a check and `/tune` is periodic maintenance;
 neither is a finish command. There is no separate operator-facing `/integrate`
 or `/harvest` command.
 
+If you forget, `goal-watch` reminds once per session when a goal is closable.
+Reply "close now" to run `/close`, or "later" to keep it open. The watcher never
+closes the goal itself.
+
 ## Worked example
 
 Task: add a `--dry-run` flag to a small command. The change touches one file and

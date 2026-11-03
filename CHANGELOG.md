@@ -28,6 +28,9 @@ This is the local release candidate line. Nothing here has been published.
 - `tasks.py reap` removes clean worktrees whose task is review/done/abandoned
   and whose branch is merged into another branch; active, dirty, or unmerged
   lanes are retained.
+- `goal-watch` reminds once per session when an active goal is closable. The
+  operator can reply "close now" to run `/close` or "later" to keep it open; the
+  plugin never closes a goal itself.
 
 ### Changed
 
