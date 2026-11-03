@@ -44,16 +44,19 @@ not throughput.
 
 1. `/goal` the outcome; the plan gets one child per independent slice and
    explicit dependencies.
-2. `/brief <task>` for each lane; fix the interface and acceptance before code.
-3. `/lane <task>` per lane, or use OpenCode worktrees and
-   `tasks.py claim <task> --owner lane-x --worktree <path> --branch <branch> --base <base>`.
+2. `/goal go` runs `goal-start`; it creates up to three lanes for ready
+   children with disjoint `owns`. Use `/lane` only for a manual worktree or an
+   existing task.
+3. `/brief <task>` for each lane; fix the interface and acceptance before code.
 4. Each lane works only in its worktree. It does not edit shared config, the
    state, or another lane's files.
 5. At a pause, `/handoff <task>`; at review, `/review <task>`.
-6. One integrator merges in the declared order, resolves conflicts, then reruns
-   the full check on the merged tree. A green lane is not a green integration.
-7. Review the merged diff once. Close each task with its own evidence, then
-   close the integration task.
+6. For a goal, `/close <goal>` runs the integration in the declared order,
+   resolves no conflicts by guessing, reruns the full check on the merged tree,
+   and reviews the merged diff. Use `/integrate` or the `integrator` agent
+   directly only for an explicit branch set.
+7. A green lane is not a green integration. Close each task with its own
+   evidence, then close the goal.
 
 ## Stop conditions
 

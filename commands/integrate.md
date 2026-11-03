@@ -4,6 +4,10 @@ description: Integrate reviewed lanes in order and prove the merged tree
 <!-- SPDX-License-Identifier: MIT -->
 Integrate: $ARGUMENTS
 
+This is the manual/advanced path. `/close <goal-id>` runs integration for a goal
+with lanes; use `/integrate` directly only for an explicit branch set or a
+manual merge.
+
 Use the parallel-lanes, work-queue, and engineering-loop skills. One
 integrator owns this turn; do not let a lane push or rewrite history.
 

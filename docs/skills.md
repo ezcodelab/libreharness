@@ -11,8 +11,8 @@ one-screen choice between them, see [When to use what](when-to-use.md).
 | Skill | Use when | Lines in rc.1 |
 |---|---|---|
 | [engineering-loop](../skills/engineering-loop/SKILL.md) | Nontrivial work: external API, secrets or auth, schema or data, security tradeoff, multi-file design, or "done" means production behavior | 120 |
-| [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, run the queue, stop on a one-way door or blocker | 81 |
-| [parallel-lanes](../skills/parallel-lanes/SKILL.md) | Split work across two or three agents or sessions; define slices, ownership, worktrees, merge order, and integration | 74 |
+| [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, auto-lane ready children, run the queue, stop on a one-way door or blocker | 90 |
+| [parallel-lanes](../skills/parallel-lanes/SKILL.md) | Split work across two or three agents or sessions; define slices, ownership, worktrees, merge order, and integration | 77 |
 | [ui-design](../skills/ui-design/SKILL.md) | UI or UX work: layout, component, styling, visual review, or interface copy | 89 |
 | [verification](../skills/verification/SKILL.md) | A change needs proof against the real app and the project lacks a scripted way to drive it; generate a project-local verification recipe | 116 |
 | [work-queue](../skills/work-queue/SKILL.md) | Work that is nontrivial, spans sessions, or runs in parallel; create and maintain durable tasks | 82 |

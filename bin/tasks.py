@@ -1184,6 +1184,20 @@ def run_git(args: list[str], cwd: Path) -> str:
     return result.stdout.strip()
 
 
+def lane_targets(
+    task: dict,
+    repo: Path,
+    *,
+    name: str = "",
+    path: str = "",
+) -> tuple[str, str, Path]:
+    repo = repo.resolve()
+    name = slugify(name or task["meta"].get("id", "task").split("-", 1)[-1])
+    branch = f"feature/{name}"
+    worktree = Path(path).expanduser() if path else repo.parent / f"{repo.name}-{name}"
+    return name, branch, worktree
+
+
 def lane_task(
     root: Path,
     key: str,
@@ -1194,6 +1208,7 @@ def lane_task(
     path: str = "",
     setup: str = "",
     owner: str = "",
+    quiet: bool = False,
 ) -> dict:
     task = find_task(root, key)
     if task["meta"].get("kind") == "goal":
@@ -1207,12 +1222,10 @@ def lane_task(
     repo = repo.resolve()
     if not (repo / ".git").exists() and not (repo / ".git").is_file():
         raise SystemExit(f"error: {repo} is not a git repository")
-    name = slugify(name or task["meta"].get("id", key).split("-", 1)[-1])
-    branch = f"feature/{name}"
+    name, branch, worktree = lane_targets(task, repo, name=name, path=path)
     base = base or run_git(["rev-parse", "--abbrev-ref", "HEAD"], repo)
     if base == "HEAD":
         base = run_git(["rev-parse", "HEAD"], repo)
-    worktree = Path(path).expanduser() if path else repo.parent / f"{repo.name}-{name}"
     if worktree.exists():
         raise SystemExit(f"error: worktree path already exists: {worktree}")
     existing = run_git(["branch", "--list", branch], repo)
@@ -1265,10 +1278,160 @@ def lane_task(
         )
         if result.returncode != 0:
             raise SystemExit(f"error: setup failed ({setup}) in {worktree}")
-    print(f"lane: {branch} -> {worktree}")
-    print()
-    print(packet(find_task(root, key)))
+    if not quiet:
+        print(f"lane: {branch} -> {worktree}")
+        print()
+        print(packet(find_task(root, key)))
     return find_task(root, key)
+
+
+def goal_start(
+    root: Path,
+    key: str,
+    *,
+    repo: Path,
+    max_lanes: int = 3,
+    serial: bool = False,
+    as_json: bool = False,
+) -> dict:
+    """Start ready goal children in lanes, or report that work is serial."""
+    goal = find_task(root, key)
+    if goal["meta"].get("kind") != "goal":
+        raise SystemExit(f"error: {goal['meta']['id']} is not a goal")
+    if goal["meta"].get("status") in FINAL:
+        raise SystemExit(f"error: goal {goal['meta']['id']} is already {goal['meta']['status']}")
+    if max_lanes < 1 or max_lanes > 3:
+        raise SystemExit("error: --max-lanes must be 1..3")
+    repo = repo.resolve()
+    if not (repo / ".git").exists() and not (repo / ".git").is_file():
+        raise SystemExit(f"error: {repo} is not a git repository")
+
+    with locked(root, ".plan.lock"):
+        ready_all: list[dict] = []
+        laneable: list[tuple[dict, list[str]]] = []
+        for child in sorted(
+            children_of(root, goal["meta"]["id"]),
+            key=lambda item: (priority_of(item), item["meta"].get("id", "")),
+        ):
+            if child["meta"].get("status") not in ("ready", "inbox"):
+                continue
+            unblocked, _ = is_unblocked(root, child)
+            if not unblocked:
+                continue
+            ready_all.append(child)
+            owns = [
+                normalized_owns(value)
+                for value in child["meta"].get("owns", "").split(",")
+                if value.strip()
+            ]
+            if owns:
+                laneable.append((child, owns))
+
+        selected = laneable[:max_lanes]
+        should_lane = not serial and bool(selected) and (
+            len(selected) >= 2 or max_lanes == 1
+        )
+        laneable_ids = [child["meta"]["id"] for child, _ in laneable]
+        ready_ids = [child["meta"]["id"] for child in ready_all]
+        laneable_set = set(laneable_ids)
+        skipped = [
+            child["meta"]["id"]
+            for child in ready_all
+            if child["meta"]["id"] not in laneable_set
+        ]
+
+        if not should_lane:
+            if serial:
+                reason = "requested by --serial"
+            elif not laneable:
+                reason = "no ready child with an owned path"
+            else:
+                reason = "fewer than two independent ready children"
+            result = {
+                "goal": goal["meta"]["id"],
+                "mode": "serial",
+                "reason": reason,
+                "ready": ready_ids,
+                "laneable": laneable_ids,
+                "skipped": skipped,
+                "lanes": [],
+                "deferred": [],
+            }
+        else:
+            for index, (left, left_owns) in enumerate(selected):
+                for right, right_owns in selected[index + 1 :]:
+                    for left_path in left_owns:
+                        for right_path in right_owns:
+                            if paths_overlap(left_path, right_path):
+                                raise SystemExit(
+                                    "error: lane ownership overlaps: "
+                                    f"{left['meta']['id']} owns {left_path}, "
+                                    f"{right['meta']['id']} owns {right_path}"
+                                )
+
+            # Preflight every selected lane before creating any worktree.
+            for child, _ in selected:
+                _, branch, worktree = lane_targets(child, repo)
+                if worktree.exists():
+                    raise SystemExit(f"error: worktree path already exists: {worktree}")
+                if run_git(["branch", "--list", branch], repo):
+                    raise SystemExit(f"error: branch already exists: {branch}")
+
+            created = []
+            for child, _ in selected:
+                lane = child["meta"].get("lane") or "lane"
+                task = lane_task(
+                    root,
+                    child["meta"]["id"],
+                    repo=repo,
+                    owner=f"lane-{lane}",
+                    quiet=True,
+                )
+                created.append(
+                    {
+                        "task": task["meta"]["id"],
+                        "lane": lane,
+                        "branch": task["meta"]["branch"],
+                        "worktree": task["meta"]["worktree"],
+                        "owner": task["meta"]["owner"],
+                    }
+                )
+            result = {
+                "goal": goal["meta"]["id"],
+                "mode": "lanes",
+                "reason": "",
+                "ready": ready_ids,
+                "laneable": laneable_ids,
+                "skipped": skipped,
+                "lanes": created,
+                "deferred": [
+                    child["meta"]["id"] for child, _ in laneable[max_lanes:]
+                ],
+            }
+
+    if as_json:
+        return result
+
+    print(f"goal: {result['goal']} ({result['mode']})")
+    if result["mode"] == "lanes":
+        for item in result["lanes"]:
+            print(
+                f"  lane {item['task']}: {item['branch']} -> {item['worktree']} "
+                f"({item['owner']})"
+            )
+        if result["deferred"]:
+            print("deferred: " + ", ".join(result["deferred"]))
+        if result["skipped"]:
+            print("not lane-able: " + ", ".join(result["skipped"]))
+        print("next: work each lane; run tasks.py goal-status after review")
+    else:
+        print(f"reason: {result['reason']}")
+        if result["ready"]:
+            print("ready: " + ", ".join(result["ready"]))
+            print("next: work the ready children in this tree; do not create lanes")
+        else:
+            print("next: run tasks.py goal-status; no ready child is available")
+    return result
 
 
 def remove_lane(root: Path, key: str, *, repo: Path | None = None, force: bool = False) -> None:
@@ -1340,6 +1503,13 @@ def main() -> int:
     goal_status_parser = sub.add_parser("goal-status")
     goal_status_parser.add_argument("task")
     goal_status_parser.add_argument("--json", action="store_true")
+
+    goal_start_parser = sub.add_parser("goal-start")
+    goal_start_parser.add_argument("task")
+    goal_start_parser.add_argument("--repo", default=".")
+    goal_start_parser.add_argument("--max-lanes", type=int, default=3)
+    goal_start_parser.add_argument("--serial", action="store_true")
+    goal_start_parser.add_argument("--json", action="store_true")
 
     goals = sub.add_parser("goals")
     goals.add_argument("--json", action="store_true")
@@ -1439,6 +1609,18 @@ def main() -> int:
         return 0
     if args.command == "goal-status":
         return goal_status(root, args.task, as_json=args.json)
+    if args.command == "goal-start":
+        result = goal_start(
+            root,
+            args.task,
+            repo=Path(args.repo),
+            max_lanes=args.max_lanes,
+            serial=args.serial,
+            as_json=args.json,
+        )
+        if args.json:
+            print(json.dumps(result, indent=2))
+        return 0
     if args.command == "goals":
         return running_goals(root, as_json=args.json)
     if args.command == "plan":

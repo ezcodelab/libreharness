@@ -28,7 +28,7 @@ which command you need and want its arguments.
 
 ### `/goal`
 
-**Use when** you have a request, task id, goal id, or reviewed plan to execute.
+**Use when** you have a request, task id, goal id, or reviewed plan to execute; `go` creates the goal and auto-lanes ready children.
 
 ```text
 /goal <request>
@@ -44,14 +44,16 @@ The single task entry.
   goal.
 - With an existing task id in `inbox` or `ready`: confirm scope and acceptance,
   then execute the small-task path.
-- With an existing goal id: find the next ready child and continue.
+- With an existing goal id: find the next ready child; run `goal-start` once to
+  lane ready children.
 - With `go`: create the plan that was reviewed in `/tmp/opencode/goal-plan.json`
-  after checking its SHA-256 hash.
+  after checking its SHA-256 hash, then run `goal-start` for ready children.
 - With `go --unattended`: same, and set `autorun` so the goal watcher may
   continue it.
 
 Plan mode stops before creating anything. `go` is the approval. There is no
-separate apply step.
+separate apply step. `goal-start` creates up to three lanes for ready children
+with disjoint `owns`, or reports serial when fewer than two are lane-able.
 
 Plan critique is available as a standalone `bin/jev_plan.py` call. The rc.1
 `/goal` command does not invoke it automatically. Run it after the dry run if
@@ -96,7 +98,7 @@ Do not hand-edit status, owner, dependencies, or evidence. Use the CLI.
 
 ### `/lane`
 
-**Use when** a ready task is one of two or three independent slices that can run in isolated worktrees.
+**Use when** you need a manual worktree for an existing task; normal goals auto-lane through `/goal go`.
 
 ```text
 /lane <task-id>
@@ -114,9 +116,9 @@ and prints a worker packet. Optional flags are passed to `tasks.py lane`:
 ```
 
 The default branch is `feature/<name>`. The default worktree is
-`<repo-parent>/<repo>-<name>`. If OpenCode already created a worktree, claim the
-task with `--worktree`, `--branch`, and `--base` instead of creating a second
-one.
+`<repo-parent>/<repo>-<name>`. This is the manual path; `/goal go` auto-lanes
+ready children. If OpenCode already created a worktree, claim the task with
+`--worktree`, `--branch`, and `--base` instead of creating a second one.
 
 ### `/takeover`
 
@@ -132,7 +134,7 @@ active under another owner, it stops and asks before dual-writing.
 
 ### `/review`
 
-**Use when** a diff exists and needs a verdict before close or integration.
+**Use when** a diff exists and needs a check; this is not a finish step.
 
 ```text
 /review <task-id>
@@ -150,7 +152,7 @@ review path. A Jev exit 4 means the model is gone and stops the review.
 
 ### `/integrate`
 
-**Use when** reviewed lanes must become one tree and the merged result needs its own check.
+**Use when** an explicit branch set must be merged manually; `/close` handles normal goal integration.
 
 ```text
 /integrate <task-id> [<task-id> ...]
@@ -159,21 +161,23 @@ review path. A Jev exit 4 means the model is gone and stops the review.
 
 Integrates reviewed lanes in a declared order, refuses a task without evidence
 or with a failing review, stops on a conflict, runs the full check on the merged
-tree, and reviews the merged diff. It does not push, force-push, or deploy.
+tree, and reviews the merged diff. This is the manual path; `/close <goal-id>`
+runs it for a normal goal. It does not push, force-push, or deploy.
 
 ### `/close`
 
-**Use when** every acceptance item and its evidence are ready; missing evidence means wait.
+**Use when** a task or goal is ready to finish; it integrates reviewed goal lanes first.
 
 ```text
 /close <task-id>
 ```
 
-Final review, optional Jev triage, one lesson entry, and a done transition with
-evidence. Missing evidence keeps the task active. Jev never blocks the close by
-itself. A repeated correction is encoded at the highest level that works
-(architecture, types, lint, test, docs) and the check is proved on the past
-mistake.
+The single finish command. It runs `/integrate` first when the task is a goal
+with lanes, then the final review, optional Jev triage, one lesson entry, and a
+done transition with evidence. Missing evidence keeps the task active. Jev never
+blocks the close by itself. A repeated correction is encoded at the highest level
+that works (architecture, types, lint, test, docs) and the check is proved on the
+past mistake.
 
 ### `/handoff`
 
@@ -215,7 +219,7 @@ and Keep. No code edits.
 
 ### `/tune`
 
-**Use when** a work wave is finished and you want to remove process weight; not during feature work.
+**Use when** a work wave is finished and you want to remove process weight; this is periodic maintenance, not a finish step.
 
 ```text
 /tune
@@ -284,6 +288,19 @@ Options:
 | `--max-continuations <0..100>` | Default 12 |
 
 Prints the goal id.
+
+### `goal-start`
+
+```text
+python3 "$HARNESS_HOME/bin/tasks.py" goal-start <goal-id> --repo <repo> \
+  [--max-lanes 3] [--serial] [--json]
+```
+
+Starts ready goal children in up to three lanes with disjoint `owns`. It
+preflights branch and worktree collisions before creating anything, claims each
+child, and prints the lane table. With fewer than two lane-able children, or
+with `--serial`, it reports serial and creates no worktrees. Use it after
+`/goal go`; do not ask the operator to run `/lane` per child.
 
 ### `goal-status`
 

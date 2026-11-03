@@ -2,7 +2,8 @@
 description: Propose deletions and at most five portable AGENTS or skill patches from measured evidence
 ---
 <!-- SPDX-License-Identifier: MIT -->
-Tuning turn. Do not do feature work, and do not edit global config yet.
+Tuning turn. Use this after a work wave, not as a task finish. Do not do
+feature work, and do not edit global config yet.
 
 1. Run the docs and skill-budget check:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/docs_lint.py" . --skills-dir "${HARNESS_HOME:-$HOME/.config/opencode}/skills"`.

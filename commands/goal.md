@@ -8,8 +8,12 @@ Use the goal, work-queue, parallel-lanes, and engineering-loop skills.
 
 ## Existing goal or single task
 
-1. If `$ARGUMENTS` is an existing `kind: goal` task id, execute it: `goal-status`,
-   next ready child, `/brief`, implement or `/lane`, test, `/review`, `/close`.
+1. If `$ARGUMENTS` is an existing `kind: goal` task id, execute it:
+   `goal-status`, then `tasks.py goal-start <goal-id> --repo "$PWD"` once. It
+   creates up to three lanes for ready children with disjoint `owns`; if it
+   reports serial, work in the current tree. Then `/brief <child>`, implement,
+   test, `/review`, `/close`. Do not ask the operator to run `/lane` for each
+   child; `/lane` is only for manual or existing-task isolation.
    Stop on a one-way door, blocker, two same-axis send-backs, a merge conflict,
    a push/deploy, or ambiguous acceptance.
 2. If `$ARGUMENTS` is an existing `kind: task` id with status `inbox` or
@@ -22,7 +26,8 @@ Use the goal, work-queue, parallel-lanes, and engineering-loop skills.
      request or ask one question; run `tasks.py status <id> ready --note "goal confirmed"`;
    - claim it: `tasks.py claim <id> --owner <session-or-lane>`; if another owner
      holds it, stop;
-   - execute: `/brief`, implement or `/lane`, run checks, `/review`, `/close`.
+   - execute: `/brief`, implement, run checks, `/review`, `/close`. Use `/lane`
+     only when you deliberately want a manual worktree for this one task.
      Do **not** create a goal or a plan for one small task.
 3. If `$ARGUMENTS` is empty, ask one question: "What observable outcome means
    this is done?" Then stop. If the request is trivial, say so and skip the
@@ -85,6 +90,10 @@ If `$ARGUMENTS` starts with `go`:
    the reviewed plan is unchanged.
 3. Create with `plan --file /tmp/opencode/goal-plan.json --expect-hash
    "$(cat /tmp/opencode/goal-plan.sha256)"` (add `--unattended` for `go
-   --unattended`); show the goal id and then execute it as in section 1.
-4. `go` is the approval; there is no separate apply step. Do not re-plan
+   --unattended`); show the goal id.
+4. Run `tasks.py goal-start <goal-id> --repo "$PWD"` once. It uses the reviewed
+   lane map and creates up to three lanes for ready children. If it reports
+   serial, work the ready children in the current tree. Then execute as in
+   section 1.
+5. `go` is the approval; there is no separate apply step. Do not re-plan
    silently.

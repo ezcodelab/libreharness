@@ -4,6 +4,9 @@ description: Manual lesson capture (legacy; /close is the canonical task close)
 <!-- SPDX-License-Identifier: MIT -->
 Harvest the task just completed. Operator's words, if any: $ARGUMENTS
 
+This is a legacy fallback, not the normal finish path. Use `/close` when a task
+exists; keep `/harvest` only for a lesson with no task or diff.
+
 Follow the `engineering-loop` skill §8 and the project's `AGENTS.md`.
 
 1. If `$ARGUMENTS` is empty and the task is not obvious from this session,

@@ -1,10 +1,14 @@
 ---
-description: Create one isolated worktree lane for a queued task
+description: Manual worktree lane for an existing task; normal goals auto-lane
 ---
 <!-- SPDX-License-Identifier: MIT -->
 Lane: $ARGUMENTS
 
 Use the parallel-lanes and work-queue skills. Do not edit code in this turn.
+
+This is the manual path. For a goal, `/goal go` runs `tasks.py goal-start` and
+creates lanes automatically; use `/lane` only for an existing task or a worktree
+the operator explicitly wants.
 
 1. Require a task id. If missing, ask for it or list `tasks.py ready`.
 2. Run `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" show <id> --packet`

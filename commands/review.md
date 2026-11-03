@@ -4,6 +4,9 @@ description: Tiered quality review — Jev screen, devil's advocate only when ri
 <!-- SPDX-License-Identifier: MIT -->
 Review the working diff. Task: $ARGUMENTS
 
+This is a check, not a finish step. `/close` runs the final review and, for a
+goal, integrates reviewed lanes before closing.
+
 Use the engineering-loop and work-queue skills. Do not edit code in this turn.
 
 1. If `$ARGUMENTS` is a task id (or unique prefix), read the task packet and

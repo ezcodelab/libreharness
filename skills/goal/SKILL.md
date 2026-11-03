@@ -26,7 +26,8 @@ own acceptance is checked. A goal is never claimed or laned; its children are.
 Review or revise it, then `/goal go` creates and executes it; `/goal go
 --unattended` also sets the per-goal continuation flag. Each child has one
 scope, testable acceptance, dependencies, and a review boundary. If a child
-cannot be reviewed in one sitting, split it.
+cannot be reviewed in one sitting, split it. The reviewed lane map is used by
+`goal-start`; the operator does not create lanes by hand.
 
 Run a plan critique before execution when the goal is large or risky: Jev's
 plan mode checks completeness, testability, missing dependencies, and risk.
@@ -34,15 +35,23 @@ It is advisory; fix the plan, not the score.
 
 ## Run
 
+After creating or resuming a goal, run `tasks.py goal-start <goal> --repo
+<repo>` once. It creates up to three lanes for ready children with disjoint
+`owns`. If it reports serial, work in the current tree. `/lane` is only for a
+manual worktree or an existing task.
+
 For each stable, unblocked child in priority order:
 
 1. `/brief <child>`; confirm scope/acceptance.
-2. Implement directly, or `/lane <child>` when two or three independent
-   children can run without file/interface overlap.
+2. Implement in the assigned lane, or directly when `goal-start` reported
+   serial.
 3. Run the named checks; record the command and result.
 4. `/review <child>`; fix send-backs.
 5. `/close <child>`; the child is `done` only with evidence.
 6. `goal-status <goal>`; continue or stop.
+
+When every child is final, `/close <goal>` runs the integration of reviewed
+lanes as part of the finish path.
 
 After the last child, review the goal's acceptance against the merged evidence,
 run the full check on the final tree, write the goal handoff, and `/close` the

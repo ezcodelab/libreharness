@@ -54,10 +54,10 @@ harness makes three things durable:
 |---|---|
 | Nontrivial work, or you are unsure | `/goal` |
 | Continue a task | `/brief <task-id>` |
-| Run independent slices | `/lane <task-id>` |
-| Review a diff | `/review <task-id>` |
+| Run independent slices | `/goal go` auto-lanes; `/lane` only for manual isolation |
+| Review a diff | `/review <task-id>` (a check, not a finish step) |
 | Resume after a pause | `/takeover <task-id>` |
-| Finish a task | `/close <task-id>` |
+| Finish a task or goal | `/close <task-id>` (integrates goal lanes) |
 | Review a UI | `/design-review` |
 | Prove real app behavior | `verification` skill |
 | Clean up the workflow | `/tune` |

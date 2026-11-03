@@ -24,8 +24,8 @@ request
 /brief <----------------+
   |
   v
-claim or /lane
-  |
+goal-start  --->  up to 3 lanes for ready children
+  |                 or serial in the current tree
   v
 implement
   |
@@ -36,11 +36,11 @@ run checks  --->  evidence, or [T] with a plan
 /review  --->  Jev advisory + optional independent challenge
   |
   v
-/close  --->  final review, optional Jev triage, one lesson, done with evidence
-  |
-  v
-/integrate (when lanes exist)
+/close  --->  integrate reviewed goal lanes, final review, lesson, done
 ```
+
+`/lane` and `/integrate` remain manual escape hatches. A normal goal does not
+ask the operator to type either one.
 
 ## 1. Intake
 
@@ -84,16 +84,19 @@ Claiming checks open dependencies and branch or worktree ownership. If another
 owner holds the task, stop. If a dependency is open, stop unless the operator
 accepts the risk and you record why.
 
-For parallel work:
+For a goal, start its ready children in lanes once:
 
 ```sh
-python3 "$HARNESS_HOME/bin/tasks.py" lane "$ID" \
-  --repo "$REPO" --owner lane-a
+python3 "$HARNESS_HOME/bin/tasks.py" goal-start "$GOAL_ID" --repo "$REPO"
 ```
 
-Write the ownership map first: lane, task, files or interfaces, branch,
-worktree, dependency, and merge order. Cap at two or three lanes. Shared files
-get one owner.
+It creates up to three lanes for ready children with disjoint `owns`, claims
+each child, and prints the branch and worktree. If fewer than two children are
+lane-able, it reports serial and no worktree is created. The plan's lane map is
+the ownership map: lane, task, files or interfaces, branch, worktree,
+dependency, and merge order. Shared files get one owner.
+
+Use `/lane` only for a manual worktree or an existing task outside a goal.
 
 ## 4. Implement
 
@@ -148,8 +151,9 @@ disagreement. A Jev pass does not replace the acceptance check.
 
 ## 7. Close
 
-`/close <id>`:
+`/close <id>` is the single finish command:
 
+- for a goal with lanes, runs `/integrate` on the reviewed lanes first;
 - checks every acceptance item;
 - runs the final review if there is a diff;
 - runs Jev close triage when configured;
@@ -157,11 +161,13 @@ disagreement. A Jev pass does not replace the acceptance check.
 - records the evidence with `status <id> done --evidence "<command and result>"`;
 - reports what passed, what remains unproven, and the next action.
 
-A task stays active if evidence is missing.
+A task stays active if evidence is missing. `/review` is a check and `/tune` is
+periodic maintenance; neither is a finish command.
 
-## 8. Integrate
+## 8. Integrate (manual/advanced)
 
-When lanes exist, `/integrate`:
+Normally `/close <goal-id>` runs this step. Use `/integrate` directly only for an
+explicit branch set or a manual merge. When lanes exist, `/integrate`:
 
 - reads each task packet;
 - refuses a task that is not `review` or `done`, has no evidence, or has a
