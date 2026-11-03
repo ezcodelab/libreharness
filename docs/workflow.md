@@ -3,7 +3,8 @@
 # Workflow
 
 The harness is a loop, not a ceremony. A trivial change can skip the queue. A
-change that needs memory, review, or more than one session uses the loop.
+change that needs memory, review, or more than one session uses the loop. For a
+one-screen choice of the next action, see [When to use what](when-to-use.md).
 
 ## The loop
 

@@ -24,8 +24,8 @@ outlives one chat:
   design, verification, and work queue.
 - Agents for exploration, implementation, integration, and independent
   challenge.
-- Commands for goal intake, briefs, lanes, review, integration, close,
-  handoff, and tuning.
+- Commands for queue inspection, goal intake, briefs, lanes, takeover, review,
+  integration, close, handoff, design review, and tuning.
 - Four local plugins: automatic task intake, close reminder, continuation
   watcher, and an advisory security scan.
 - Jev, a first-class advisory layer that asks typed questions about a diff, a
@@ -47,6 +47,23 @@ harness makes three things durable:
 3. **Review proportional to risk.** A typo does not need a committee. A change
    to auth, secrets, data, or a public API gets a closer look. Jev is one
    input, never the deciding gate.
+
+## Choose the next action
+
+| You are about to... | Start with |
+|---|---|
+| Nontrivial work, or you are unsure | `/goal` |
+| Continue a task | `/brief <task-id>` |
+| Run independent slices | `/lane <task-id>` |
+| Review a diff | `/review <task-id>` |
+| Resume after a pause | `/takeover <task-id>` |
+| Finish a task | `/close <task-id>` |
+| Review a UI | `/design-review` |
+| Prove real app behavior | `verification` skill |
+| Clean up the workflow | `/tune` |
+
+The full operator guide, including every skill, command, agent, plugin, and Jev
+client, is [When to use what](docs/when-to-use.md).
 
 ## One-command install
 
@@ -153,7 +170,8 @@ Code snippets inside documentation are MIT. The surrounding prose is CC BY
 
 ## Documentation
 
-Start at [docs/README.md](docs/README.md). For a clean install, read
+Start at [docs/README.md](docs/README.md). For the next action, read
+[docs/when-to-use.md](docs/when-to-use.md). For a clean install, read
 [docs/install.md](docs/install.md). For the first task, read
 [docs/quickstart.md](docs/quickstart.md). For the design rationale, read
 [docs/design-notes.md](docs/design-notes.md).

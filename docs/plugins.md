@@ -3,7 +3,8 @@
 # Plugins
 
 The harness ships four local OpenCode plugins and two opt-in example plugins.
-Local plugins use Node built-ins only. None of them calls a model.
+Local plugins use Node built-ins only. None of them calls a model. For when to
+keep each one on, see [When to use what](when-to-use.md).
 
 ## How local plugins load
 
@@ -23,12 +24,12 @@ continue.
 
 ## Bundled plugins
 
-| Plugin | What it does | Disable | Failure mode |
-|---|---|---|---|
-| `auto-intake` | Creates an inbox task from a nontrivial prompt before the model answers | `AUTO_INTAKE=off` | No task is created; the prompt continues |
-| `close-reminder` | Sends one desktop notification or prompt after real tool work goes quiet | `CLOSE_REMINDER_MODE=off` | No notification; the next session still reminds |
-| `goal-watch` | Nudges one active autorun goal to continue after the session goes idle | Do not load the plugin | No continuation; the goal stays active |
-| `security-guard` | Appends one advisory warning after an edit matches a risky pattern | Do not load the plugin | No warning; the edit proceeds |
+| Plugin | Use when | What it does | Disable | Failure mode |
+|---|---|---|---|---|
+| `auto-intake` | A nontrivial prompt should become an inbox task without retyping | Creates an inbox task from a nontrivial prompt before the model answers | `AUTO_INTAKE=off` | No task is created; the prompt continues |
+| `close-reminder` | A long session should remind you to close finished work | Sends one desktop notification or prompt after real tool work goes quiet | `CLOSE_REMINDER_MODE=off` | No notification; the next session still reminds |
+| `goal-watch` | An active autorun goal should continue after idle | Nudges one active autorun goal to continue after the session goes idle | Do not load the plugin | No continuation; the goal stays active |
+| `security-guard` | You want an advisory warning after a risky edit pattern | Appends one advisory warning after an edit matches a risky pattern | Do not load the plugin | No warning; the edit proceeds |
 
 ### auto-intake
 

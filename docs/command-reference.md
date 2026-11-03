@@ -23,7 +23,12 @@ mutable queue and metrics root.
 
 ## Slash commands
 
+Use this page after [When to use what](when-to-use.md) when you know
+which command you need and want its arguments.
+
 ### `/goal`
+
+**Use when** you have a request, task id, goal id, or reviewed plan to execute.
 
 ```text
 /goal <request>
@@ -55,6 +60,8 @@ gate.
 
 ### `/brief`
 
+**Use when** you are about to implement and need scope, acceptance, risks, and the first proof pinned down.
+
 ```text
 /brief <task-id>
 /brief <stated scope>
@@ -65,6 +72,8 @@ relevant lessons. Without a task id, it uses the stated scope. It does not edit
 code.
 
 ### `/queue`
+
+**Use when** you need queue state or a manual state change; most operators can start with `/goal` instead.
 
 ```text
 /queue
@@ -86,6 +95,8 @@ shorthand for `status <id> blocked --note <reason>`.
 Do not hand-edit status, owner, dependencies, or evidence. Use the CLI.
 
 ### `/lane`
+
+**Use when** a ready task is one of two or three independent slices that can run in isolated worktrees.
 
 ```text
 /lane <task-id>
@@ -109,6 +120,8 @@ one.
 
 ### `/takeover`
 
+**Use when** you are resuming a paused or inherited task from its handoff.
+
 ```text
 /takeover <task-id>
 ```
@@ -118,6 +131,8 @@ the handoff names. If the task is ready and unowned, it claims it. If it is
 active under another owner, it stops and asks before dual-writing.
 
 ### `/review`
+
+**Use when** a diff exists and needs a verdict before close or integration.
 
 ```text
 /review <task-id>
@@ -135,6 +150,8 @@ review path. A Jev exit 4 means the model is gone and stops the review.
 
 ### `/integrate`
 
+**Use when** reviewed lanes must become one tree and the merged result needs its own check.
+
 ```text
 /integrate <task-id> [<task-id> ...]
 /integrate <branch> [<branch> ...]
@@ -145,6 +162,8 @@ or with a failing review, stops on a conflict, runs the full check on the merged
 tree, and reviews the merged diff. It does not push, force-push, or deploy.
 
 ### `/close`
+
+**Use when** every acceptance item and its evidence are ready; missing evidence means wait.
 
 ```text
 /close <task-id>
@@ -158,6 +177,8 @@ mistake.
 
 ### `/handoff`
 
+**Use when** you are pausing, switching agents or sessions, or approaching the context limit.
+
 ```text
 /handoff <task-id>
 ```
@@ -167,6 +188,8 @@ handoff is under 40 lines and uses the fixed fields: State, Decisions, Files,
 Checks, Open, Next, Context. It does not close the task.
 
 ### `/harvest`
+
+**Use when** no task or diff exists and you only need a manual lesson; otherwise use `/close`.
 
 ```text
 /harvest
@@ -179,6 +202,8 @@ project's `docs/process-lessons.md` and stops.
 
 ### `/design-review`
 
+**Use when** a UI change needs a design pass before merge; it never edits code.
+
 ```text
 /design-review <screenshot path, description, or UI reference>
 ```
@@ -189,6 +214,8 @@ image, it says so and runs the text checklist. Output is Blocking, Quick wins,
 and Keep. No code edits.
 
 ### `/tune`
+
+**Use when** a work wave is finished and you want to remove process weight; not during feature work.
 
 ```text
 /tune
@@ -203,6 +230,7 @@ It stops for approval and promotes nothing in the turn.
 
 ## Queue CLI
 
+For choosing between these actions, see [When to use what](when-to-use.md).
 The global form is:
 
 ```sh

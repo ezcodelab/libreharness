@@ -3,11 +3,12 @@
 # Skills
 
 Skills are reusable procedures that OpenCode advertises to the model and loads
-on demand. The harness ships six. They are process, not product code.
+on demand. The harness ships six. They are process, not product code. For a
+one-screen choice between them, see [When to use what](when-to-use.md).
 
 ## The six skills
 
-| Skill | Trigger | Lines in rc.1 |
+| Skill | Use when | Lines in rc.1 |
 |---|---|---|
 | [engineering-loop](../skills/engineering-loop/SKILL.md) | Nontrivial work: external API, secrets or auth, schema or data, security tradeoff, multi-file design, or "done" means production behavior | 120 |
 | [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, run the queue, stop on a one-way door or blocker | 81 |

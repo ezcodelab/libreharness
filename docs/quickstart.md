@@ -73,6 +73,7 @@ it. See [benchmark-tools.md](benchmark-tools.md) and the
 
 ## Next
 
+- [When to use what](when-to-use.md)
 - [Install options](install.md)
 - [Workflow](workflow.md)
 - [Model routing](model-routing.md)

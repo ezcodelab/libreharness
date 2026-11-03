@@ -8,6 +8,12 @@ A durable Markdown work queue, a risk-scaled engineering workflow, reusable
 OpenCode agents, commands, skills, local plugins, and an advisory typed-question
 reviewer called Jev.
 
+## Which command should I use?
+
+See [When to use what](when-to-use.md) for a one-screen choice. `/goal` is
+the usual entry for a request; `/brief` is for an existing task; `/review` is
+for a diff; `/close` is for a finished task.
+
 ## Is it a replacement for OpenCode?
 
 No. It runs on top of OpenCode. OpenCode supplies the model, tools, sessions,

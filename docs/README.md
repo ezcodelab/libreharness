@@ -12,6 +12,7 @@ here makes a performance claim.
 
 | Document | What it answers |
 |---|---|
+| [When to use what](when-to-use.md) | The next action for a request, task, goal, lane, review, close, UI, proof, or tuning turn |
 | [Install](install.md) | One-command `npx libreharness init`, guided and unattended paths, upgrade, and manual fallback |
 | [Quickstart](quickstart.md) | Create, claim, review, and close one task after install |
 | [Concepts](concepts.md) | What a task, goal, lane, handoff, evidence, review, and close mean |
@@ -21,8 +22,8 @@ here makes a performance claim.
 
 | Document | What it answers |
 |---|---|
-| [Command reference](command-reference.md) | Every slash command and queue CLI argument |
-| [Skills](skills.md) | The six bundled skills, their triggers, the budget, and how to add one |
+| [Command reference](command-reference.md) | Every slash command, when to use it, and its queue CLI arguments |
+| [Skills](skills.md) | The six bundled skills, when to use them, their triggers, the budget, and how to add one |
 | [Named principles](principles.md) | Eight short rules for diagnosis, proof, sequencing, measurement, context, parallel state, subtraction, and structural lessons |
 | [Plugins](plugins.md) | The four local plugins, their environment, failure modes, and disable switches |
 | [Model routing](model-routing.md) | Roles, provider-agnostic configuration, static matrix, and cost controls |
@@ -63,8 +64,9 @@ here makes a performance claim.
 
 ## Reading paths
 
-**New user:** [Install](install.md), then [Quickstart](quickstart.md), then
-[Concepts](concepts.md) and [Workflow](workflow.md).
+**New user:** [When to use what](when-to-use.md), then [Install](install.md),
+then [Quickstart](quickstart.md), then [Concepts](concepts.md) and
+[Workflow](workflow.md).
 
 **Evaluator:** [Concepts](concepts.md), [Workflow](workflow.md),
 [Security and privacy](security-privacy.md), then [Design notes](design-notes.md).

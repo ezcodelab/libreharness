@@ -3,7 +3,8 @@
 # Jev
 
 Jev is an advisory reviewer, planner, and close-triage client. It sends a
-typed-question request to an HTTP endpoint and prints structured answers.
+typed-question request to an HTTP endpoint and prints structured answers. For
+when to use each client, see [When to use what](when-to-use.md).
 
 Jev is not a gate. It does not merge, close, block, or approve anything by
 itself. The operator or reviewing agent decides what to do with the answer.
@@ -13,11 +14,11 @@ test suite work without a key.
 
 ## The three clients
 
-| Client | Input | What it asks |
-|---|---|---|
-| `bin/jev_review.py` | A task and a diff | Seven quality axes, ship, scope, tests, secret leak |
-| `bin/jev_plan.py` | A goal and its children | Complete, testable, largest gap, risk, recommendation |
-| `bin/jev_triage.py` | A compact close state | Durable lesson, kind, scope, confidence |
+| Client | Use when | Input | What it asks |
+|---|---|---|---|
+| `bin/jev_review.py` | A diff needs a typed second opinion before close | A task and a diff | Seven quality axes, ship, scope, tests, secret leak |
+| `bin/jev_plan.py` | A goal plan needs a completeness and risk check | A goal and its children | Complete, testable, largest gap, risk, recommendation |
+| `bin/jev_triage.py` | Close is deciding whether a lesson is durable | A compact close state | Durable lesson, kind, scope, confidence |
 
 All three print a human-readable result by default and JSON with `--json`.
 
