@@ -84,25 +84,27 @@ explicit operator decision; do not assume a clean tree means a clean history.
 ## 5. Bootstrap the first npm publish
 
 npm trusted publishing can only be configured on a package that already exists.
-The first publish therefore needs one interactive WebAuthn approval. Use a
-platform authenticator or phone passkey if available; otherwise a hardware
-security key is required.
+The first publish therefore needs one interactive 2FA approval.
+
+Use staged publishing. Staging does not require 2FA, and the approval happens
+on npmjs.com without the short-lived CLI callback:
 
 ```sh
 npm login
 npm view libreharness version   # expect 404 before the first publish
-npm publish --access public
-```
-
-Alternatively, use staged publishing:
-
-```sh
-npm stage publish
+npm stage publish --access public
 npm stage list libreharness
 ```
 
-Approve the staged `1.0.0` in npmjs.com → **Staged Packages** with your
-security key. Then verify:
+Open `https://www.npmjs.com/package/libreharness`, use the **Staged Packages**
+tab, and approve the version with your passkey. A new package first gets a
+public `0.0.0-stage` placeholder; the real version stays hidden until approval.
+
+Direct `npm publish --access public` also works, but its CLI auth URL expires
+after about a minute. A phone passkey can fail there with "Something went
+wrong"; use a desktop authenticator or the staged path above.
+
+Then verify:
 
 ```sh
 npm view libreharness@1.0.0 version
