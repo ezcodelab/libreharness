@@ -93,8 +93,9 @@ git push <public-remote> v1.0.0
 The maintainer verifies the tag locally before pushing. The release workflow
 checks the version and package, reruns the checks, publishes the npm package
 when the `NPM_TOKEN` repository secret is configured, builds an archive, and
-creates the host release. The tag push is the publication approval. For the
-first release, publish manually and verify before enabling the automated step:
+creates the host release. The tag push is the publication approval. The publish
+step skips a version that already exists, so a manual first publish and a later
+tag release cannot collide:
 
 ```sh
 npm publish --access public

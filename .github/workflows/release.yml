@@ -39,7 +39,13 @@ jobs:
       - name: Publish npm package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
+          if npm view "libreharness@$version" version >/dev/null 2>&1; then
+            echo "libreharness@$version is already published; skipping"
+          else
+            npm publish --access public
+          fi
       - name: Archive
         run: |
           git archive --format=tar.gz --prefix="libreharness-${GITHUB_REF_NAME}/" -o "libreharness-${GITHUB_REF_NAME}.tar.gz" HEAD
