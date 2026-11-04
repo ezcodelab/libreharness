@@ -6,11 +6,6 @@ A durable work queue, a risk-scaled engineering workflow, reusable agents,
 commands, and skills, local OpenCode plugins, and an advisory typed-question
 reviewer called Jev.
 
-**Status: 1.0.0, Linux only. Prepared for public release. Benchmark unrun.**
-This tree is prepared for publication but has not been published yet. No
-performance, cost, or quality claim is backed by a benchmark. Treat the
-harness as a workflow to evaluate, not as a proven improvement.
-
 ## What it is
 
 The harness gives an OpenCode user a small, inspectable system for work that
@@ -75,15 +70,6 @@ The guided installer asks for the OpenCode config and state directories, copies
 the runtime, creates `opencode.json` only when none exists, and runs the
 environment check. For an unattended install, add `--yes`.
 
-Until the npm package is published, use the checkout directly:
-
-```sh
-node bin/libreharness.js init
-```
-
-The installer does not choose a provider or model. Start OpenCode and choose
-one with `/models`.
-
 The full walkthrough is in [docs/quickstart.md](docs/quickstart.md). The manual
 path is in [docs/install.md](docs/install.md).
 
@@ -124,24 +110,6 @@ offers. `JEV_ENDPOINT` and `JEV_KEY_FILE` are configurable. A missing key is a
 skip at the workflow level: the quickstart and the full test suite do not need
 one. See [docs/jev.md](docs/jev.md).
 
-## Status and support
-
-| Item | Status in 1.0.0 |
-|---|---|
-| Release | 1.0.0 release tree, not yet published |
-| Benchmark | Not run; no results are shipped |
-| Platform | Linux only |
-| Python | 3.10 or newer |
-| Node | 20 or newer, for plugin tests and optional plugins |
-| OpenCode | 2.x only; no Claude Code, Hermes, or other host adapter |
-| CI | Linux CI is defined; the tagged release path is not yet exercised |
-| Support | Best effort, no SLA, no bounty |
-
-The supported scope is the queue, commands, agents, six skills, the four
-bundled local plugins, the Jev client, and the documented Linux/OpenCode
-install path. Third-party plugins, custom providers, custom Jev adapters,
-macOS, Windows, and private knowledge integrations are outside 1.0.0 support.
-
 ## License
 
 | Path | License |
@@ -155,17 +123,6 @@ macOS, Windows, and private knowledge integrations are outside 1.0.0 support.
 
 Code snippets inside documentation are MIT. The surrounding prose is CC BY
 4.0. See [LICENSE](LICENSE), [NOTICE](NOTICE), and [docs/LICENSE](docs/LICENSE).
-
-## Non-goals
-
-- A hosted service, model proxy, model provider, or account system.
-- Publishing a private knowledge base, personal tasks, transcripts, logs, or
-  calibration data.
-- Replacing OpenCode or becoming a general multi-agent framework in 1.0.0.
-- macOS and Windows support in 1.0.0; Linux is the only supported platform.
-- A claim that the harness is faster, cheaper, or better before the benchmark
-  protocol has been run and reviewed.
-- A guarantee that Jev's advice is correct. It is evidence, not a gate.
 
 ## Documentation
 
