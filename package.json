@@ -5,6 +5,17 @@
   "license": "MIT",
   "type": "module",
   "description": "A durable task queue and engineering workflow for OpenCode. One-command install.",
+  "homepage": "https://github.com/ezcodelab/libreharness#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ezcodelab/libreharness.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ezcodelab/libreharness/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "libreharness": "bin/libreharness.js"
   },

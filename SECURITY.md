@@ -18,7 +18,8 @@ as a promise of a service-level agreement.
 Do not open a public issue with exploit details, a secret, a private path, or
 personal data.
 
-Use the public repository's private vulnerability reporting form. If that form
+Use the GitHub repository's private vulnerability reporting form at
+<https://github.com/ezcodelab/libreharness/security/advisories/new>. If that form
 is not available, open a minimal public issue asking the maintainer for a
 private channel, and include no technical detail beyond the affected area. Do
 not use a personal address.

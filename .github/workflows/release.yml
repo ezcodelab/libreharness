@@ -23,6 +23,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
+          registry-url: "https://registry.npmjs.org"
       - name: Verify package version
         run: |
           version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
@@ -35,6 +36,10 @@ jobs:
           python3 bin/docs_lint.py . --skills-dir skills
           python3 bin/check_spdx.py --root .
           python3 bin/scan_private.py --root .
+      - name: Publish npm package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
       - name: Archive
         run: |
           git archive --format=tar.gz --prefix="libreharness-${GITHUB_REF_NAME}/" -o "libreharness-${GITHUB_REF_NAME}.tar.gz" HEAD

@@ -61,7 +61,11 @@ Do not install the package into the release checkout.
 
 ## 4. Prepare the public remote
 
-- [ ] Create the public repository on the chosen host.
+The current GitHub remote is `https://github.com/ezcodelab/libreharness.git`
+(private until publication). The SSH form is
+`git@github.com:ezcodelab/libreharness.git`.
+
+- [ ] Confirm the GitHub repository is the intended public target.
 - [ ] Add it as a separate remote; do not reuse a private remote blindly.
 - [ ] Confirm the public tree contains no archived experiment reports, old
   suites, jobs, results, caches, secrets, or private paths.
@@ -87,8 +91,10 @@ git push <public-remote> v1.0.0
 ```
 
 The maintainer verifies the tag locally before pushing. The release workflow
-checks the version and package, reruns the checks, builds an archive, and
-creates the host release. Publish the npm package only with explicit approval:
+checks the version and package, reruns the checks, publishes the npm package
+when the `NPM_TOKEN` repository secret is configured, builds an archive, and
+creates the host release. The tag push is the publication approval. For the
+first release, publish manually and verify before enabling the automated step:
 
 ```sh
 npm publish --access public
