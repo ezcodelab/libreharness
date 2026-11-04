@@ -32,6 +32,8 @@ python3 bin/docs_lint.py . --skills-dir skills
 python3 bin/check_spdx.py --root .
 python3 bin/scan_private.py --root .
 git diff --check
+# CI installs a pinned gitleaks binary and scans with the repository config.
+gitleaks detect --source . --config .gitleaks.toml --redact --verbose
 ```
 
 Record the command and result in the release task or tag note. Do not treat a

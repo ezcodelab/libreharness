@@ -3,5 +3,9 @@
 useDefault = true
 
 [[allowlists]]
-description = "Synthetic test fixtures"
-paths = ['''tests/fixtures/.*''']
+description = "Synthetic secret shapes used only by guard and benchmark fixtures"
+paths = [
+  '''tests/fixtures/.*''',
+  '''tests/auto-intake\.test\.mjs''',
+  '''bench/fixtures/ablation/.*''',
+]

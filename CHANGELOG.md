@@ -58,6 +58,9 @@ published to npm or a public repository.
 - Jev error text now names `~/.config/opencode/jev.key`, matching the resolver.
 - CI actions are pinned to immutable commits; release packaging checks the
   tarball and the tag/version match.
+- CI uses a pinned gitleaks binary instead of the organization-licensed action.
+  Synthetic secret shapes in guard and benchmark fixtures are explicitly
+  allowlisted; real code and history remain scanned.
 
 ## [1.0.0-rc.1] - 2026-10-30
 
