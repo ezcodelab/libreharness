@@ -68,11 +68,9 @@ investigated promptly and fairly.
 All community leaders are obligated to respect the privacy and security of the
 reporter of any incident.
 
-**Project enforcement contact:** This local release candidate has no public
-repository and no project alias yet. Before the first public release, replace
-this paragraph with a project-owned conduct address or private report form. Do
-not use a personal address. Until then, a report can be made through the
-maintainer contact published on the repository profile when one exists.
+**Project enforcement contact:** Use the repository host's private reporting
+form or the maintainer contact published on the repository profile. Do not use
+a personal address.
 
 ## Enforcement Guidelines
 

@@ -19,7 +19,7 @@ import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const VERSION = "1.0.0-rc.1";
+const VERSION = "1.0.0";
 const RUNTIME_DIRS = ["agents", "commands", "skills", "plugins", "bin"];
 const RUNTIME_FILES = ["AGENTS.md", "LICENSE", "NOTICE", "opencode.example.json"];
 

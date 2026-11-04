@@ -28,7 +28,7 @@ Tradeoffs:
   boundary.
 - No schema migration framework. A major format change needs a script.
 - Markdown parsing is deliberately simple. A task is not a rich document.
-- POSIX `fcntl` locking means Windows is out for 1.0.0.
+- Linux `fcntl` locking is the 1.0.0 support boundary.
 - A large queue eventually needs archive and retention rules.
 
 The queue is not trying to be a project tracker. It is a small durable memory
@@ -111,42 +111,29 @@ fix or an explained disagreement. A pass does not replace the acceptance check.
 | A single TODO list | No ownership, dependencies, evidence, handoff, or review boundary. It loses the reason for the queue. |
 | Automatic Jev gate | False confidence and model-controlled blocking. Advisory is the safer default. |
 | A general multi-agent framework in 1.0.0 | Coordination cost, unclear ownership, and no tests for the interface. A narrow preview is a later milestone. |
-| Windows support first | The lock layer, path behavior, and CI matrix need their own work. POSIX first is honest. |
+| macOS and Windows support in 1.0.0 | The lock layer, path behavior, and CI matrix need their own work. Linux is the tested platform. |
 | Copying a private history into a public repository | Old blobs, paths, and secrets are hard to audit. A fresh sanitized tree is smaller and reviewable. |
 | A benchmark claim before running the benchmark | A claim without data is marketing. The honest status is "unrun". |
 
 ## What 1.0.0 keeps as seams
 
-The 1.1 and 1.2 previews should not require a rewrite. 1.0.0 keeps these seams:
+A later multi-agent preview should not require a rewrite. 1.0.0 keeps these
+seams:
 
-- The target is one lock module with `fcntl` behind it, so the 1.1 preview
-  replaces the lock implementation, not the queue. In rc.1, `bin/tasks.py`
-  still imports `fcntl` directly.
+- The target is one lock module with `fcntl` behind it, so a later
+  implementation can replace the lock without touching the queue. In 1.0.0,
+  `bin/tasks.py` still imports `fcntl` directly.
 - `pathlib` and explicit path handling in the queue, doctor, installer, and
-  tests. No POSIX-only shell assumption in the public contract.
+  tests. No unstated Linux shell assumption in the public contract.
 - A documented agent and lane boundary: task ownership, provider concurrency,
   handoff, worktree, and merge ownership.
 - Provider concurrency as policy, not a hardcoded number.
 - State schema versioning so a later multi-agent change can migrate.
 
-These are design constraints, not features. The previews still need their own
-tests and release gates.
+These are design constraints, not features. Any later preview still needs its
+own tests and release gates.
 
-## Windows 1.1 preview
-
-Planned scope:
-
-- replace the direct `fcntl` use with a cross-platform lock module;
-- keep the Markdown state format compatible;
-- test the queue on Windows and POSIX;
-- document the platform-specific install path;
-- add a Windows CI job.
-
-Not promised for 1.0.0. The current code imports `fcntl` directly in
-`bin/tasks.py` and fails on native Windows Python. WSL2 may work but is not
-tested.
-
-## Multi-agent 1.2 preview
+## Multi-agent preview
 
 Planned scope is narrow:
 

@@ -83,14 +83,14 @@ tool, or at least three tool calls. It nudges once per session.
 | `CLOSE_REMINDER_MODE` | `notify` | `notify`, `prompt`, or `off` |
 | `CLOSE_REMINDER_MS` | `1800000` | Idle time in milliseconds |
 
-`notify` uses `notify-send` on Linux. On macOS and other platforms it silently
+`notify` uses `notify-send` on Linux. Without a notification daemon it silently
 does nothing. `prompt` sends a message into the session and costs model tokens.
 `off` disables the plugin.
 
 Failure mode: no `notify-send`, no desktop session, or a closing session means
 the reminder is missed. That is safe. There is no retry queue.
 
-Test: there is no dedicated unit test in rc.1. Check syntax with:
+Test: there is no dedicated unit test in 1.0.0. Check syntax with:
 
 ```sh
 node --check plugins/close-reminder.js
@@ -157,7 +157,7 @@ A comment with no rule id allows all matches in that edit. Use the rule id when
 you can.
 
 Failure mode: a scan failure is swallowed and the tool result is unchanged.
-There is no environment switch in rc.1. Disable by not loading the plugin.
+There is no environment switch in 1.0.0. Disable by not loading the plugin.
 
 Test:
 

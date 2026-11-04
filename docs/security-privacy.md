@@ -138,7 +138,7 @@ redact it first. If you publish a fixture, use synthetic data.
 - A shell command that reaches the network.
 - A leaked key that was already committed. Rotate it.
 - A state directory on a shared machine with permissive permissions.
-- Windows in 1.0.0.
+- macOS and Windows in 1.0.0; Linux is the only supported platform.
 
 ## Reporting
 

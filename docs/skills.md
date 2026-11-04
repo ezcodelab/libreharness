@@ -8,7 +8,7 @@ one-screen choice between them, see [When to use what](when-to-use.md).
 
 ## The six skills
 
-| Skill | Use when | Lines in rc.1 |
+| Skill | Use when | Lines in 1.0.0 |
 |---|---|---|
 | [engineering-loop](../skills/engineering-loop/SKILL.md) | Nontrivial work: external API, secrets or auth, schema or data, security tradeoff, multi-file design, or "done" means production behavior | 120 |
 | [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, auto-lane ready children, run the queue, stop on a one-way door or blocker | 92 |
@@ -17,7 +17,7 @@ one-screen choice between them, see [When to use what](when-to-use.md).
 | [verification](../skills/verification/SKILL.md) | A change needs proof against the real app and the project lacks a scripted way to drive it; generate a project-local verification recipe | 116 |
 | [work-queue](../skills/work-queue/SKILL.md) | Work that is nontrivial, spans sessions, or runs in parallel; create and maintain durable tasks | 82 |
 
-Line counts are for the current candidate and will drift. The budget is
+Line counts are for the 1.0.0 tree and will drift. The budget is
 enforced by the lint, not by this table.
 
 ## What a skill contains

@@ -79,7 +79,7 @@ single diff moves the rate by 10 points.
 
 ## Current thresholds
 
-These are the rc.1 defaults in the reference client:
+These are the 1.0.0 defaults in the reference client:
 
 | Client | Rule |
 |---|---|

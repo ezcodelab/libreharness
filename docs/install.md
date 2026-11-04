@@ -24,7 +24,7 @@ For scripts or CI, skip the prompts:
 npx libreharness init --yes
 ```
 
-The release candidate is not published to npm yet. From a checkout, use the
+The 1.0.0 package is not published to npm yet. From a checkout, use the
 same command directly:
 
 ```sh
@@ -101,7 +101,7 @@ delete an existing OpenCode config.
 
 ## Requirements
 
-- Linux or macOS. Windows is a 1.1 preview.
+- Linux only. macOS and Windows are not supported.
 - Node 20 or newer.
 - Python 3.10 or newer.
 - Git and OpenCode 2.x.

@@ -31,7 +31,6 @@ All three print a human-readable result by default and JSON with `--json`.
 | `JEV_MODEL` | Yes for a live call | Unset | Model id; no hardcoded default |
 | `JEV_API_KEY` | No | Unset | Key from the environment |
 | `JEV_KEY_FILE` | No | Unset | Path to a key file; mode 600 |
-| `JEV_MODE` | No | Unset | Contract values `live`, `mock`, `skip`; see implementation status |
 
 `JEV_MODEL` is required for every live call. The client does not pick a model
 from the catalog and does not hardcode a rotating free model. A model id that
@@ -98,11 +97,11 @@ A missing key is a configuration error from a standalone client:
 
 ```text
 error: no Jev key. Set OPENCODE_API_KEY, pass --key-file, or create
-~/.config/opencode/console.key (chmod 600).
+~/.config/opencode/jev.key (chmod 600).
 ```
 
-The exit code is 3. The message in rc.1 names `console.key`; the resolver reads
-`jev.key`, `JEV_KEY_FILE`, and the environment variables above. Use those.
+The exit code is 3. The 1.0.0 message names `jev.key`; the resolver reads that
+file, `JEV_KEY_FILE`, and the environment variables above. Use those.
 
 At the workflow level, a missing key is a skip:
 
@@ -214,22 +213,8 @@ promotes a skill to global in that turn.
 The mock still requires `JEV_MODEL`, because the client validates configuration
 before the mock branch. It does not need a key.
 
-`jev_triage.py` has no mock or dry-run in rc.1. If you need a no-network triage
-test, test the parser with a fixture response in Python.
-
-## JEV_MODE
-
-The adapter contract defines `JEV_MODE` with three values:
-
-| Value | Intended behavior |
-|---|---|
-| `live` | Call the configured endpoint; require a key and model |
-| `mock` | Return a deterministic fixture; no network |
-| `skip` | Print one line and exit successfully |
-
-In 1.0.0-rc.1 the three clients do not read `JEV_MODE`. Use the command flags
-and the exit-3 handling described above. Do not rely on `JEV_MODE` until the
-changelog says it is implemented.
+`jev_triage.py` has no mock or dry-run in 1.0.0. If you need a no-network
+triage test, test the parser with a fixture response in Python.
 
 ## Cost
 
@@ -269,7 +254,7 @@ may contain request details. Read an error before sharing it.
 
 See [security-privacy.md](security-privacy.md) for the full boundary.
 
-## Implementation status in 1.0.0-rc.1
+## Implementation status in 1.0.0
 
 | Area | Status |
 |---|---|
@@ -279,9 +264,8 @@ See [security-privacy.md](security-privacy.md) for the full boundary.
 | `--check` model availability, exit 4 | Implemented |
 | Review mock and dry run | Implemented |
 | Plan mock and dry run | Implemented |
-| Automatic plan critique from `/goal` | Not wired in rc.1; run `bin/jev_plan.py` directly |
+| Automatic plan critique from `/goal` | Not wired in 1.0.0; run `bin/jev_plan.py` directly |
 | Triage mock and dry run | Not implemented |
-| `JEV_MODE` | Documented contract, not read by the clients |
 | Shared `bin/jev_common.py` | Not present; clients import shared functions from `jev_review.py` |
 | Prompt templates in `jev/prompts/` | Not present; prompts are built in the clients |
 

@@ -7,7 +7,7 @@
 One maintainer owns 1.0.0: the person or project role listed in the repository
 profile. The maintainer makes the final call on scope, releases, and one-way
 decisions. The role is expected to grow into a small maintainer group after
-the first public release; this candidate does not pretend that group exists
+the first public release; this release does not pretend that group exists
 yet.
 
 The maintainer is responsible for:
@@ -68,8 +68,7 @@ with no interface change, is decided and acted on without a gate.
 
 ## Releases
 
-- Versions follow semantic versioning. `1.0.0-rc.1` is a release candidate, not
-  a stable release.
+- Versions follow semantic versioning. `1.0.0` is the first stable release.
 - Every release has a changelog entry, a tag, and a note that states what was
   verified and what was not.
 - Patch and minor releases keep the Markdown state format backward compatible.

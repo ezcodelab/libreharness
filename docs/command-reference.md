@@ -55,7 +55,7 @@ Plan mode stops before creating anything. `go` is the approval. There is no
 separate apply step. `goal-start` creates up to three lanes for ready children
 with disjoint `owns`, or reports serial when fewer than two are lane-able.
 
-Plan critique is available as a standalone `bin/jev_plan.py` call. The rc.1
+Plan critique is available as a standalone `bin/jev_plan.py` call. The 1.0.0
 `/goal` command does not invoke it automatically. Run it after the dry run if
 you want an advisory second opinion, and treat the result as evidence, not a
 gate.
@@ -502,7 +502,7 @@ python3 bin/jev_triage.py --state <file> [options]
 | `--timeout <seconds>` | Default 90 |
 | `--json` | JSON result |
 
-Triage has no `--mock` or `--dry-run` in 1.0.0-rc.1.
+Triage has no `--mock` or `--dry-run` in 1.0.0.
 
 ## Exit codes
 

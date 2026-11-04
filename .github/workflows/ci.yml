@@ -18,12 +18,11 @@ jobs:
         python: ["3.10", "3.11", "3.12", "3.13"]
         node: ["20", "22"]
     steps:
-      - uses: actions/checkout@v4
-        # TODO: pin to a commit SHA before publication.
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: ${{ matrix.python }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ matrix.node }}
       - name: Python tests
@@ -34,6 +33,9 @@ jobs:
           node tests/goal-watch.test.mjs
           node tests/review-protocol.test.mjs
           node tests/security-guard.test.mjs
+          node tests/installer.test.mjs
+      - name: Package dry run
+        run: npm pack --dry-run
       - name: Docs lint
         run: python3 bin/docs_lint.py . --skills-dir skills
       - name: SPDX
@@ -44,11 +46,11 @@ jobs:
         run: |
           if ls bin/*.sh >/dev/null 2>&1; then shellcheck -x bin/*.sh; else echo "no shell scripts"; fi
       - name: Secret scan
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Link check
-        uses: lycheeverse/lychee-action@v2
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
           args: --offline --no-progress "**/*.md"
           fail: true

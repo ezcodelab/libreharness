@@ -147,7 +147,7 @@ The reference review mock returns 3.5 for every axis and high `noul` values for
 `good`, and 1.0 and low values for `bad`. The plan mock returns `proceed` for
 `good` and `stop` for `bad`.
 
-In rc.1 the mock lives inside `jev_review.py` and `jev_plan.py`. There is no
+In 1.0.0 the mock lives inside `jev_review.py` and `jev_plan.py`. There is no
 shared transport module and no mock for triage. A future `jev_common.py` should
 own one transport interface so every client uses the same mock.
 
@@ -193,7 +193,7 @@ At minimum, test:
 - a mock run with no key and no network.
 
 The current tests for the queue are in `tests/test_tasks.py`. The Jev clients do
-not yet have dedicated test files in this candidate. That is a gap, not a
+not yet have dedicated test files in this release. That is a gap, not a
 reason to skip the contract.
 
 ## Security notes

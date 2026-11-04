@@ -64,14 +64,14 @@ Tasks, board, metrics, lock, and an optional key file live under
 `HARNESS_STATE`. Code and configuration live under `HARNESS_HOME`. Set both
 explicitly. Do not put state inside the checkout.
 
-## Does it work on Windows?
+## Does it work on macOS or Windows?
 
-No, not in 1.0.0. The queue uses POSIX `fcntl`. The 1.1 preview is planned to
-add a cross-platform lock layer. WSL2 may work but is not tested.
+No. LibreHarness 1.0.0 supports Linux only. The queue uses Linux `fcntl`
+locking, and there is no macOS or Windows support or preview in this release.
 
 ## Is it benchmarked?
 
-No. The benchmark has not been run. This candidate makes no performance, cost,
+No. The benchmark has not been run. This release makes no performance, cost,
 or quality claim. A future claim needs a pre-registered protocol, fixed tasks,
 raw data, an analysis script, and limitations.
 
@@ -117,8 +117,8 @@ See [LICENSE](../LICENSE) and [docs/LICENSE](LICENSE).
 
 Best effort, no SLA, no bounty. Security reports follow
 [SECURITY.md](../SECURITY.md). Third-party plugins, custom providers, custom Jev
-adapters, Windows, and private knowledge integrations are outside 1.0.0
-support.
+adapters, macOS, Windows, and private knowledge integrations are outside
+1.0.0 support.
 
 ## Can I contribute?
 
@@ -127,9 +127,8 @@ Sign off with `git commit -s`. No secrets.
 
 ## What is planned after 1.0.0?
 
-A Windows 1.1 preview with a cross-platform lock layer, and a narrow multi-agent
-1.2 preview. Neither is a 1.0.0 deliverable. See
-[design-notes.md](design-notes.md).
+A narrow multi-agent preview, if it earns its place. It is not a 1.0.0
+deliverable. See [design-notes.md](design-notes.md).
 
 ## Does the harness preserve chat history?
 

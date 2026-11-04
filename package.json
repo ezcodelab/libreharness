@@ -1,6 +1,6 @@
 {
   "name": "libreharness",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "private": false,
   "license": "MIT",
   "type": "module",
@@ -13,15 +13,23 @@
     "LICENSE",
     "NOTICE",
     "README.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "GOVERNANCE.md",
+    "CODE_OF_CONDUCT.md",
     "opencode.example.json",
     "agents",
     "commands",
     "skills",
     "plugins",
-    "bin",
+    "bin/*.py",
+    "bin/libreharness.js",
     "docs",
-    "harbor_agent"
+    "harbor_agent/*.py",
+    "harbor_agent/*.md"
   ],
+  "os": ["linux"],
   "engines": {
     "node": ">=20",
     "python": ">=3.10"

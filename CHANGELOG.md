@@ -7,9 +7,10 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-11-04
 
-This is the local release candidate line. Nothing here has been published.
+Status: first public release tree, Linux only. Prepared for publication; not yet
+published to npm or a public repository.
 
 ### Added
 
@@ -31,6 +32,8 @@ This is the local release candidate line. Nothing here has been published.
 - `goal-watch` reminds once per session when an active goal is closable. The
   operator can reply "close now" to run `/close` or "later" to keep it open; the
   plugin never closes a goal itself.
+- A release checklist in `docs/release.md` covering checks, signed tags, the
+  public remote, npm publication, and rollback.
 
 ### Changed
 
@@ -39,11 +42,22 @@ This is the local release candidate line. Nothing here has been published.
   closes with evidence. `/review` is a check; `/tune` is periodic maintenance.
 - Goal start auto-creates up to three lanes for ready children; `/lane` is a
   manual escape hatch.
+- LibreHarness 1.0.0 is Linux only and OpenCode only. macOS, Windows, and other
+  host adapters are outside the 1.0.0 support scope.
+- The package declares `os: linux`, and release CI runs on Ubuntu.
 
 ### Removed
 
 - The operator-facing `/harvest` and `/integrate` commands. Lesson capture is
   part of `/close`; integration is part of `/close` for a goal.
+- The unsupported `JEV_MODE` contract claim. Use `--mock`, `--dry-run`, and the
+  documented exit codes.
+
+### Fixed
+
+- Jev error text now names `~/.config/opencode/jev.key`, matching the resolver.
+- CI actions are pinned to immutable commits; release packaging checks the
+  tarball and the tag/version match.
 
 ## [1.0.0-rc.1] - 2026-10-30
 

@@ -2,11 +2,10 @@
 
 # Documentation
 
-This index describes the public documentation set for LibreHarness
-1.0.0-rc.1.
+This index describes the public documentation set for LibreHarness 1.0.0.
 
-Status: local release candidate. The benchmark has not been run. No document
-here makes a performance claim.
+Status: Linux-only release tree, prepared for publication. The benchmark has
+not been run. No document here makes a performance claim.
 
 ## Start here
 
@@ -30,6 +29,7 @@ here makes a performance claim.
 | [Skill evaluation](skill-eval.md) | How to run a small with/without experiment before promoting a skill |
 | [Benchmark proof protocol](benchmark-proof.md) | What would make an “objectively best” claim valid, and what would falsify it |
 | [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
+| [Release checklist](release.md) | Checks, signed tag, public remote, npm publish approval, and rollback |
 
 ## Jev
 
@@ -47,7 +47,7 @@ here makes a performance claim.
 | [Process lessons](process-lessons.md) | The project ledger format; experiment lessons stay in the local brain archive |
 | [Troubleshooting](troubleshooting.md) | Install, plugin, queue, permission, Jev, and upgrade errors with a next step |
 | [FAQ](faq.md) | Short answers to the questions a new user asks first |
-| [Design notes](design-notes.md) | Why the queue is Markdown, why the evidence gate exists, rejected alternatives, and the 1.1 and 1.2 previews |
+| [Design notes](design-notes.md) | Why the queue is Markdown, why the evidence gate exists, rejected alternatives, and later previews |
 
 ## Project files
 

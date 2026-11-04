@@ -2,13 +2,13 @@
 
 # Contributing
 
-This is a local release candidate. Contributions are welcome once a public
-repository exists. Until then, use the same process locally so the first public
-pull request is boring.
+This is the 1.0.0 release tree. Contributions are welcome once the public
+repository is published. Until then, use the same process locally so the first
+public pull request is boring.
 
 ## Development setup
 
-Requirements: a POSIX system, Git, Python 3.10 or newer, and Node 20 or newer
+Requirements: Linux, Git, Python 3.10 or newer, and Node 20 or newer
 for plugin tests. No Python package is required. `npm install` is only needed
 for editor types from the development dependency; the tests run without
 `node_modules`.
@@ -48,6 +48,7 @@ node --check plugins/close-reminder.js
 node --check plugins/goal-watch.js
 node --check plugins/security-guard.js
 python3 -m json.tool opencode.example.json >/dev/null
+npm pack --dry-run
 ```
 
 The Python suite uses temporary state roots. The Node tests use temporary
@@ -56,6 +57,12 @@ directories and mocks. No test should make a live model call or need a Jev key.
 If you add a Python test, use `unittest`, not a new test framework. If you add
 a Node test, use `node:test` or the existing assert style. Keep state in a
 temporary directory and clean it up.
+
+## Commits
+
+Use a Conventional Commits prefix: `feat:`, `fix:`, `docs:`, `test:`,
+`chore:`, or `refactor:`. Keep one reviewable change per commit. Sign off
+with `git commit -s`.
 
 ## Style
 
@@ -134,7 +141,7 @@ reviewer's decision.
 ## Adding a skill
 
 1. Create `skills/<name>/SKILL.md` with `name` and `description` frontmatter.
-2. Keep it under 120 lines. The skill budget is eight; the current set is five.
+2. Keep it under 120 lines. The skill budget is eight; the current set is six.
 3. Write the trigger in the description, not only in the body.
 4. Test it with the method in [docs/skill-eval.md](docs/skill-eval.md).
 5. Do not promote a skill on a hunch. A neutral result is a reason to delete or

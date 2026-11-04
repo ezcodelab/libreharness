@@ -6,26 +6,22 @@
 
 | Version | Supported |
 |---|---|
-| 1.0.0-rc.1 and later 1.0.x release candidates | Yes, best effort |
+| 1.0.x | Yes, best effort |
 | Earlier development snapshots | No |
 
-This is a local release candidate. There is no public repository, no security
-team, and no response-time guarantee yet. Do not treat this file as a promise
-of a service-level agreement.
+This is the 1.0.0 release tree. The public repository is not available yet, and
+there is no security team or response-time guarantee. Do not treat this file
+as a promise of a service-level agreement.
 
 ## Reporting a vulnerability
 
 Do not open a public issue with exploit details, a secret, a private path, or
 personal data.
 
-When the public repository exists, use its private vulnerability reporting
-form. If that form is not available, open a minimal public issue asking the
-maintainer for a private channel, and include no technical detail beyond the
-affected area.
-
-This candidate has no project security alias yet. Before publication, replace
-this paragraph with a project-owned address or the repository's private
-reporting form. Do not use a personal address.
+Use the public repository's private vulnerability reporting form. If that form
+is not available, open a minimal public issue asking the maintainer for a
+private channel, and include no technical detail beyond the affected area. Do
+not use a personal address.
 
 Include:
 
@@ -51,9 +47,9 @@ key.
 
 - Prefer `JEV_API_KEY` in the environment for a short session, or
   `JEV_KEY_FILE` pointing at a mode 600 file.
-- The reference client also checks `OPENCODE_API_KEY`, `TYPESAFE_API_KEY`, and
-  `~/.config/opencode/jev.key` in that order after `JEV_API_KEY`. Use one
-  source, not several.
+- The reference client accepts `--key-file`, then `JEV_API_KEY`,
+  `OPENCODE_API_KEY`, `TYPESAFE_API_KEY`, `JEV_KEY_FILE`, and the default
+  `~/.config/opencode/jev.key`, in that order. Use one source, not several.
 - Never commit a key, put it in a task, paste it into a prompt, or send it to a
   custom endpoint you do not trust.
 - The client sends the key only to the configured endpoint. It does not print
@@ -72,7 +68,7 @@ key.
   pattern unless `--allow-secret-shaped` is passed. That flag is for a
   deliberate, reviewed exception, not a convenience. The plan client rejects a
   secret-shaped plan state. Triage does not apply the guard to its close state
-  in rc.1.
+  in 1.0.0.
 - The queue does not encrypt task files. Use filesystem permissions and full
   disk encryption if the state contains sensitive work.
 - State should be mode 700 and key files mode 600. The queue uses the process
@@ -85,7 +81,7 @@ key.
 - A malicious repository, prompt injection, or tool output that convinces an
   agent to run a command. Review commands and permissions.
 - Third-party plugins, custom Jev adapters, and external MCP servers.
-- Windows in 1.0.0.
+- macOS and Windows in 1.0.0; Linux is the only supported platform.
 - A leaked key that was already committed before this policy existed. Rotate
   it and treat the exposure as real.
 

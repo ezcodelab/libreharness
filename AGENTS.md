@@ -52,7 +52,7 @@
 
 ## Context and handoff
 - Load in this order: task packet and handoff; project `AGENTS.md`,
-  `docs/process-lessons.md`, and `docs/INDEX.md`; the named source and tests; at
+  `docs/process-lessons.md`, and `docs/README.md`; the named source and tests; at
   most three matching lessons and one matching skill.
 - Do not read the whole state directory, the whole lesson ledger, a full
   transcript, or unrelated projects. Prefer indexes and `rg`.

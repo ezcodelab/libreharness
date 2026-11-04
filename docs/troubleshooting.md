@@ -155,8 +155,8 @@ The watcher never creates work and never marks a task done. It only nudges.
 - Has the session done real tool work? It needs a mutating tool or at least
   three tool calls.
 - Has 30 minutes of idle time passed? Change `CLOSE_REMINDER_MS` to test.
-- On macOS, `notify-send` is not used, so `notify` mode is silent. Use `prompt`
-  mode or a platform notifier.
+- Without a Linux desktop notification daemon, `notify` mode is silent. Use
+  `prompt` mode if you need a reminder.
 - The reminder is once per session.
 
 ## State and permissions
@@ -255,7 +255,7 @@ or:
 export JEV_API_KEY="<key>"
 ```
 
-The rc.1 error text mentions `console.key`; the resolver reads `jev.key`,
+The 1.0.0 error text names `jev.key`; the resolver reads that file,
 `JEV_KEY_FILE`, `JEV_API_KEY`, `OPENCODE_API_KEY`, and `TYPESAFE_API_KEY`. Use
 the documented names.
 
@@ -308,7 +308,7 @@ branch. Set any non-empty value, for example `JEV_MODEL=example-model`.
 
 ### The triage client has no mock
 
-Correct for rc.1. Only review and plan have `--mock`; triage does not. Test the
+Correct for 1.0.0. Only review and plan have `--mock`; triage does not. Test the
 triage parser with a fixture instead of a live call.
 
 ## Upgrade and rollback
@@ -320,12 +320,10 @@ triage parser with a fixture instead of a live call.
 - If a rollback crosses a migration, restore the backup. Do not run an old
   binary against a newer state layout.
 
-## Windows
+## Linux-only support
 
-1.0.0 does not support Windows. `bin/tasks.py` imports `fcntl`, so it fails on a
-native Windows Python. WSL2 provides a Linux environment and may work, but it is
-not tested for 1.0.0. The 1.1 preview is planned to put the lock behind a
-cross-platform module. Until then, use Linux or macOS.
+LibreHarness 1.0.0 supports Linux only. `bin/tasks.py` imports `fcntl`; macOS
+and Windows are not supported. Use a Linux host or a Linux VM.
 
 ## Documentation checks
 

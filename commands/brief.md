@@ -9,7 +9,7 @@ Use the work-queue and engineering-loop skills.
 1. Read the task packet:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" show <id> --packet`.
    If there is no task, say so and use the stated scope.
-2. Read the project `AGENTS.md`, `docs/INDEX.md` when present, and the files or
+2. Read the project `AGENTS.md`, `docs/README.md` when present, and the files or
    tests the task names. Do not read the whole repository.
 3. Find up to three matching lessons in the project's
    `docs/process-lessons.md`. Include only lessons that change the next action.

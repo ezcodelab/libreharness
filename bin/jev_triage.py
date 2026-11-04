@@ -114,7 +114,7 @@ def main() -> int:
     if not key:
         print(
             "error: no Jev key. Set OPENCODE_API_KEY, pass --key-file, or create "
-            "~/.config/opencode/console.key (chmod 600).",
+            "~/.config/opencode/jev.key (chmod 600).",
             file=sys.stderr,
         )
         return 3

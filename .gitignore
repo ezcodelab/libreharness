@@ -14,5 +14,7 @@ __pycache__/
 .venv/
 dist/
 coverage/
+*.tgz
+SHA256SUMS
 
 jobs/

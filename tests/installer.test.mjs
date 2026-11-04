@@ -29,7 +29,7 @@ assert.match(help.stdout, /npx libreharness init/);
 
 const version = run(["--version"]);
 assert.equal(version.status, 0);
-assert.match(version.stdout, /1\.0\.0-rc\.1/);
+assert.match(version.stdout, /1\.0\.0/);
 
 // A dry run must not create the target.
 const dryHome = join(root, "dry-home");
@@ -98,7 +98,8 @@ assert.ok(
 const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 assert.equal(pkg.bin.libreharness, "bin/libreharness.js");
 assert.equal(pkg.private, false);
-assert.ok(pkg.files.includes("bin"));
+assert.ok(pkg.files.includes("bin/*.py"));
+assert.ok(pkg.files.includes("bin/libreharness.js"));
 assert.ok(pkg.files.includes("agents"));
 
 rmSync(root, { recursive: true, force: true });

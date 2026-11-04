@@ -6,10 +6,10 @@ A durable work queue, a risk-scaled engineering workflow, reusable agents,
 commands, and skills, local OpenCode plugins, and an advisory typed-question
 reviewer called Jev.
 
-**Status: 1.0.0-rc.1, local release candidate. Benchmark unrun.**
-This tree has not been published. No performance, cost, or quality claim is
-backed by a benchmark yet. Treat the harness as a workflow to evaluate, not as
-a proven improvement.
+**Status: 1.0.0, Linux only. Prepared for public release. Benchmark unrun.**
+This tree is prepared for publication but has not been published yet. No
+performance, cost, or quality claim is backed by a benchmark. Treat the
+harness as a workflow to evaluate, not as a proven improvement.
 
 ## What it is
 
@@ -31,7 +31,7 @@ outlives one chat:
 - Jev, a first-class advisory layer that asks typed questions about a diff, a
   plan, or a close state and returns structured answers.
 
-The queue is stdlib Python plus POSIX file locking. There is no database, no
+The queue is stdlib Python plus Linux file locking. There is no database, no
 server, and no third-party Python package. Local plugins use Node built-ins.
 
 ## Why it exists
@@ -126,22 +126,21 @@ one. See [docs/jev.md](docs/jev.md).
 
 ## Status and support
 
-| Item | Status in 1.0.0-rc.1 |
+| Item | Status in 1.0.0 |
 |---|---|
-| Release | Local candidate, not published |
+| Release | 1.0.0 release tree, not yet published |
 | Benchmark | Not run; no results are shipped |
-| Platform | Linux and macOS |
-| Windows | Not supported in 1.0.0; 1.1 preview planned |
+| Platform | Linux only |
 | Python | 3.10 or newer |
 | Node | 20 or newer, for plugin tests and optional plugins |
-| OpenCode | 2.x |
-| CI | Workflows are present in the tree; publication CI has not been verified |
+| OpenCode | 2.x only; no Claude Code, Hermes, or other host adapter |
+| CI | Linux CI is defined; the tagged release path is not yet exercised |
 | Support | Best effort, no SLA, no bounty |
 
 The supported scope is the queue, commands, agents, six skills, the four
-bundled local plugins, the Jev client, and the documented install path.
-Third-party plugins, custom providers, custom Jev adapters, Windows, and
-private knowledge integrations are outside 1.0.0 support.
+bundled local plugins, the Jev client, and the documented Linux/OpenCode
+install path. Third-party plugins, custom providers, custom Jev adapters,
+macOS, Windows, and private knowledge integrations are outside 1.0.0 support.
 
 ## License
 
@@ -163,7 +162,7 @@ Code snippets inside documentation are MIT. The surrounding prose is CC BY
 - Publishing a private knowledge base, personal tasks, transcripts, logs, or
   calibration data.
 - Replacing OpenCode or becoming a general multi-agent framework in 1.0.0.
-- Windows support in 1.0.0.
+- macOS and Windows support in 1.0.0; Linux is the only supported platform.
 - A claim that the harness is faster, cheaper, or better before the benchmark
   protocol has been run and reviewed.
 - A guarantee that Jev's advice is correct. It is evidence, not a gate.

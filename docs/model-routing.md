@@ -43,7 +43,7 @@ copy a model ID from an example and assume it is current.
 
 ## Static matrix example
 
-A cost-conscious release candidate can use one provider for every role. The
+A cost-conscious 1.0.0 install can use one provider for every role. The
 operator's current working matrix uses Ollama:
 
 | Role | Model |

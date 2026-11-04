@@ -108,7 +108,7 @@ curl -fsS localhost:8080/health: HTTP 200
 ```
 
 ```text
-[T] no Windows machine available; 1.1 preview tracks the lock layer, manual check deferred
+[T] Harbor is not installed; adapter tests are skipped in this environment
 ```
 
 The last form is a tracked deferral, not a pass. Say what is unproven and what
