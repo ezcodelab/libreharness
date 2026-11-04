@@ -45,6 +45,9 @@ published to npm or a public repository.
 - LibreHarness 1.0.0 is Linux only and OpenCode only. macOS, Windows, and other
   host adapters are outside the 1.0.0 support scope.
 - The package declares `os: linux`, and release CI runs on Ubuntu.
+- Release publishing uses npm OIDC trusted publishing. There is no long-lived
+  `NPM_TOKEN`; the first package version is bootstrapped interactively or with
+  staged publishing.
 
 ### Removed
 

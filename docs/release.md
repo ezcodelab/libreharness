@@ -81,9 +81,60 @@ If the public history must be clean, create the repository from a fresh
 snapshot. The current repository history contains old experiment files by
 explicit operator decision; do not assume a clean tree means a clean history.
 
-## 5. Tag and publish
+## 5. Bootstrap the first npm publish
 
-Only after the checks and the public repository review:
+npm trusted publishing can only be configured on a package that already exists.
+The first publish therefore needs one interactive WebAuthn approval. Use a
+platform authenticator or phone passkey if available; otherwise a hardware
+security key is required.
+
+```sh
+npm login
+npm view libreharness version   # expect 404 before the first publish
+npm publish --access public
+```
+
+Alternatively, use staged publishing:
+
+```sh
+npm stage publish
+npm stage list libreharness
+```
+
+Approve the staged `1.0.0` in npmjs.com → **Staged Packages** with your
+security key. Then verify:
+
+```sh
+npm view libreharness@1.0.0 version
+```
+
+## 6. Configure trusted publishing
+
+After the package exists, open npmjs.com → package → **Settings** →
+**Trusted Publisher** → **GitHub Actions** and set:
+
+- Organization: `ezcodelab`
+- Repository: `libreharness`
+- Workflow filename: `release.yml`
+- Allowed action: `npm publish`
+
+The CLI equivalent, run interactively with 2FA, is:
+
+```sh
+npm trust github --file release.yml \
+  --repo ezcodelab/libreharness --allow-publish
+```
+
+Complete the first trusted publish within **2 days** or the configuration
+expires. The release workflow uses OIDC; there is no `NPM_TOKEN` secret and no
+long-lived publish token.
+
+After the trusted publisher works, set the package's **Publishing access** to
+**Require two-factor authentication and disallow tokens**.
+
+## 7. Tag and publish
+
+Only after the checks, the first npm publish, and the public repository review:
 
 ```sh
 git tag -s v1.0.0 -m "LibreHarness 1.0.0"
@@ -93,20 +144,15 @@ git push <public-remote> v1.0.0
 ```
 
 The maintainer verifies the tag locally before pushing. The release workflow
-checks the version and package, reruns the checks, publishes the npm package
-when the `NPM_TOKEN` repository secret is configured, builds an archive, and
-creates the host release. The tag push is the publication approval. The publish
-step skips a version that already exists, so a manual first publish and a later
-tag release cannot collide:
-
-```sh
-npm publish --access public
-```
+checks the version and package, reruns the checks, publishes over OIDC, builds
+an archive, and creates the host release. The tag push is the publication
+approval. The publish step skips a version that already exists, so the manual
+first publish and a later tag release cannot collide.
 
 Do not push a tag before the version and changelog are final. Do not force-push
 a shared branch.
 
-## 6. Post-release verification
+## 8. Post-release verification
 
 - [ ] Install from the published npm package on a clean Linux host.
 - [ ] Run `npx libreharness init --dry-run` and a real init in a temporary
@@ -117,7 +163,7 @@ a shared branch.
   is unrun.
 - [ ] Confirm the package tarball and release archive hashes match.
 
-## 7. Rollback
+## 9. Rollback
 
 - Unpublish only if the host and registry allow it; otherwise publish a patch
   release with a clear advisory.

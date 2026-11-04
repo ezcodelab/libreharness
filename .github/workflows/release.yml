@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -24,6 +25,7 @@ jobs:
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
       - name: Verify package version
         run: |
           version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
@@ -45,8 +47,6 @@ jobs:
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
           /tmp/gitleaks detect --source . --config .gitleaks.toml --redact --verbose
       - name: Publish npm package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
           if npm view "libreharness@$version" version >/dev/null 2>&1; then
