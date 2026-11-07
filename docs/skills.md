@@ -3,22 +3,23 @@
 # Skills
 
 Skills are reusable procedures that OpenCode advertises to the model and loads
-on demand. The harness ships six. They are process, not product code. For a
+on demand. The harness ships seven. They are process, not product code. For a
 one-screen choice between them, see [When to use what](when-to-use.md).
 
-## The six skills
+## The seven skills
 
-| Skill | Use when | Lines in 1.0.0 |
+| Skill | Use when | Lines |
 |---|---|---|
 | [engineering-loop](../skills/engineering-loop/SKILL.md) | Nontrivial work: external API, secrets or auth, schema or data, security tradeoff, multi-file design, or "done" means production behavior | 120 |
 | [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, auto-lane ready children, run the queue, stop on a one-way door or blocker | 92 |
 | [parallel-lanes](../skills/parallel-lanes/SKILL.md) | Split work across two or three agents or sessions; define slices, ownership, worktrees, merge order, and integration | 77 |
+| [state-audit](../skills/state-audit/SKILL.md) | Stateful code: queues, retries, locks, sessions, lifecycle, recovery, concurrency, or a stuck/duplicate/lost bug; document states, invariants, and transitions, then fix confirmed invalid paths | 100 |
 | [ui-design](../skills/ui-design/SKILL.md) | UI or UX work: layout, component, styling, visual review, or interface copy | 89 |
 | [verification](../skills/verification/SKILL.md) | A change needs proof against the real app and the project lacks a scripted way to drive it; generate a project-local verification recipe | 116 |
 | [work-queue](../skills/work-queue/SKILL.md) | Work that is nontrivial, spans sessions, or runs in parallel; create and maintain durable tasks | 82 |
 
-Line counts are for the 1.0.0 tree and will drift. The budget is
-enforced by the lint, not by this table.
+Line counts are current and will drift. The budget is enforced by the lint, not
+by this table.
 
 ## What a skill contains
 

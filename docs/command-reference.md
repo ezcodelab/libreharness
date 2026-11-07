@@ -150,6 +150,24 @@ The review order is Jev, then an optional `devils-advocate` pass, then a
 verdict. A Jev exit 3 means "unavailable" and falls back to the independent
 review path. A Jev exit 4 means the model is gone and stops the review.
 
+### `/state-audit`
+
+**Use when** stateful code needs its explicit and implicit state machines mapped, or a stuck, duplicate, lost, retry, or concurrency bug needs a reachable-path audit.
+
+```text
+/state-audit <repo, path, subsystem, or machine>
+/state-audit
+```
+
+Writes or updates `docs/state-machines.md` in the project with states,
+invariants, transition tables, ownership, recovery, and concurrency. It traces
+invalid paths through retries, duplicate delivery, lock expiry, crash or
+restart, partial failure, cancellation, timeouts, stale reads, and out-of-order
+events. A finding is `CONFIRMED` only with `file:line` evidence and a failing
+test or repro. It ranks by impact, groups by root cause, fixes the highest-impact
+group with a regression test, and updates the document. If the audit is too
+large, it stops after the document and grouped issues.
+
 ### `/close`
 
 **Use when** a task or goal is ready to finish; it integrates reviewed goal lanes and reaps clean merged worktrees.

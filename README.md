@@ -15,12 +15,12 @@ outlives one chat:
   a generated board.
 - A workflow that scales process to risk: trivial changes skip the queue,
   nontrivial changes get a brief, a review, and evidence.
-- Six portable skills: engineering loop, goal loop, parallel lanes, UI
-  design, verification, and work queue.
+- Seven portable skills: engineering loop, goal loop, parallel lanes, state
+  audit, UI design, verification, and work queue.
 - Agents for exploration, implementation, integration, and independent
   challenge.
 - Commands for queue inspection, goal intake, briefs, lanes, takeover, review,
-  close, handoff, design review, and tuning.
+  state audit, close, handoff, design review, and tuning.
 - Four local plugins: automatic task intake, close reminder, a goal watcher for
   continuation and closable-goal reminders, and an advisory security scan.
 - Jev, a first-class advisory layer that asks typed questions about a diff, a
@@ -51,6 +51,7 @@ harness makes three things durable:
 | Continue a task | `/brief <task-id>` |
 | Run independent slices | `/goal go` auto-lanes; `/lane` only for manual isolation |
 | Review a diff | `/review <task-id>` (a check, not a finish step) |
+| Audit stateful code | `/state-audit <path>` |
 | Resume after a pause | `/takeover <task-id>` |
 | Finish a task or goal | `/close <task-id>` (integrates goal lanes) |
 | Review a UI | `/design-review` |

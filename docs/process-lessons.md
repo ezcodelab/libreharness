@@ -31,3 +31,15 @@ for a desktop authenticator.
 Doc updated: `docs/release.md` (staged-first bootstrap), `docs/README.md`
 (published status).
 Promote-to-global: no
+
+## 2026-11-07 - Default state-machine audit
+
+Surprise: none.
+Cost: one command, one skill, one review gate, and one tune pass.
+Rule: stateful changes run the `state-audit` skill and update
+`docs/state-machines.md` before review; a confirmed invalid transition gets a
+regression test before the fix.
+Doc updated: `AGENTS.md`, `commands/review.md`, `commands/tune.md`,
+`docs/command-reference.md`, `docs/skills.md`, `docs/when-to-use.md`,
+`docs/workflow.md`.
+Promote-to-global: yes

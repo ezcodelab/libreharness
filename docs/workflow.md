@@ -149,6 +149,11 @@ Jev exit codes:
 A Jev send-back is advisory. It still needs a concrete fix or an explained
 disagreement. A Jev pass does not replace the acceptance check.
 
+For a stateful diff, the review also checks the project's
+`docs/state-machines.md` and requires a regression test for every confirmed
+invalid transition. Run `/state-audit` before the review when the document is
+missing or the change crosses a transition, retry, lock, or lifecycle boundary.
+
 ## 7. Close
 
 `/close <id>` is the single finish command:

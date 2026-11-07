@@ -105,6 +105,10 @@ in the repository.
 - Define done as runnable checks. Run them and report actual results.
 - Run `/review` before declaring nontrivial work complete. The merged tree gets
   the final review.
+- Stateful changes: when a change adds or alters a state machine, retry, lock,
+  concurrency, session, queue, or lifecycle path, run the `state-audit` skill
+  and update the project's `docs/state-machines.md` before `/review`. A
+  confirmed invalid transition gets a regression test before the fix.
 - Prefer independent review for nontrivial changes. If no review ran, say so.
 - When a failure pattern appears twice, encode it as a test, lint rule, or
   instruction.

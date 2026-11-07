@@ -52,7 +52,13 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
    the change is safe because of. Require a runnable proof such as a test,
    script, or command output; if it cannot be proved, mark it **UNVERIFIED**.
    A plausible explanation is not evidence.
-7. Verdict:
+7. State impact. If the diff adds or changes a state machine, retry, lock,
+   session, queue, concurrency, or lifecycle path, require the `state-audit`
+   skill's `docs/state-machines.md` to be updated and a regression test for
+   every confirmed invalid transition. Do not run the audit or edit code in this
+   turn. A missing document is a warning for a stateless diff and a send-back
+   for a lifecycle, retry, concurrency, or recovery change.
+8. Verdict:
    - Only a **CONFIRMED** devils P0/P1 blocks. A P2/P3 confirmed finding is a
      fix or an explicit accepted risk, not an automatic send-back.
    - **UNVERIFIED** is a warning, not a defect. Ask for the missing source,
@@ -68,8 +74,8 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
      not a confirmed defect, and still ask for a rerun after the fix.
    - Jev exit 0 and no confirmed blocking finding → report what passed,
      residual risks, and what remains unproven.
-8. If a task id was used, update the queue (not code):
+9. If a task id was used, update the queue (not code):
    - pass: `tasks.py status <id> review --note "Jev pass; devils: <none|findings>"`;
    - send back: `tasks.py log <id> "review send-back: <one line>"`, leave it
      active.
-9. Show the verdict and stop. Do not promote lessons; `/close` does that.
+10. Show the verdict and stop. Do not promote lessons; `/close` does that.
