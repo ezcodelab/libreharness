@@ -43,3 +43,13 @@ Doc updated: `AGENTS.md`, `commands/review.md`, `commands/tune.md`,
 `docs/command-reference.md`, `docs/skills.md`, `docs/when-to-use.md`,
 `docs/workflow.md`.
 Promote-to-global: yes
+
+## 2026-11-07 - OpenCode V2 plugin packaging
+
+Surprise: the V2 server plugin API registers commands, agents, and skills
+directly; the copy installer was the source of the drift.
+Cost: a package entrypoint, a plugin test, and a clean npm install proof.
+Rule: ship harness behavior as a versioned V2 plugin; keep the copy installer
+only as an offline fallback.
+Doc updated: `docs/install.md`, `README.md`, `CHANGELOG.md`.
+Promote-to-global: yes

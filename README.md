@@ -61,7 +61,27 @@ harness makes three things durable:
 The full operator guide, including every skill, command, agent, plugin, and Jev
 client, is [When to use what](docs/when-to-use.md).
 
-## One-command install
+## Install as a plugin (recommended)
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": [
+    {
+      "package": "libreharness@1.1.0",
+      "options": { "state": "~/.local/state/libreharness" }
+    }
+  ]
+}
+```
+
+1.1.0 is prepared but not yet published. Until then, use the checkout path or
+the offline installer below.
+
+The plugin registers commands, agents, and skills from the package, so an
+update is a package version change rather than a file copy.
+
+## Offline copy install
 
 ```sh
 npx libreharness init

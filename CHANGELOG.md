@@ -2,6 +2,32 @@
 
 # Changelog
 
+## 1.1.0 — 2026-11-07
+
+OpenCode V2 plugin distribution: commands, agents, and skills load from the
+package instead of being copied into the config.
+
+### 🚀 Features
+
+- The npm package exports a V2 server plugin. It registers the bundled
+  commands, four agents, and seven skills through the OpenCode plugin API.
+- The plugin sets `HARNESS_HOME` and `HARNESS_STATE`; the existing Python CLI
+  commands work unchanged.
+- Model overrides in `opencode.json` are preserved when the plugin updates
+  agent prompts and permissions.
+
+### 🧭 Behaviour
+
+- Plugin install is the no-drift path: update the package version and reload.
+- The offline copy installer remains available, but normal installs no longer
+  need it.
+
+### ⚠️ Limits
+
+- The four local plugins (auto-intake, goal-watch, security-guard,
+  close-reminder) remain separate for now.
+- 1.1.0 is prepared but not yet published.
+
 ## 1.0.0 — 2026-11-04
 
 First public npm release: a Linux-only, OpenCode-only harness for durable

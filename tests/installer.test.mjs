@@ -29,7 +29,7 @@ assert.match(help.stdout, /npx libreharness init/);
 
 const version = run(["--version"]);
 assert.equal(version.status, 0);
-assert.match(version.stdout, /1\.0\.0/);
+assert.match(version.stdout, /1\.1\.0/);
 
 // A dry run must not create the target.
 const dryHome = join(root, "dry-home");
