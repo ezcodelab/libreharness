@@ -85,3 +85,15 @@ Rule: one plugin entry should own all harness behavior; set env first, then
 import feature modules. Do not require a copied `plugins/` directory.
 Doc updated: `docs/install.md`, `docs/plugins.md`, `CHANGELOG.md`.
 Promote-to-global: yes
+
+## 2026-11-07 - Custom agents need an explicit read rule
+
+Surprise: the build agent's `* allow` did not cover the custom subagents. With
+no `read` rule, V2 asked for every subagent read; the external guards only
+protected env/secret files.
+Cost: every explore/implementer/integrator/devils read prompted until each
+agent got `read * allow` plus `.env` ask rules.
+Rule: every reading custom agent needs explicit read rules; verify the live
+`/api/agent/{id}` permissions, not just the Markdown file.
+Doc updated: `agents/*.md`, `tests/plugin.test.mjs`.
+Promote-to-global: yes

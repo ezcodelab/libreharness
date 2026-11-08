@@ -102,6 +102,13 @@ const explore = updatedAgents.get("explore");
 assert.match(explore.description, /Read-only repository scout/);
 assert.ok(explore.system.length > 100);
 assert.ok(explore.permissions.length > 0);
+assert.ok(
+  explore.permissions.some(
+    (rule) =>
+      rule.action === "read" && rule.resource === "*" && rule.effect === "allow",
+  ),
+  "explore must allow reads",
+);
 assert.deepEqual(explore.model, {
   providerID: "commandcode",
   id: "deepseek-v4-flash",
