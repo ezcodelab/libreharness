@@ -19,13 +19,23 @@ Add the package to the global `plugins` array in
       "package": "libreharness@1.1.0",
       "options": { "state": "~/.local/state/libreharness" }
     }
-  ]
+  ],
+  "agents": {
+    "devils-advocate": {},
+    "explore": {},
+    "implementer": {},
+    "integrator": {}
+  }
 }
 ```
 
-OpenCode loads the commands, agents, and skills from the package. Update by
-changing the version or using a newer package; no runtime files are copied into
-the config, so there is nothing to drift.
+The four `agents` stubs are required: the V2 plugin API can update an existing
+agent but cannot create one. Add a model to a stub for per-agent routing; the
+plugin fills its prompt, mode, and permissions.
+
+OpenCode loads the commands and skills, and applies the four agent definitions.
+Update by changing the version or using a newer package; no runtime files are
+copied into the config, so there is nothing to drift.
 
 From a checkout, use the absolute path instead of the npm name:
 

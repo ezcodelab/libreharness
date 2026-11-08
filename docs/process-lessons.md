@@ -53,3 +53,13 @@ Rule: ship harness behavior as a versioned V2 plugin; keep the copy installer
 only as an offline fallback.
 Doc updated: `docs/install.md`, `README.md`, `CHANGELOG.md`.
 Promote-to-global: yes
+
+## 2026-11-07 - AgentEditor has no add; mocks must match the API
+
+Surprise: the V2 `AgentEditor` updates existing agents but has no `add`; the
+mocked editor had one, so the test passed while the live plugin was disabled.
+Cost: one live failure and a service restart to clear the disabled plugin.
+Rule: a mock must mirror the published API, and a clean-config live load is
+part of the proof. Agent stubs must be declared in `opencode.json`.
+Doc updated: `docs/install.md`, `README.md`, `CHANGELOG.md`.
+Promote-to-global: yes

@@ -71,15 +71,21 @@ client, is [When to use what](docs/when-to-use.md).
       "package": "libreharness@1.1.0",
       "options": { "state": "~/.local/state/libreharness" }
     }
-  ]
+  ],
+  "agents": {
+    "devils-advocate": {},
+    "explore": {},
+    "implementer": {},
+    "integrator": {}
+  }
 }
 ```
 
 1.1.0 is prepared but not yet published. Until then, use the checkout path or
 the offline installer below.
 
-The plugin registers commands, agents, and skills from the package, so an
-update is a package version change rather than a file copy.
+The plugin registers commands and skills, and fills the four declared agents.
+An update is a package version change rather than a file copy.
 
 ## Offline copy install
 

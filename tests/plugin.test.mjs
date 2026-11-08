@@ -7,10 +7,27 @@ import { fileURLToPath } from "node:url";
 
 const state = mkdtempSync(join(tmpdir(), "libreharness-plugin-"));
 const commands = [];
-const agents = [];
 const skills = [];
 const prompts = [];
 let contextHook;
+const agentIds = ["explore", "implementer", "integrator", "devils-advocate"];
+const baseAgents = new Map(
+  agentIds.map((id) => [
+    id,
+    {
+      id,
+      name: id,
+      description: "",
+      system: "",
+      mode: "subagent",
+      permissions: [],
+      hidden: false,
+      request: { settings: {}, headers: {}, body: {} },
+      model: { providerID: "commandcode", id: "deepseek-v4-flash" },
+    },
+  ]),
+);
+const updatedAgents = new Map();
 
 const ctx = {
   options: { state },
@@ -20,9 +37,13 @@ const ctx = {
   agent: {
     transform: (callback) =>
       callback({
-        get: () => undefined,
-        add: (agent) => agents.push(agent),
-        update: () => {},
+        get: (id) => baseAgents.get(id),
+        update: (id, update) => {
+          const agent = baseAgents.get(id);
+          assert.ok(agent, `unexpected agent update: ${id}`);
+          update(agent);
+          updatedAgents.set(id, agent);
+        },
       }),
   },
   skill: {
@@ -56,13 +77,17 @@ assert.equal(prompts[0].sessionID, "ses_test");
 assert.match(prompts[0].text, /src\//);
 assert.match(prompts[0].text, /state-audit/);
 
-for (const id of ["explore", "implementer", "integrator", "devils-advocate"]) {
-  assert.ok(agents.some((agent) => agent.id === id), `missing agent ${id}`);
+for (const id of agentIds) {
+  assert.ok(updatedAgents.has(id), `agent was not updated: ${id}`);
 }
-const explore = agents.find((agent) => agent.id === "explore");
+const explore = updatedAgents.get("explore");
 assert.match(explore.description, /Read-only repository scout/);
 assert.ok(explore.system.length > 100);
 assert.ok(explore.permissions.length > 0);
+assert.deepEqual(explore.model, {
+  providerID: "commandcode",
+  id: "deepseek-v4-flash",
+});
 
 for (const id of ["state-audit", "verification", "engineering-loop"]) {
   assert.ok(skills.some((skill) => skill.id === id), `missing skill ${id}`);

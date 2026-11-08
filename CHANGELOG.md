@@ -10,7 +10,8 @@ package instead of being copied into the config.
 ### 🚀 Features
 
 - The npm package exports a V2 server plugin. It registers the bundled
-  commands, four agents, and seven skills through the OpenCode plugin API.
+  commands and seven skills, and updates the four agents declared under
+  `agents` in `opencode.json`.
 - The plugin sets `HARNESS_HOME` and `HARNESS_STATE`; the existing Python CLI
   commands work unchanged.
 - Model overrides in `opencode.json` are preserved when the plugin updates
@@ -24,6 +25,8 @@ package instead of being copied into the config.
 
 ### ⚠️ Limits
 
+- OpenCode V2 can update an existing agent from a plugin but cannot create
+  one. The four agent stubs must exist under `agents` in `opencode.json`.
 - The four local plugins (auto-intake, goal-watch, security-guard,
   close-reminder) remain separate for now.
 - 1.1.0 is prepared but not yet published.
