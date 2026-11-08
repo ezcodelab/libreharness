@@ -37,7 +37,9 @@ const ctx = {
   agent: {
     transform: (callback) =>
       callback({
-        get: (id) => baseAgents.get(id),
+        // Config-defined agents are not visible to get(), but update(id) still
+        // applies. Do not gate updates on get().
+        get: () => undefined,
         update: (id, update) => {
           const agent = baseAgents.get(id);
           assert.ok(agent, `unexpected agent update: ${id}`);

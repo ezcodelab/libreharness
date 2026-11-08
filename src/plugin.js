@@ -155,12 +155,6 @@ const plugin = Plugin.define({
     const agents = agentFiles();
     await ctx.agent.transform((editor) => {
       for (const agent of agents) {
-        if (!editor.get(agent.id)) {
-          console.warn(
-            `libreharness: agent ${agent.id} is not defined; add it under agents in opencode.json`,
-          );
-          continue;
-        }
         editor.update(agent.id, (current) => {
           current.description = agent.description;
           current.system = agent.system;

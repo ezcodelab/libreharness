@@ -63,3 +63,14 @@ Rule: a mock must mirror the published API, and a clean-config live load is
 part of the proof. Agent stubs must be declared in `opencode.json`.
 Doc updated: `docs/install.md`, `README.md`, `CHANGELOG.md`.
 Promote-to-global: yes
+
+## 2026-11-07 - Config-defined agents are not in editor.get
+
+Surprise: `editor.get` returned undefined for `implementer`, `integrator`, and
+`devils-advocate`, but `editor.update(id)` still applied. Gating updates on
+`get` left three agents with empty system prompts.
+Cost: a live/fresh inventory comparison found it after the first fix.
+Rule: update agents by id; never use `get` as an existence gate. Prove all four
+prompts and models in both an existing and a fresh config.
+Doc updated: `docs/install.md`, `CHANGELOG.md`.
+Promote-to-global: yes
