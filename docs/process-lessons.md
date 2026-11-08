@@ -93,7 +93,8 @@ no `read` rule, V2 asked for every subagent read; the external guards only
 protected env/secret files.
 Cost: every explore/implementer/integrator/devils read prompted until each
 agent got `read * allow` plus `.env` ask rules.
-Rule: every reading custom agent needs explicit read rules; verify the live
-`/api/agent/{id}` permissions, not just the Markdown file.
-Doc updated: `agents/*.md`, `tests/plugin.test.mjs`.
+Rule: every reading custom agent needs `read * allow`. Keep `.env` policy in
+one guard (EnvSitter or one global rule), not repeated per agent. Verify the
+live `/api/agent/{id}` permissions, not just the Markdown file.
+Doc updated: `agents/*.md`, `docs/plugins.md`, `tests/plugin.test.mjs`.
 Promote-to-global: yes

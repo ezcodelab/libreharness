@@ -24,6 +24,20 @@ A plugin must never block a session because of its own misconfiguration. The
 bundled plugins catch their own errors, log at most a short warning, and
 continue.
 
+## Secret-file policy
+
+The harness agent roles keep `read * allow`; they do not repeat `.env` rules in
+every agent. Keep secret-file protection in one place: install an external
+guard such as `envsitter-guard` or `cc-safety-net`, or add one global rule:
+
+```jsonc
+"permissions": [
+  { "action": "read", "resource": "*.env", "effect": "ask" },
+  { "action": "read", "resource": "*.env.*", "effect": "ask" },
+  { "action": "read", "resource": "*.env.example", "effect": "allow" }
+]
+```
+
 ## Bundled plugins
 
 | Plugin | Use when | What it does | Disable | Failure mode |
