@@ -9,6 +9,9 @@ const state = mkdtempSync(join(tmpdir(), "libreharness-plugin-"));
 const commands = [];
 const skills = [];
 const prompts = [];
+const hooks = [];
+const toolHooks = [];
+const subscriptions = [];
 let contextHook;
 const agentIds = ["explore", "implementer", "integrator", "devils-advocate"];
 const baseAgents = new Map(
@@ -53,15 +56,28 @@ const ctx = {
   },
   session: {
     hook: (name, callback) => {
+      hooks.push(name);
       if (name === "context") contextHook = callback;
     },
     prompt: async (prompt) => prompts.push(prompt),
+  },
+  event: {
+    subscribe: (options) => {
+      subscriptions.push(options?.types ?? []);
+      return (async function* () {})();
+    },
+  },
+  tool: {
+    hook: (name) => {
+      toolHooks.push(name);
+      return { dispose() {} };
+    },
   },
 };
 
 const { default: plugin } = await import("../src/plugin.js");
 assert.equal(plugin.id, "libreharness");
-await plugin.setup(ctx);
+const cleanup = await plugin.setup(ctx);
 
 const commandNames = commands.map((command) => command.name);
 for (const name of ["goal", "review", "state-audit", "tune", "close"]) {
@@ -103,5 +119,14 @@ const system = [];
 contextHook({ system });
 assert.ok(system.some((part) => part.text.includes("## Task scale")));
 
+assert.ok(hooks.includes("prompt"), "auto-intake prompt hook missing");
+assert.ok(toolHooks.includes("execute.before"), "close-reminder hook missing");
+assert.ok(toolHooks.includes("execute.after"), "security-guard hook missing");
+assert.ok(
+  subscriptions.some((types) => types.includes("session.idle")),
+  "goal-watch subscription missing",
+);
+
+cleanup();
 rmSync(state, { recursive: true, force: true });
 console.log("plugin: PASS");

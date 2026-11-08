@@ -169,6 +169,34 @@ const plugin = Plugin.define({
     await ctx.skill.transform((editor) => {
       for (const skill of skills) editor.add(skill);
     });
+
+    const cleanups = [];
+    for (const featurePath of [
+      "../plugins/auto-intake.js",
+      "../plugins/close-reminder.js",
+      "../plugins/goal-watch.js",
+      "../plugins/security-guard.js",
+    ]) {
+      try {
+        const { default: feature } = await import(featurePath);
+        const cleanup = await feature.setup(ctx);
+        if (typeof cleanup === "function") cleanups.push(cleanup);
+      } catch (error) {
+        console.warn(
+          `libreharness: ${featurePath} failed: ${error?.message ?? error}`,
+        );
+      }
+    }
+
+    return () => {
+      for (const cleanup of cleanups) {
+        try {
+          cleanup();
+        } catch {
+          // A feature cleanup must not prevent the rest from unloading.
+        }
+      }
+    };
   },
 });
 

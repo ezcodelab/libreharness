@@ -34,8 +34,10 @@ agent but cannot create one. Add a model to a stub for per-agent routing; the
 plugin fills its prompt, mode, and permissions.
 
 OpenCode loads the commands and skills, and applies the four agent definitions.
-Update by changing the version or using a newer package; no runtime files are
-copied into the config, so there is nothing to drift.
+The main plugin also bundles `auto-intake`, `close-reminder`, `goal-watch`, and
+`security-guard`; do not add their files separately. Update by changing the
+version or using a newer package; no runtime files are copied into the config,
+so there is nothing to drift.
 
 From a checkout, use the absolute path instead of the npm name:
 

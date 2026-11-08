@@ -6,13 +6,15 @@ The harness ships four local OpenCode plugins and two opt-in example plugins.
 Local plugins use Node built-ins only. None of them calls a model. For when to
 keep each one on, see [When to use what](when-to-use.md).
 
+In 1.1.0 the four are bundled into the main V2 server plugin. The standalone
+files remain in the package for the offline copy install.
+
 ## How local plugins load
 
-OpenCode automatically loads JavaScript files from the global plugin directory,
-`~/.config/opencode/plugins/`, and from a project's `.opencode/plugins/`. If
-`HARNESS_HOME` is `~/.config/opencode`, the bundled `plugins/` directory is
-already in the right place. If the checkout is elsewhere, copy or symlink the
-four files into the global plugin directory.
+With the V2 plugin, the main server part imports the four after it sets
+`HARNESS_HOME` and `HARNESS_STATE`; no copy or symlink is needed. The offline
+copy install still loads them from the global plugin directory,
+`~/.config/opencode/plugins/`, or a project's `.opencode/plugins/`.
 
 External npm plugins are listed in the OpenCode configuration. The example
 config has an empty list. The harness does not require or endorse any external

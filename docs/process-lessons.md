@@ -74,3 +74,14 @@ Rule: update agents by id; never use `get` as an existence gate. Prove all four
 prompts and models in both an existing and a fresh config.
 Doc updated: `docs/install.md`, `CHANGELOG.md`.
 Promote-to-global: yes
+
+## 2026-11-07 - Bundle local plugins after env setup
+
+Surprise: the four local plugins already used the V2 server API; the fresh gap
+was packaging, not compatibility. Dynamic imports evaluated their env constants
+before setup, so they must load after `HARNESS_HOME`/`HARNESS_STATE` are set.
+Cost: one dynamic-import pass and a hook-integration test.
+Rule: one plugin entry should own all harness behavior; set env first, then
+import feature modules. Do not require a copied `plugins/` directory.
+Doc updated: `docs/install.md`, `docs/plugins.md`, `CHANGELOG.md`.
+Promote-to-global: yes
