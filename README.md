@@ -67,12 +67,7 @@ client, is [When to use what](docs/when-to-use.md).
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": [
-    {
-      "package": "libreharness@1.1.0",
-      "options": { "state": "~/.local/state/libreharness" }
-    }
-  ],
+  "plugins": ["libreharness@1.1.0"],
   "agents": {
     "devils-advocate": {},
     "explore": {},

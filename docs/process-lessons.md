@@ -98,3 +98,14 @@ one guard (EnvSitter or one global rule), not repeated per agent. Verify the
 live `/api/agent/{id}` permissions, not just the Markdown file.
 Doc updated: `agents/*.md`, `docs/plugins.md`, `tests/plugin.test.mjs`.
 Promote-to-global: yes
+
+## 2026-11-07 - Default state is a real directory
+
+Surprise: the plugin honoured `HARNESS_STATE`, so the setup could quietly point
+at a brain symlink instead of the documented default.
+Cost: moving the symlink and seeding the queue once.
+Rule: a plugin's user-facing default must not be overridden by the ambient
+environment unless the option is documented. Keep state a real mode-700
+directory; keep a knowledge base separate.
+Doc updated: `docs/install.md`, `README.md`, `CHANGELOG.md`.
+Promote-to-global: yes

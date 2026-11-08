@@ -111,8 +111,8 @@ function skillFiles() {
     });
 }
 
-function statePath(value) {
-  const chosen = value ?? process.env.HARNESS_STATE ?? join(homedir(), ".local/state/libreharness");
+export function statePath(value) {
+  const chosen = value ?? join(homedir(), ".local/state/libreharness");
   return resolve(chosen.replace(/^~/, homedir()));
 }
 

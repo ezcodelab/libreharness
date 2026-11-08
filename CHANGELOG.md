@@ -24,6 +24,9 @@ package instead of being copied into the config.
 - Plugin install is the no-drift path: update the package version and reload.
 - The offline copy installer remains available, but normal installs no longer
   need it.
+- State defaults to a real `~/.local/state/libreharness` directory with mode
+  700. The plugin does not follow a `HARNESS_STATE` environment variable or a
+  symlink; a knowledge base such as a brain stays separate.
 
 ### ⚠️ Limits
 

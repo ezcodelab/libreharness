@@ -75,8 +75,19 @@ const ctx = {
   },
 };
 
-const { default: plugin } = await import("../src/plugin.js");
+const { default: plugin, statePath } = await import("../src/plugin.js");
 assert.equal(plugin.id, "libreharness");
+
+const previousState = process.env.HARNESS_STATE;
+process.env.HARNESS_STATE = "/tmp/ignored-by-default";
+assert.equal(
+  statePath(undefined),
+  join(process.env.HOME, ".local/state/libreharness"),
+  "the plugin must default to a normal state directory, not HARNESS_STATE",
+);
+assert.equal(statePath("~/custom"), join(process.env.HOME, "custom"));
+if (previousState === undefined) delete process.env.HARNESS_STATE;
+else process.env.HARNESS_STATE = previousState;
 const cleanup = await plugin.setup(ctx);
 
 const commandNames = commands.map((command) => command.name);
