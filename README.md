@@ -77,7 +77,7 @@ client, is [When to use what](docs/when-to-use.md).
 }
 ```
 
-1.1.0 is prepared but not yet published. Until then, use the checkout path or
+1.1.0 is the current release. It is also available from a checkout and through
 the offline installer below.
 
 The plugin registers commands and skills, and fills the four declared agents.

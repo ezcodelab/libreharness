@@ -2,7 +2,7 @@
 
 # Changelog
 
-## 1.1.0 — 2026-11-07
+## 1.1.0 — 2026-11-08
 
 OpenCode V2 plugin distribution: commands, agents, and skills load from the
 package instead of being copied into the config.
@@ -18,6 +18,11 @@ package instead of being copied into the config.
   commands work unchanged.
 - Model overrides in `opencode.json` are preserved when the plugin updates
   agent prompts and permissions.
+- The four harness agents allow normal reads with `read * allow`. Secret-file
+  policy stays in one layer (EnvSitter, `cc-safety-net`, or one global rule),
+  not repeated in every agent.
+- The plugin updates config-defined agents by id; it does not use `editor.get`
+  as an existence gate.
 
 ### 🧭 Behaviour
 
@@ -32,7 +37,8 @@ package instead of being copied into the config.
 
 - OpenCode V2 can update an existing agent from a plugin but cannot create
   one. The four agent stubs must exist under `agents` in `opencode.json`.
-- 1.1.0 is prepared but not yet published.
+- The npm package needs a provider/model chosen by the user; the harness does
+  not choose one.
 
 ## 1.0.0 — 2026-11-04
 

@@ -2,9 +2,9 @@
 
 # Documentation
 
-This index describes the public documentation set for LibreHarness 1.0.0.
+This index describes the public documentation set for LibreHarness 1.1.0.
 
-Status: 1.0.0 is published on npm. Linux only. The benchmark has not been run.
+Status: 1.1.0 is published on npm. Linux only. The benchmark has not been run.
 No document here makes a performance claim.
 
 ## Start here

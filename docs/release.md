@@ -2,17 +2,23 @@
 
 # Release checklist
 
-Status: **procedure for 1.0.0. Not yet executed.** Linux only, OpenCode only.
+Status: **procedure for 1.1.0.** Linux only, OpenCode only. The public
+repository is `https://github.com/ezcodelab/libreharness`, and npm trusted
+publishing is configured for `ezcodelab/libreharness` and `release.yml`.
 
 This page is the release gate. A green branch is not a green release. Run the
 checks on the tagged tree, and do not publish from a dirty working tree.
 
 ## 1. Confirm the release scope
 
-- [ ] The version is `1.0.0` in `package.json`, `bin/libreharness.js`, and
+- [ ] The version is `1.1.0` in `package.json`, `bin/libreharness.js`, and
   `CHANGELOG.md`.
 - [ ] `README.md`, `docs/README.md`, and `SECURITY.md` say Linux only and
   OpenCode only.
+- [ ] The plugin entry in `docs/install.md` is the normal
+  `"plugins": ["libreharness@1.1.0"]` form, with the four agent stubs.
+- [ ] State defaults to `~/.local/state/libreharness`, is created with mode
+  700, and is a real directory rather than a symlink.
 - [ ] No macOS, Windows, Claude Code, Hermes, or other host-support claim is
   present.
 - [ ] No benchmark result is claimed. The benchmark remains unrun.
@@ -27,6 +33,7 @@ node tests/auto-intake.test.mjs
 node tests/goal-watch.test.mjs
 node tests/review-protocol.test.mjs
 node tests/security-guard.test.mjs
+node tests/plugin.test.mjs
 node tests/installer.test.mjs
 python3 bin/docs_lint.py . --skills-dir skills
 python3 bin/check_spdx.py --root .
@@ -50,106 +57,90 @@ Inspect the tarball contents. It must include the runtime, commands, skills,
 agents, plugins, docs, and `harbor_agent/`. It must not include state, jobs,
 results, caches, credentials, or private files.
 
-Install the packed artifact into a temporary Linux prefix and run the doctor:
+Install the packed artifact into a temporary Linux prefix and start an isolated
+OpenCode service with only the plugin entry and the four agent stubs:
 
 ```sh
 tmp=$(mktemp -d)
-npm install --prefix "$tmp" ./libreharness-1.0.0.tgz
-python3 "$tmp/node_modules/libreharness/bin/doctor.py" \
-  --root "$tmp/node_modules/libreharness"
+npm install --prefix "$tmp" ./libreharness-1.1.0.tgz
+# Write a minimal opencode.json with:
+#   "plugins": ["$tmp/node_modules/libreharness"]
+#   four empty agent stubs
+# Then confirm the plugin is active, commands/skills load, the four agent
+# prompts are filled, and ~/.local/state/libreharness is created mode 700.
 ```
 
 Do not install the package into the release checkout.
 
 ## 4. Prepare the public remote
 
-The current GitHub remote is `https://github.com/ezcodelab/libreharness.git`
-(private until publication). The SSH form is
-`git@github.com:ezcodelab/libreharness.git`.
+The public GitHub remote is `git@github.com:ezcodelab/libreharness.git`. The
+self-hosted `origin` remote is a development mirror; do not treat it as the
+public target.
 
 - [ ] Confirm the GitHub repository is the intended public target.
-- [ ] Add it as a separate remote; do not reuse a private remote blindly.
 - [ ] Confirm the public tree contains no archived experiment reports, old
   suites, jobs, results, caches, secrets, or private paths.
 - [ ] Confirm the README and LICENSE render correctly on the host.
 - [ ] Confirm the host's private vulnerability reporting and conduct reporting
   paths exist.
-- [ ] Add a real `.github/CODEOWNERS` owner if the host requires one. The
-  placeholder was removed before publication.
+- [ ] Do not push directly to `main`. Push a release branch, open a pull
+  request, let CI pass, and merge through the host.
 
 If the public history must be clean, create the repository from a fresh
 snapshot. The current repository history contains old experiment files by
 explicit operator decision; do not assume a clean tree means a clean history.
 
-## 5. Bootstrap the first npm publish
+## 5. First publish bootstrap (done for 1.0.0)
 
-npm trusted publishing can only be configured on a package that already exists.
-The first publish therefore needs one interactive 2FA approval.
-
-Use staged publishing. Staging does not require 2FA, and the approval happens
-on npmjs.com without the short-lived CLI callback:
+The first publish needs one interactive 2FA approval because trusted
+publishing can only be configured on a package that already exists. That step
+is complete for `libreharness`. A new package name would repeat it:
 
 ```sh
 npm login
-npm view libreharness version   # expect 404 before the first publish
 npm stage publish --access public
-npm stage list libreharness
+npm stage list <package>
 ```
 
-Open `https://www.npmjs.com/package/libreharness`, use the **Staged Packages**
-tab, and approve the version with your passkey. A new package first gets a
-public `0.0.0-stage` placeholder; the real version stays hidden until approval.
-
-Direct `npm publish --access public` also works, but its CLI auth URL expires
-after about a minute. A phone passkey can fail there with "Something went
-wrong"; use a desktop authenticator or the staged path above.
-
-Then verify:
+Approve the staged version on npmjs.com with your passkey, then verify:
 
 ```sh
-npm view libreharness@1.0.0 version
+npm view libreharness@<version> version
 ```
 
-## 6. Configure trusted publishing
+## 6. Trusted publishing (configured)
 
-After the package exists, open npmjs.com → package → **Settings** →
-**Trusted Publisher** → **GitHub Actions** and set:
-
-- Organization: `ezcodelab`
-- Repository: `libreharness`
-- Workflow filename: `release.yml`
-- Allowed action: `npm publish`
-
-The CLI equivalent, run interactively with 2FA, is:
+The package trusts GitHub Actions from `ezcodelab/libreharness` and
+`release.yml`. The release workflow uses OIDC; there is no `NPM_TOKEN` secret
+and no long-lived publish token. The workflow upgrades npm explicitly because
+Node 22's bundled npm 10 cannot use trusted publishing. Reconfigure only if the
+repository, workflow filename, or package owner changes:
 
 ```sh
 npm trust github --file release.yml \
   --repo ezcodelab/libreharness --allow-publish
 ```
 
-Complete the first trusted publish within **2 days** or the configuration
-expires. The release workflow uses OIDC; there is no `NPM_TOKEN` secret and no
-long-lived publish token.
-
-After the trusted publisher works, set the package's **Publishing access** to
-**Require two-factor authentication and disallow tokens**.
+Keep the package's **Publishing access** at "Require two-factor authentication
+and disallow tokens".
 
 ## 7. Tag and publish
 
-Only after the checks, the first npm publish, and the public repository review:
+Only after the checks, the package inspection, and the public repository
+review:
 
 ```sh
-git tag -s v1.0.0 -m "LibreHarness 1.0.0"
-git verify-tag v1.0.0
-git push <public-remote> main
-git push <public-remote> v1.0.0
+git tag -s v1.1.0 -m "LibreHarness 1.1.0"
+git verify-tag v1.1.0
+git push github v1.1.0
 ```
 
 The maintainer verifies the tag locally before pushing. The release workflow
 checks the version and package, reruns the checks, publishes over OIDC, builds
 an archive, and creates the host release. The tag push is the publication
-approval. The publish step skips a version that already exists, so the manual
-first publish and a later tag release cannot collide.
+approval. The publish step skips a version that already exists, so a manual
+publish and a later tag release cannot collide.
 
 Do not push a tag before the version and changelog are final. Do not force-push
 a shared branch.
@@ -157,9 +148,13 @@ a shared branch.
 ## 8. Post-release verification
 
 - [ ] Install from the published npm package on a clean Linux host.
+- [ ] Confirm the plugin is active, the commands and skills load, the four
+  agents have prompts, and state is created at `~/.local/state/libreharness`
+  with mode 700.
 - [ ] Run `npx libreharness init --dry-run` and a real init in a temporary
   OpenCode config.
-- [ ] Confirm `/goal`, `/review`, `/close`, and `/tune` are discoverable.
+- [ ] Confirm `/goal`, `/review`, `/close`, `/tune`, and `/state-audit` are
+  discoverable.
 - [ ] Confirm `doctor.py` passes and state stays outside the checkout.
 - [ ] Confirm the release notes link to the changelog and state the benchmark
   is unrun.
@@ -175,8 +170,7 @@ a shared branch.
 
 ## Release gates that still need a human
 
-- Public host and remote URL.
 - Signed tag and signing key.
-- npm publication and token.
+- npm publication approval (the tag push triggers it).
 - Public release announcement.
 - Any change to the Linux-only or OpenCode-only scope.
