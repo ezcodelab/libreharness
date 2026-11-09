@@ -13,6 +13,10 @@ the CLI wins and the page is wrong.
 | `HARNESS_HOME` | Code and configuration | `bin/tasks.py`, `commands/`, `skills/`, `plugins/`, `opencode.json` |
 | `HARNESS_STATE` | Mutable local data | tasks, board, lock, metrics, optional Jev key file |
 
+With the V2 plugin, the plugin sets `HARNESS_HOME` to its own package root.
+OpenCode configuration stays in `~/.config/opencode`, and state defaults to
+`~/.local/state/libreharness` as a real mode-700 directory.
+
 The rule is simple: code is read-mostly and can be replaced by a checkout;
 state is the user's work and must survive an upgrade. No runtime component
 should write into `HARNESS_HOME`.

@@ -15,14 +15,15 @@ outlives one chat:
   a generated board.
 - A workflow that scales process to risk: trivial changes skip the queue,
   nontrivial changes get a brief, a review, and evidence.
-- Six portable skills: engineering loop, goal loop, parallel lanes, UI
-  design, verification, and work queue.
+- Seven portable skills: engineering loop, goal loop, parallel lanes, state
+  audit, UI design, verification, and work queue.
 - Agents for exploration, implementation, integration, and independent
   challenge.
 - Commands for queue inspection, goal intake, briefs, lanes, takeover, review,
-  close, handoff, design review, and tuning.
-- Four local plugins: automatic task intake, close reminder, a goal watcher for
-  continuation and closable-goal reminders, and an advisory security scan.
+  state audit, close, handoff, design review, and tuning.
+- Four local plugins, bundled into the main V2 plugin: automatic task intake,
+  close reminder, a goal watcher for continuation and closable-goal reminders,
+  and an advisory security scan.
 - Jev, a first-class advisory layer that asks typed questions about a diff, a
   plan, or a close state and returns structured answers.
 
@@ -51,6 +52,7 @@ harness makes three things durable:
 | Continue a task | `/brief <task-id>` |
 | Run independent slices | `/goal go` auto-lanes; `/lane` only for manual isolation |
 | Review a diff | `/review <task-id>` (a check, not a finish step) |
+| Audit stateful code | `/state-audit <path>` |
 | Resume after a pause | `/takeover <task-id>` |
 | Finish a task or goal | `/close <task-id>` (integrates goal lanes) |
 | Review a UI | `/design-review` |
@@ -60,7 +62,33 @@ harness makes three things durable:
 The full operator guide, including every skill, command, agent, plugin, and Jev
 client, is [When to use what](docs/when-to-use.md).
 
-## One-command install
+## Install as a plugin (recommended)
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["libreharness@1.1.0"],
+  "agents": {
+    "devils-advocate": {},
+    "explore": {},
+    "implementer": {},
+    "integrator": {}
+  }
+}
+```
+
+1.1.0 is the current release. It is also available from a checkout and through
+the offline installer below.
+
+The plugin registers commands and skills, and fills the four declared agents.
+An update is a package version change rather than a file copy.
+
+The harness roles intentionally keep `read * allow` and do not repeat secret
+rules in every agent. Protect `.env` files and credentials in one layer:
+install `envsitter-guard` or `cc-safety-net`, or add a global `read *.env ask`
+rule. See [Plugins](docs/plugins.md#secret-file-policy).
+
+## Offline copy install
 
 ```sh
 npx libreharness init

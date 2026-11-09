@@ -29,7 +29,7 @@ assert.match(help.stdout, /npx libreharness init/);
 
 const version = run(["--version"]);
 assert.equal(version.status, 0);
-assert.match(version.stdout, /1\.0\.0/);
+assert.match(version.stdout, /1\.1\.0/);
 
 // A dry run must not create the target.
 const dryHome = join(root, "dry-home");
@@ -66,7 +66,9 @@ for (const path of [
   "opencode.json",
   "agents/devils-advocate.md",
   "commands/goal.md",
+  "commands/state-audit.md",
   "skills/engineering-loop/SKILL.md",
+  "skills/state-audit/SKILL.md",
   "plugins/security-guard.js",
   "bin/tasks.py",
   "bin/doctor.py",

@@ -96,6 +96,10 @@ permissions:
   - action: shell
     resource: "sudo *"
     effect: deny
+  - action: read
+    resource: "*"
+    effect: allow
+
 ---
 <!-- SPDX-License-Identifier: MIT -->
 

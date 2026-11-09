@@ -1,10 +1,13 @@
 {
   "name": "libreharness",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": false,
   "license": "MIT",
   "type": "module",
-  "description": "A durable task queue and engineering workflow for OpenCode. One-command install.",
+  "exports": {
+    ".": "./src/plugin.js"
+  },
+  "description": "A durable task queue and engineering workflow for OpenCode, as a V2 plugin and CLI.",
   "homepage": "https://github.com/ezcodelab/libreharness#readme",
   "repository": {
     "type": "git",
@@ -30,6 +33,7 @@
     "GOVERNANCE.md",
     "CODE_OF_CONDUCT.md",
     "opencode.example.json",
+    "src",
     "agents",
     "commands",
     "skills",
@@ -47,8 +51,11 @@
   },
   "scripts": {
     "test:python": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
-    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/review-protocol.test.mjs && node tests/security-guard.test.mjs && node tests/installer.test.mjs",
+    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/review-protocol.test.mjs && node tests/security-guard.test.mjs && node tests/plugin.test.mjs && node tests/installer.test.mjs",
     "test": "npm run test:python && npm run test:node"
+  },
+  "dependencies": {
+    "@opencode/plugin": "^2.2.6"
   },
   "devDependencies": {
     "@opencode-ai/plugin": "1.14.20"

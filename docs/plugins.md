@@ -6,13 +6,15 @@ The harness ships four local OpenCode plugins and two opt-in example plugins.
 Local plugins use Node built-ins only. None of them calls a model. For when to
 keep each one on, see [When to use what](when-to-use.md).
 
+In 1.1.0 the four are bundled into the main V2 server plugin. The standalone
+files remain in the package for the offline copy install.
+
 ## How local plugins load
 
-OpenCode automatically loads JavaScript files from the global plugin directory,
-`~/.config/opencode/plugins/`, and from a project's `.opencode/plugins/`. If
-`HARNESS_HOME` is `~/.config/opencode`, the bundled `plugins/` directory is
-already in the right place. If the checkout is elsewhere, copy or symlink the
-four files into the global plugin directory.
+With the V2 plugin, the main server part imports the four after it sets
+`HARNESS_HOME` and `HARNESS_STATE`; no copy or symlink is needed. The offline
+copy install still loads them from the global plugin directory,
+`~/.config/opencode/plugins/`, or a project's `.opencode/plugins/`.
 
 External npm plugins are listed in the OpenCode configuration. The example
 config has an empty list. The harness does not require or endorse any external
@@ -22,14 +24,28 @@ A plugin must never block a session because of its own misconfiguration. The
 bundled plugins catch their own errors, log at most a short warning, and
 continue.
 
+## Secret-file policy
+
+The harness agent roles keep `read * allow`; they do not repeat `.env` rules in
+every agent. Keep secret-file protection in one place: install an external
+guard such as `envsitter-guard` or `cc-safety-net`, or add one global rule:
+
+```jsonc
+"permissions": [
+  { "action": "read", "resource": "*.env", "effect": "ask" },
+  { "action": "read", "resource": "*.env.*", "effect": "ask" },
+  { "action": "read", "resource": "*.env.example", "effect": "allow" }
+]
+```
+
 ## Bundled plugins
 
 | Plugin | Use when | What it does | Disable | Failure mode |
 |---|---|---|---|---|
 | `auto-intake` | A nontrivial prompt should become an inbox task without retyping | Creates an inbox task from a nontrivial prompt before the model answers | `AUTO_INTAKE=off` | No task is created; the prompt continues |
 | `close-reminder` | A long session should remind you to close finished work | Sends one desktop notification or prompt after real tool work goes quiet | `CLOSE_REMINDER_MODE=off` | No notification; the next session still reminds |
-| `goal-watch` | An active goal is closable, or an autorun goal should continue | Reminds once per session when a goal can close; continues one autorun goal with ready children | Do not load the plugin | No reminder or continuation; the goal stays active |
-| `security-guard` | You want an advisory warning after a risky edit pattern | Appends one advisory warning after an edit matches a risky pattern | Do not load the plugin | No warning; the edit proceeds |
+| `goal-watch` | An active goal is closable, or an autorun goal should continue | Reminds once per session when a goal can close; continues one autorun goal with ready children | No individual switch; remove the main plugin entry | No reminder or continuation; the goal stays active |
+| `security-guard` | You want an advisory warning after a risky edit pattern | Appends one advisory warning after an edit matches a risky pattern | No individual switch; remove the main plugin entry | No warning; the edit proceeds |
 
 ### auto-intake
 
@@ -58,8 +74,8 @@ egress.
 | `AUTO_INTAKE` | on | Set to `off` to disable |
 | `AUTO_INTAKE_ROOT` | `HARNESS_STATE` or `$HOME/.local/state/libreharness` | State root |
 | `AUTO_INTAKE_TASKS` | `$HARNESS_HOME/bin/tasks.py` | Queue helper |
-| `HARNESS_HOME` | `$HOME/.config/opencode` | Checkout |
-| `HARNESS_STATE` | `$HOME/.local/state/libreharness` | State root |
+| `HARNESS_HOME` | package root | Set by the plugin to its own directory |
+| `HARNESS_STATE` | `$HOME/.local/state/libreharness` | Set by the plugin; a real mode-700 directory |
 
 Failure mode: if the helper is missing, the state root is not writable, or the
 helper exits non-zero, the plugin catches the error and the prompt continues
@@ -90,7 +106,7 @@ does nothing. `prompt` sends a message into the session and costs model tokens.
 Failure mode: no `notify-send`, no desktop session, or a closing session means
 the reminder is missed. That is safe. There is no retry queue.
 
-Test: there is no dedicated unit test in 1.0.0. Check syntax with:
+Test: there is no dedicated unit test. Check syntax with:
 
 ```sh
 node --check plugins/close-reminder.js
@@ -118,11 +134,11 @@ A missing queue, malformed JSON, or a closing session is a no-op, not a crash.
 |---|---|---|
 | `GOAL_WATCH_ROOT` | `HARNESS_STATE` or `$HOME/.local/state/libreharness` | State root |
 | `GOAL_WATCH_TASKS` | `$HARNESS_HOME/bin/tasks.py` | Queue helper |
-| `HARNESS_HOME` | `$HOME/.config/opencode` | Checkout |
-| `HARNESS_STATE` | `$HOME/.local/state/libreharness` | State root |
+| `HARNESS_HOME` | package root | Set by the plugin to its own directory |
+| `HARNESS_STATE` | `$HOME/.local/state/libreharness` | Set by the plugin; a real mode-700 directory |
 
-To disable it, do not load the file: remove or rename it in the plugin
-directory. There is no `GOAL_WATCH=off` switch in this version.
+There is no `GOAL_WATCH=off` switch. To disable it, remove the main plugin
+entry; do not copy a second `goal-watch.js` into an auto-load directory.
 
 Test:
 
@@ -157,7 +173,7 @@ A comment with no rule id allows all matches in that edit. Use the rule id when
 you can.
 
 Failure mode: a scan failure is swallowed and the tool result is unchanged.
-There is no environment switch in 1.0.0. Disable by not loading the plugin.
+There is no environment switch. Disable it by removing the main plugin entry.
 
 Test:
 

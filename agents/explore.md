@@ -57,6 +57,10 @@ permissions:
   - action: shell
     resource: "wc *"
     effect: allow
+  - action: read
+    resource: "*"
+    effect: allow
+
 ---
 <!-- SPDX-License-Identifier: MIT -->
 

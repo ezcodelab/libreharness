@@ -27,12 +27,15 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Python tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Node dependencies
+        run: npm install --no-audit --no-fund --no-package-lock
       - name: Node tests
         run: |
           node tests/auto-intake.test.mjs
           node tests/goal-watch.test.mjs
           node tests/review-protocol.test.mjs
           node tests/security-guard.test.mjs
+          node tests/plugin.test.mjs
           node tests/installer.test.mjs
       - name: Package dry run
         run: npm pack --dry-run
@@ -56,5 +59,5 @@ jobs:
       - name: Link check
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
-          args: --offline --no-progress "**/*.md"
+          args: --offline --no-progress --exclude-path node_modules "**/*.md"
           fail: true

@@ -171,6 +171,10 @@ permissions:
   - action: shell
     resource: "pnpm publish*"
     effect: deny
+  - action: read
+    resource: "*"
+    effect: allow
+
 ---
 <!-- SPDX-License-Identifier: MIT -->
 

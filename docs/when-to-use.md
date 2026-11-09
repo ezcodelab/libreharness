@@ -17,6 +17,7 @@ run `/goal`; it routes the request.
 | Split independent work | `/goal go` | Auto-lanes up to three ready children; `/lane` only for manual or existing-task isolation |
 | Stop and resume later | `/handoff <task-id>`, later `/takeover <task-id>` | Durable state transfer, not a transcript |
 | Review a diff | `/review <task-id>` | Jev advisory first, independent challenge only when risk warrants |
+| Audit stateful code | `/state-audit <scope>` | Documents states, invariants, and transitions; fixes confirmed invalid paths |
 | Finish a task or goal | `/close <task-id>` | Integrates goal lanes, reviews, reaps clean worktrees, records evidence, done |
 | Review a UI | `/design-review` | Blocking, quick wins, and keep notes; no code edits |
 | Prove real app behavior | `verification` skill | Generates a project-local `verify-<app>` recipe and proves it once |
@@ -31,6 +32,7 @@ run `/goal`; it routes the request.
 | `engineering-loop` | Nontrivial work: auth, secrets, data, external API, multi-file design, or "done" means production behavior | The change is a typo, one-liner, or pure copy edit |
 | `goal` | The outcome spans sessions, has several deliverables, or should keep running unattended | The work is one reviewable diff; use the small-task path |
 | `parallel-lanes` | Two or three independent slices with disjoint files or a fixed interface | The work touches one file, shared state, or needs one owner |
+| `state-audit` | Stateful code: queues, retries, locks, sessions, lifecycle, recovery, concurrency, or a stuck/duplicate/lost bug | The change is stateless, a typo, or a pure copy/docs edit |
 | `ui-design` | Layout, components, styling, visual review, or interface copy | The work is backend, data, or docs only |
 | `verification` | You need proof against the real app and the project has no scripted way to drive it | A unit test, type check, lint, or direct command already proves the change |
 | `work-queue` | Work must survive a session, needs ownership/dependencies/evidence, or runs in parallel | The work is trivial or a question that needs no change |
@@ -50,6 +52,7 @@ command name and want its purpose.
 | `/lane` | You need a manual worktree for an existing task; normal goals auto-lane | Worker packet for one lane |
 | `/takeover` | You are resuming a paused or inherited task | Claims from the handoff and named files |
 | `/review` | A diff exists and needs a check; this is not a finish step | Jev, optional devils-advocate, and a verdict |
+| `/state-audit` | Stateful code needs its states, invariants, and transitions mapped, and confirmed invalid paths fixed | State-machine document, grouped findings, regression-tested fixes |
 | `/close` | A task or goal is ready to finish; it integrates reviewed goals and reaps clean lanes | Final review, reap, lesson, done with evidence |
 | `/handoff` | You are pausing, switching context, or near the context limit | Under-40-line handoff in the task |
 | `/design-review` | A UI screenshot or reference needs a design pass | Blocking, quick wins, keep |
@@ -173,6 +176,13 @@ ui-design skill -> implement -> /design-review -> /review -> /close
 verification skill -> generated verify-<app> -> run it -> /close with its output
 ```
 
+**Stateful change**
+
+```text
+/state-audit <scope> -> docs/state-machines.md -> grouped fixes
+-> regression tests -> /review -> /close
+```
+
 ## Other docs by need
 
 | Need | Read |
@@ -200,4 +210,5 @@ verification skill -> generated verify-<app> -> run it -> /close with its output
 - Do not run `devils-advocate` on a typo or a routine low-risk diff.
 - Do not generate a verification skill when a direct test or command already
   proves the change.
+- Do not run `/state-audit` on stateless code or use it to justify a redesign.
 - Do not run `/goal` for a typo; just fix it.

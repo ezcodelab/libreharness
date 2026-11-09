@@ -26,6 +26,13 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
+      # Node 22 ships npm 10, which cannot use OIDC trusted publishing.
+      - name: Upgrade npm for trusted publishing
+        run: |
+          npm install -g npm@11.21.2
+          npm --version
+      - name: Install Node dependencies
+        run: npm install --no-audit --no-fund --no-package-lock
       - name: Verify package version
         run: |
           version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
@@ -35,6 +42,12 @@ jobs:
       - name: Full checks
         run: |
           python3 -m unittest discover -s tests -p 'test_*.py' -v
+          node tests/auto-intake.test.mjs
+          node tests/goal-watch.test.mjs
+          node tests/review-protocol.test.mjs
+          node tests/security-guard.test.mjs
+          node tests/plugin.test.mjs
+          node tests/installer.test.mjs
           python3 bin/docs_lint.py . --skills-dir skills
           python3 bin/check_spdx.py --root .
           python3 bin/scan_private.py --root .

@@ -2,9 +2,60 @@
 
 # Install
 
-LibreHarness installs with one command into the OpenCode config directory.
+LibreHarness can run as an OpenCode V2 plugin or as a copied runtime. The
+plugin is the recommended path: commands, agents, and skills load from the
+package, so package updates do not leave stale copies behind.
 
-## One command
+## Plugin install (recommended)
+
+Add the package to the global `plugins` array in
+`~/.config/opencode/opencode.json`:
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["libreharness@1.1.0"],
+  "agents": {
+    "devils-advocate": {},
+    "explore": {},
+    "implementer": {},
+    "integrator": {}
+  }
+}
+```
+
+The four `agents` stubs are required: the V2 plugin API can update an existing
+agent but cannot create one. Add a model to a stub for per-agent routing; the
+plugin fills its prompt, mode, and permissions.
+
+OpenCode loads the commands and skills, and applies the four agent definitions.
+The main plugin also bundles `auto-intake`, `close-reminder`, `goal-watch`, and
+`security-guard`; do not add their files separately. Update by changing the
+version or using a newer package; no runtime files are copied into the config,
+so there is nothing to drift.
+
+The agent roles allow normal reads and do not repeat `.env` rules in every
+agent. Protect secret files in one layer: install `envsitter-guard` or
+`cc-safety-net`, or add a global `read *.env ask` rule. See
+[Plugins](plugins.md#secret-file-policy).
+
+From a checkout, use the absolute path instead of the npm name:
+
+```jsonc
+"plugins": ["/path/to/libreharness"]
+```
+
+The default state directory is `~/.local/state/libreharness`, created with mode
+700. To use a different directory, pass
+`{ "package": "libreharness@1.1.0", "options": { "state": "/your/state" } }`.
+
+1.1.0 is the current release. The checkout path above and the offline copy
+installer below remain supported.
+
+## Offline copy install
+
+The original one-command installer remains for machines that cannot load an npm
+plugin:
 
 ```sh
 npx libreharness init
@@ -24,8 +75,7 @@ For scripts or CI, skip the prompts:
 npx libreharness init --yes
 ```
 
-The 1.0.0 package is not published to npm yet. From a checkout, use the
-same command directly:
+From a checkout, use the same command directly:
 
 ```sh
 node bin/libreharness.js init
@@ -64,6 +114,9 @@ provider, and choose a model with `/models`. The harness roles and cost policy
 are in [model-routing.md](model-routing.md).
 
 ## Upgrade
+
+For the plugin, change the package version in `plugins` and reload; no files
+are copied. The commands below update an offline copy install.
 
 From a checkout:
 
