@@ -83,6 +83,11 @@ the offline installer below.
 The plugin registers commands and skills, and fills the four declared agents.
 An update is a package version change rather than a file copy.
 
+The harness roles intentionally keep `read * allow` and do not repeat secret
+rules in every agent. Protect `.env` files and credentials in one layer:
+install `envsitter-guard` or `cc-safety-net`, or add a global `read *.env ask`
+rule. See [Plugins](docs/plugins.md#secret-file-policy).
+
 ## Offline copy install
 
 ```sh

@@ -34,6 +34,11 @@ The main plugin also bundles `auto-intake`, `close-reminder`, `goal-watch`, and
 version or using a newer package; no runtime files are copied into the config,
 so there is nothing to drift.
 
+The agent roles allow normal reads and do not repeat `.env` rules in every
+agent. Protect secret files in one layer: install `envsitter-guard` or
+`cc-safety-net`, or add a global `read *.env ask` rule. See
+[Plugins](plugins.md#secret-file-policy).
+
 From a checkout, use the absolute path instead of the npm name:
 
 ```jsonc

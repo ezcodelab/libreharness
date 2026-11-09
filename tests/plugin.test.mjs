@@ -106,6 +106,10 @@ assert.equal(prompts.length, 1);
 assert.equal(prompts[0].sessionID, "ses_test");
 assert.match(prompts[0].text, /src\//);
 assert.match(prompts[0].text, /state-audit/);
+// SessionApi.prompt takes SessionPromptInput: a flat { sessionID, text,
+// delivery }, not a nested { prompt } object.
+assert.equal(prompts[0].prompt, undefined);
+assert.equal(prompts[0].delivery, "steer");
 
 for (const id of agentIds) {
   assert.ok(updatedAgents.has(id), `agent was not updated: ${id}`);

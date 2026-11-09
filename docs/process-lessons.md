@@ -109,3 +109,14 @@ environment unless the option is documented. Keep state a real mode-700
 directory; keep a knowledge base separate.
 Doc updated: `docs/install.md`, `README.md`, `CHANGELOG.md`.
 Promote-to-global: yes
+
+## 2026-11-08 - A permissive mock hides the argument contract
+
+Surprise: the command test accepted any `session.prompt` argument, so a review
+could not tell whether the handler sent a flat `SessionPromptInput` or a nested
+`prompt`. The installed V2 types showed the flat shape was correct.
+Cost: one type lookup and one extra assertion.
+Rule: assert the real argument shape at the boundary; do not let a no-op mock
+prove only that the handler ran.
+Doc updated: `tests/plugin.test.mjs`, `README.md`, `docs/install.md`.
+Promote-to-global: yes
