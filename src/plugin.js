@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { mkdirSync, readFileSync, readdirSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,6 +124,8 @@ const plugin = Plugin.define({
     process.env.HARNESS_HOME = home;
     process.env.HARNESS_STATE = state;
     mkdirSync(state, { recursive: true, mode: 0o700 });
+    // mkdir's mode only applies to a new directory; fix an existing one too.
+    chmodSync(state, 0o700);
 
     const instructions = readFileSync(join(ROOT, "AGENTS.md"), "utf8");
     await ctx.session.hook("context", (event) => {

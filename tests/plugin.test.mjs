@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { chmodSync, mkdtempSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const state = mkdtempSync(join(tmpdir(), "libreharness-plugin-"));
+chmodSync(state, 0o755);
 const commands = [];
 const skills = [];
 const prompts = [];
@@ -132,6 +133,11 @@ for (const id of ["state-audit", "verification", "engineering-loop"]) {
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 assert.equal(process.env.HARNESS_HOME, root);
 assert.equal(process.env.HARNESS_STATE, state);
+assert.equal(
+  statSync(state).mode & 0o777,
+  0o700,
+  "setup must tighten an existing state directory to mode 700",
+);
 
 const system = [];
 contextHook({ system });
