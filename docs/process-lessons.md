@@ -120,3 +120,15 @@ Rule: assert the real argument shape at the boundary; do not let a no-op mock
 prove only that the handler ran.
 Doc updated: `tests/plugin.test.mjs`, `README.md`, `docs/install.md`.
 Promote-to-global: yes
+
+## 2026-11-08 - A skipped publish is an untested publish
+
+Surprise: the 1.0.0 release run was green because npm already had the version;
+the workflow skipped `npm publish`, so OIDC trusted publishing was never
+exercised. The 1.1.0 tag failed at exactly that step.
+Cost: one failed release run and a human trusted-publisher gate.
+Rule: treat "already published; skipping" as no proof. Exercise the publish
+path with a prerelease, or verify the trusted-publisher configuration before
+tagging.
+Doc updated: `docs/release.md`, `.github/workflows/release.yml`.
+Promote-to-global: yes

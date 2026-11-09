@@ -3,8 +3,9 @@
 # Release checklist
 
 Status: **procedure for 1.1.0.** Linux only, OpenCode only. The public
-repository is `https://github.com/ezcodelab/libreharness`, and npm trusted
-publishing is configured for `ezcodelab/libreharness` and `release.yml`.
+repository is `https://github.com/ezcodelab/libreharness`. Verify that npm
+trusted publishing is configured for `ezcodelab/libreharness` and
+`release.yml` before pushing the tag; the publish step is the gate.
 
 This page is the release gate. A green branch is not a green release. Run the
 checks on the tagged tree, and do not publish from a dirty working tree.
@@ -109,13 +110,13 @@ Approve the staged version on npmjs.com with your passkey, then verify:
 npm view libreharness@<version> version
 ```
 
-## 6. Trusted publishing (configured)
+## 6. Trusted publishing
 
-The package trusts GitHub Actions from `ezcodelab/libreharness` and
+The package must trust GitHub Actions from `ezcodelab/libreharness` and
 `release.yml`. The release workflow uses OIDC; there is no `NPM_TOKEN` secret
 and no long-lived publish token. The workflow upgrades npm explicitly because
-Node 22's bundled npm 10 cannot use trusted publishing. Reconfigure only if the
-repository, workflow filename, or package owner changes:
+Node 22's bundled npm 10 cannot use trusted publishing. Verify or configure it
+before the tag:
 
 ```sh
 npm trust github --file release.yml \
