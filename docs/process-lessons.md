@@ -132,3 +132,14 @@ path with a prerelease, or verify the trusted-publisher configuration before
 tagging.
 Doc updated: `docs/release.md`, `.github/workflows/release.yml`.
 Promote-to-global: yes
+
+## 2026-11-08 - Link checks must exclude installed dependencies
+
+Surprise: adding `@opencode/plugin` made `npm install` create a large
+`node_modules` tree; the `**/*.md` lychee glob then reported 81 broken links in
+third-party readmes and failed every CI matrix cell.
+Cost: one full CI matrix rerun.
+Rule: repo-wide link checks exclude `node_modules` (and other vendor/build
+directories); check tracked documentation only.
+Doc updated: `.github/workflows/ci.yml`.
+Promote-to-global: yes
