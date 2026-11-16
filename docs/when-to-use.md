@@ -4,23 +4,24 @@
 
 One rule: do trivial work directly; use the queue when the work must survive
 the chat, needs review, or has more than one deliverable. If you are unsure,
-run `/goal`; it routes the request.
+just describe the outcome; auto-intake creates the task and the harness routes
+it. The commands below are manual forms for intervention.
 
 ## First action
 
 | If you are about to... | Start with | What happens |
 |---|---|---|
 | Fix a typo, one-liner, or pure copy change | Just do it | No task, brief, or close needed |
-| Start a nontrivial request | `/goal <request>` | It decides: one task, or a goal with children; `go` auto-lanes ready children |
+| Start a nontrivial request | Just describe it | Auto-intake creates one task, and the harness runs brief, implement, verify, review, close, and ship. `/goal` is the manual form |
 | Continue an existing task | `/brief <task-id>` | One-page brief with scope, acceptance, risks, and first check |
 | Continue an existing goal | `/goal <goal-id>` | Finds the next ready child; `/goal` runs `goal-start` once |
 | Split independent work | `/goal go` | Auto-lanes up to three ready children; `/lane` only for manual or existing-task isolation |
 | Stop and resume later | `/handoff <task-id>`, later `/takeover <task-id>` | Durable state transfer, not a transcript |
 | Review a diff | `/review <task-id>` | Jev advisory first, independent challenge only when risk warrants |
-| Audit stateful code | `/state-audit <scope>` | Documents states, invariants, and transitions; fixes confirmed invalid paths |
-| Finish a task or goal | `/close <task-id>` | Integrates goal lanes, reviews, reaps clean worktrees, records evidence, done |
+| Audit stateful code | `/state-audit <scope>` | Documents states, invariants, transitions, and a Mermaid statechart; fixes confirmed invalid paths |
+| Finish a task or goal | Let the loop finish | The close step integrates lanes, reviews, reaps, records evidence, and ships. `/close` is the manual form |
 | Review a UI | `/design-review` | Blocking, quick wins, and keep notes; no code edits |
-| Prove real app behavior | `verification` skill | Generates a project-local `verify-<app>` recipe and proves it once |
+| Prove real app behavior | `verification` skill | Create a `verify-<app>` recipe, maintain one, or formally check an invariant |
 | Inspect the queue | `/queue` | Ready tasks, board, or a specific packet |
 | Clean up the workflow | `/tune` | Deletions first, then at most five evidence-backed patches |
 | Check a goal plan before approval | `bin/jev_plan.py` | Completeness, testability, largest gap, and risk; advisory |
@@ -32,9 +33,9 @@ run `/goal`; it routes the request.
 | `engineering-loop` | Nontrivial work: auth, secrets, data, external API, multi-file design, or "done" means production behavior | The change is a typo, one-liner, or pure copy edit |
 | `goal` | The outcome spans sessions, has several deliverables, or should keep running unattended | The work is one reviewable diff; use the small-task path |
 | `parallel-lanes` | Two or three independent slices with disjoint files or a fixed interface | The work touches one file, shared state, or needs one owner |
-| `state-audit` | Stateful code: queues, retries, locks, sessions, lifecycle, recovery, concurrency, or a stuck/duplicate/lost bug | The change is stateless, a typo, or a pure copy/docs edit |
+| `state-audit` | Stateful code: queues, retries, locks, sessions, lifecycle, recovery, concurrency, or a stuck/duplicate/lost bug; the audit adds a Mermaid statechart | The change is stateless, a typo, or a pure copy/docs edit |
 | `ui-design` | Layout, components, styling, visual review, or interface copy | The work is backend, data, or docs only |
-| `verification` | You need proof against the real app and the project has no scripted way to drive it | A unit test, type check, lint, or direct command already proves the change |
+| `verification` | You need to create or maintain proof against the real app, or formally check a property tests cannot reach | A unit test, type check, lint, or direct command already proves the change |
 | `work-queue` | Work must survive a session, needs ownership/dependencies/evidence, or runs in parallel | The work is trivial or a question that needs no change |
 
 The detailed triggers and the 120-line budget are in [Skills](skills.md).
@@ -46,13 +47,13 @@ command name and want its purpose.
 
 | Command | Use it when | Result |
 |---|---|---|
-| `/goal` | You have a request, task id, or goal id and want the single entry point | Routes to a direct task or a reviewed goal plan; `go` creates lanes |
+| `/goal` | You want the manual form of the entry step, or have a task id, goal id, or request | Routes to a direct task or a reviewed goal plan; `go` creates lanes |
 | `/brief` | Before implementing, to pin scope and acceptance | Read-only one-page brief |
 | `/queue` | You need to inspect, claim, block, or report queue state | Queue CLI output |
 | `/lane` | You need a manual worktree for an existing task; normal goals auto-lane | Worker packet for one lane |
 | `/takeover` | You are resuming a paused or inherited task | Claims from the handoff and named files |
 | `/review` | A diff exists and needs a check; this is not a finish step | Jev, optional devils-advocate, and a verdict |
-| `/state-audit` | Stateful code needs its states, invariants, and transitions mapped, and confirmed invalid paths fixed | State-machine document, grouped findings, regression-tested fixes |
+| `/state-audit` | Stateful code needs its states, invariants, transitions, and statechart mapped, and confirmed invalid paths fixed | State-machine document with a Mermaid statechart, grouped findings, regression-tested fixes |
 | `/close` | A task or goal is ready to finish; it integrates reviewed goals and reaps clean lanes | Final review, reap, lesson, done with evidence |
 | `/handoff` | You are pausing, switching context, or near the context limit | Under-40-line handoff in the task |
 | `/design-review` | A UI screenshot or reference needs a design pass | Blocking, quick wins, keep |
@@ -64,12 +65,13 @@ Every command's arguments are in [Command reference](command-reference.md).
 
 Think in five stages, not twelve commands:
 
-- **Start or resume:** `/goal`, `/brief`, `/takeover`. `/goal go` auto-lanes
-  ready children; `/lane` is the manual escape hatch.
-- **Check:** `/review`, `tasks.py goal-status`. A review is not a finish step.
-- **Finish:** `/close` is the single finish command. For a goal with lanes, it
-  integrates them inline, runs the final review, and reaps clean merged
-  worktrees. Unfinished children stop the close until they are finished.
+- **Start or resume:** the auto-intake path. Manual forms are `/goal`, `/brief`,
+  and `/takeover`; `/lane` is only for a worktree you deliberately want.
+- **Check:** the review step (manual form `/review`) and
+  `tasks.py goal-status`. A review is not a finish step.
+- **Finish:** the close step (manual form `/close`) integrates goal lanes,
+  reviews, reaps clean worktrees, records evidence, and ships. Unfinished
+  children stop the close until they are finished.
 - **Maintain:** `/tune` is periodic process cleanup, not a task finish.
 - **Manual escape:** `/lane` only for an existing task or a worktree you
   deliberately want. `tasks.py reap` and `tasks.py remove-lane` are maintenance
@@ -173,13 +175,13 @@ ui-design skill -> implement -> /design-review -> /review -> /close
 **Need proof the app works**
 
 ```text
-verification skill -> generated verify-<app> -> run it -> /close with its output
+verification skill -> create, maintain, or formal mode -> proof artifact -> /close
 ```
 
 **Stateful change**
 
 ```text
-/state-audit <scope> -> docs/state-machines.md -> grouped fixes
+/state-audit <scope> -> docs/state-machines.md with Mermaid statechart -> grouped fixes
 -> regression tests -> /review -> /close
 ```
 

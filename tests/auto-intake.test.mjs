@@ -45,14 +45,23 @@ hook(first);
 if (!first.prompt.text.includes("[queue] Task ")) {
   throw new Error("task note was not injected");
 }
-if (!first.prompt.text.includes("goal skill") || first.prompt.text.includes("/intake")) {
-  throw new Error("queue notice does not route to the goal skill");
+if (
+  !first.prompt.text.includes("goal skill") ||
+  !first.prompt.text.includes("ship") ||
+  !first.prompt.text.includes("human gates") ||
+  first.prompt.text.includes("/intake")
+) {
+  throw new Error("queue notice does not route through shipping to the human gates");
 }
 const id = first.prompt.text.match(/Task ([^\s]+)/)?.[1];
 if (!id) throw new Error("task id missing");
 const task = readFileSync(join(root, "work/tasks", `${id}.md`), "utf8");
 if (!task.includes("status: inbox")) throw new Error("task not inbox");
 if (!task.includes("example-project")) throw new Error("project not inferred");
+if (task.includes("use /goal")) throw new Error("task scope still requires /goal");
+if (!task.includes("confirm scope and acceptance")) {
+  throw new Error("task scope does not state the acceptance confirmation");
+}
 
 const second = { sessionID: "s1", prompt: { text: "Add another endpoint" } };
 hook(second);

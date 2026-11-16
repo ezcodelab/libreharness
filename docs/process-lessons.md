@@ -143,3 +143,15 @@ Rule: repo-wide link checks exclude `node_modules` (and other vendor/build
 directories); check tracked documentation only.
 Doc updated: `.github/workflows/ci.yml`.
 Promote-to-global: yes
+
+## 2026-11-15 - Gate verdicts need a grammar, not a keyword
+
+Surprise: the shipping gate accepted a `FAIL` verdict that merely contained the
+word `PASS`, and its documented `--required-check test` could never match the
+matrix check names such as `test (3.10, 20)`.
+Cost: one independent review and a harden commit before the goal could close.
+Rule: parse a gate verdict with a strict anchored grammar, test adversarial
+phrasings, and run every documented gate command against the real CI names.
+Doc updated: `bin/pr_watch.py`, `tests/test_pr_watch.py`,
+`skills/shipping/SKILL.md`, `docs/command-reference.md`.
+Promote-to-global: yes

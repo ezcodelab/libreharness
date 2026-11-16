@@ -1,10 +1,13 @@
 ---
-description: The single task entry — execute a small task, or plan/review/run a multi-step goal
+description: Manual task entry — execute a small task, or plan/review/run a multi-step goal
 ---
 <!-- SPDX-License-Identifier: MIT -->
 Request: $ARGUMENTS
 
 Use the goal, work-queue, parallel-lanes, and engineering-loop skills.
+
+This command is an escape hatch. A normal request arrives through auto-intake
+and runs the same flow without the operator typing `/goal`.
 
 ## Existing goal or single task
 

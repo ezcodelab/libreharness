@@ -82,7 +82,7 @@ function createTask(text, directory) {
       "--status",
       "inbox",
       "--scope",
-      "Auto-captured prompt; use /goal to confirm scope and acceptance.",
+      "Auto-captured prompt; confirm scope and acceptance before claiming.",
       "--acceptance",
       "- [ ] TBD — confirm before claiming.",
       "--",
@@ -131,9 +131,9 @@ export default {
         event.prompt.text =
           text +
           `\n\n[queue] Task ${id} was created for this request. ` +
-          `Continue with the goal skill now: confirm scope/acceptance, execute a ` +
-          `small task directly, or stop at the plan for a large one. Do not ask the ` +
-          `operator to retype a command.`;
+          `Continue with the goal skill now: brief, implement, verify, review, ` +
+          `close, and ship. Stop only at the contract's human gates. Do not ask ` +
+          `the operator to retype a command.`;
       } catch {
         // Never block a prompt because the queue helper is unavailable.
       }

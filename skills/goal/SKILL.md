@@ -22,12 +22,12 @@ own acceptance is checked. A goal is never claimed or laned; its children are.
 
 ## Create
 
-`/goal` plans first: it writes a validated goal/child/lane JSON and stops.
-Review or revise it, then `/goal go` creates and executes it; `/goal go
---unattended` also sets the per-goal continuation flag. Each child has one
-scope, testable acceptance, dependencies, and a review boundary. If a child
-cannot be reviewed in one sitting, split it. The reviewed lane map is used by
-`goal-start`; the operator does not create lanes by hand.
+The goal flow plans first (manual form `/goal`): it writes a validated
+goal/child/lane JSON and stops. Review or revise it, then create and execute it;
+the manual form is `/goal go`, and `--unattended` sets the per-goal continuation
+flag. Each child has one scope, testable acceptance, dependencies, and a review
+boundary. If a child cannot be reviewed in one sitting, split it. The reviewed
+lane map is used by `goal-start`; the operator does not create lanes by hand.
 
 Run a plan critique before execution when the goal is large or risky: Jev's
 plan mode checks completeness, testability, missing dependencies, and risk.
@@ -37,25 +37,28 @@ It is advisory; fix the plan, not the score.
 
 After creating or resuming a goal, run `tasks.py goal-start <goal> --repo
 <repo>` once. It creates up to three lanes for ready children with disjoint
-`owns`. If it reports serial, work in the current tree. `/lane` is only for a
-manual worktree or an existing task.
+`owns`. If it reports serial, work in the current tree. The manual `/lane`
+command is only for a worktree you deliberately want outside the goal.
 
 For each stable, unblocked child in priority order:
 
-1. `/brief <child>`; confirm scope/acceptance.
+1. Brief the child (the `/brief` command is its manual form); confirm
+   scope/acceptance.
 2. Implement in the assigned lane, or directly when `goal-start` reported
    serial.
 3. Run the named checks; record the command and result.
-4. `/review <child>`; fix send-backs.
-5. `/close <child>`; the child is `done` only with evidence.
+4. Run the review step (the `/review` command is its manual form); fix
+   send-backs.
+5. Close the child (the `/close` command is its manual form); the child is
+   `done` only with evidence.
 6. `goal-status <goal>`; continue or stop.
 
-When every child is final, `/close <goal>` runs the integration of reviewed
-lanes as part of the finish path.
+When every child is final, run the close step; it integrates reviewed lanes as
+part of the finish path.
 
 After the last child, review the goal's acceptance against the merged evidence,
-run the full check on the final tree, write the goal handoff, and `/close` the
-goal with that evidence.
+run the full check on the final tree, write the goal handoff, and close the goal
+with that evidence.
 
 ## Stop conditions
 
