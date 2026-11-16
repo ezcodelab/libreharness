@@ -54,6 +54,14 @@ Use `CONFIRMED`, `SUSPECTED`, `UNVERIFIED`, and `FIXED` as finding statuses. A
 finding is `CONFIRMED` only with a reachable code path and a failing test,
 repro, or deterministic command. `SUSPECTED` is a lead, not a bug claim.
 
+### Statechart
+
+Add a Mermaid `stateDiagram-v2` to each machine section. Label states and
+arrows with what a user sees or cares about, not internal column names. Keep it
+under about 20 arrows; merge states that act the same. Mark a confirmed invalid
+path with a short note and keep its states. For a formal counterexample, draw
+the shortest path to the broken rule and replay it against the real code.
+
 ## 3. Hunt reachable invalid paths
 
 For each machine, test the paths the code can actually reach:
