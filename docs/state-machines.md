@@ -46,7 +46,7 @@ stateDiagram-v2
   inbox --> ready: scope and acceptance confirmed
   inbox --> active: claim, dependencies final
   ready --> active: claim, dependencies final
-  blocked --> active: claim --force or blocker cleared
+  blocked --> active: claim --force
   active --> review: review passed
   review --> done: evidence recorded
   active --> blocked: blocker or human gate

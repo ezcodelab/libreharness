@@ -22,12 +22,12 @@ own acceptance is checked. A goal is never claimed or laned; its children are.
 
 ## Create
 
-`/goal` plans first: it writes a validated goal/child/lane JSON and stops.
-Review or revise it, then `/goal go` creates and executes it; `/goal go
---unattended` also sets the per-goal continuation flag. Each child has one
-scope, testable acceptance, dependencies, and a review boundary. If a child
-cannot be reviewed in one sitting, split it. The reviewed lane map is used by
-`goal-start`; the operator does not create lanes by hand.
+The goal flow plans first (manual form `/goal`): it writes a validated
+goal/child/lane JSON and stops. Review or revise it, then create and execute it;
+the manual form is `/goal go`, and `--unattended` sets the per-goal continuation
+flag. Each child has one scope, testable acceptance, dependencies, and a review
+boundary. If a child cannot be reviewed in one sitting, split it. The reviewed
+lane map is used by `goal-start`; the operator does not create lanes by hand.
 
 Run a plan critique before execution when the goal is large or risky: Jev's
 plan mode checks completeness, testability, missing dependencies, and risk.
