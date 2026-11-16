@@ -12,9 +12,9 @@ Use for nontrivial work. Skip typos, one-liners and pure copy: make the change, 
 
 State the task, the success condition, and what is explicitly out of scope.
 If the work is nontrivial, spans a session, or may run in parallel, create or
-claim a task with the `work-queue` skill (`/goal`, `/queue`, `/lane`). A task
-is the durable unit; the chat is not. For a multi-step outcome, use `/goal` to
-create the umbrella and child tasks; they still use this loop.
+claim a task with the `work-queue` skill (manual forms `/goal`, `/queue`,
+`/lane`). A task is the durable unit; the chat is not. For a multi-step
+outcome, use the goal flow to create the umbrella and child tasks.
 
 If the ask is broad, narrow it and say what you deferred. For a nontrivial
 task, run `/brief <task>` (or produce the same one page: scope, invariants,

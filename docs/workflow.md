@@ -146,7 +146,7 @@ missing or the change crosses a transition, retry, lock, or lifecycle boundary.
 
 ## 7. Close
 
-`/close <id>` is the single finish command:
+The close step (manual form `/close <id>`) is the finish:
 
 - for a goal, checks `goal-status`; if any child is unfinished, stops and lists
   it. Finish that child with a follow-up goal or task, then run `/close` again;

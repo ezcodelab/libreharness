@@ -1,5 +1,5 @@
 ---
-description: The single task entry — execute a small task, or plan/review/run a multi-step goal
+description: Manual task entry — execute a small task, or plan/review/run a multi-step goal
 ---
 <!-- SPDX-License-Identifier: MIT -->
 Request: $ARGUMENTS

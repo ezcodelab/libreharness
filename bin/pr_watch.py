@@ -8,15 +8,16 @@ contract gates hold, and only then runs `gh pr merge --squash`.
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-PASS_TOKENS = {"PASS", "PASS+NOTES"}
 FAIL_STATES = {"PENDING", "QUEUED", "IN_PROGRESS", "WAITING", "EXPECTED"}
-GOOD_STATES = {"SUCCESS", "NEUTRAL"}
+GOOD_STATES = {"SUCCESS"}
+VERDICT = re.compile(r"^(PASS(?:\+NOTES)?)\s+([0-9a-fA-F]{40})$")
 
 
 def gh(args, timeout=60):
@@ -37,18 +38,19 @@ def gh_json(args):
 
 
 def verifier(path):
-    text = Path(path).read_text(encoding="utf-8")
-    tokens = text.replace(":", " ").split()
-    passed = any(token in PASS_TOKENS for token in tokens)
-    sha = next(
-        (
-            token.lower()
-            for token in tokens
-            if len(token) == 40 and all(char in "0123456789abcdef" for char in token.lower())
-        ),
-        None,
-    )
-    return passed, sha
+    lines = [
+        line.strip()
+        for line in Path(path).read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    if not lines:
+        return False, None
+    match = VERDICT.fullmatch(lines[0])
+    if not match:
+        return False, None
+    if any(line.upper().startswith("FAIL") for line in lines):
+        return False, None
+    return True, match.group(2).lower()
 
 
 def check_state(check):
@@ -61,7 +63,7 @@ def check_state(check):
     return False, conclusion or status or "unknown"
 
 
-def evaluate(pr, verifier_path, evidence_path, required, allow_skipped):
+def evaluate(pr, verifier_path, evidence_path, required):
     errors = []
     if str(pr.get("state", "")).upper() != "OPEN":
         errors.append("PR is not open")
@@ -94,8 +96,6 @@ def evaluate(pr, verifier_path, evidence_path, required, allow_skipped):
         ok, state = check_state(check)
         names[name] = state
         if not ok:
-            if allow_skipped and state == "SKIPPED":
-                continue
             errors.append(f"check {name}: {state}")
     for name in required:
         if name not in names:
@@ -113,7 +113,6 @@ def main():
     parser.add_argument("--verifier-pass", required=True)
     parser.add_argument("--evidence", required=True)
     parser.add_argument("--required-check", action="append", default=[])
-    parser.add_argument("--allow-skipped", action="store_true")
     parser.add_argument("--merge", action="store_true", help="merge after all gates pass")
     parser.add_argument("--wait", type=int, default=0, help="seconds to wait for CI")
     parser.add_argument("--interval", type=int, default=10)
@@ -143,7 +142,7 @@ def main():
             print(f"pr_watch: {error}", file=sys.stderr)
             return 3
         errors, head, checks = evaluate(
-            pr, args.verifier_pass, args.evidence, args.required_check, args.allow_skipped
+            pr, args.verifier_pass, args.evidence, args.required_check
         )
         if not errors or time.monotonic() >= deadline:
             break

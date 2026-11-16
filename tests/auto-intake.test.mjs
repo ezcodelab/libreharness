@@ -58,6 +58,10 @@ if (!id) throw new Error("task id missing");
 const task = readFileSync(join(root, "work/tasks", `${id}.md`), "utf8");
 if (!task.includes("status: inbox")) throw new Error("task not inbox");
 if (!task.includes("example-project")) throw new Error("project not inferred");
+if (task.includes("use /goal")) throw new Error("task scope still requires /goal");
+if (!task.includes("confirm scope and acceptance")) {
+  throw new Error("task scope does not state the acceptance confirmation");
+}
 
 const second = { sessionID: "s1", prompt: { text: "Add another endpoint" } };
 hook(second);

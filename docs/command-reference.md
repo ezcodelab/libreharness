@@ -28,7 +28,7 @@ which command you need and want its arguments.
 
 ### `/goal`
 
-**Use when** you have a request, task id, goal id, or reviewed plan to execute; `go` creates the goal and auto-lanes ready children.
+**Use when** you want the manual form of the entry step, or you have a task id, goal id, or reviewed plan to execute; `go` creates the goal and auto-lanes ready children.
 
 ```text
 /goal <request>
@@ -176,10 +176,11 @@ large, it stops after the document and grouped issues.
 /close <task-id>
 ```
 
-The single finish command. For a goal with lanes it integrates the reviewed
-lanes inline; for a single task with a worktree it merges the branch into an
-integration branch from its base. It then runs the final review, reaps clean
-merged worktrees, runs optional Jev triage, records one lesson, and transitions
+The finish step; `/close` is its manual form. For a goal with lanes it
+integrates the reviewed lanes inline; for a single task with a worktree it
+merges the branch into an integration branch from its base. It then runs the
+final review, reaps clean merged worktrees, runs optional Jev triage, records
+one lesson, and transitions
 to done with evidence. Missing evidence, an unfinished child, or a retained
 dirty/unmerged lane keeps the task or goal open. Jev never blocks the close by
 itself. A repeated correction is encoded at the highest level that works
@@ -478,15 +479,16 @@ no conflicts, and a ready state. Dry-run is the default; `--merge` performs
 | `--repo <owner/repo>` | Repository; `gh` infers it from the checkout by default |
 | `--verifier-pass <file>` | File containing `PASS <sha>` or `PASS+NOTES <sha>` |
 | `--evidence <file>` | Non-empty task evidence file |
-| `--required-check <name>` | Repeatable required check name |
-| `--allow-skipped` | Treat a skipped check as acceptable |
+| `--required-check <name>` | Repeatable exact check-run name; matrix jobs are named like `test (3.10, 20)` |
 | `--wait <seconds>` | Wait for CI up to this long; default 0 |
 | `--interval <seconds>` | Poll interval; default 10 |
 | `--merge` | Merge after every gate passes |
 | `--json` | JSON summary |
 
 Exit codes: `0` gate passed, `2` gate blocked, `3` no forge or merge failed.
-The script never pushes and never deletes a branch.
+A pending, skipped, neutral, or failed check blocks; only `SUCCESS` is green.
+The verifier file must start with `PASS <sha>` or `PASS+NOTES <sha>`. The script
+never pushes and never deletes a branch.
 
 ## Jev CLI
 

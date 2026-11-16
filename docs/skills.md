@@ -11,12 +11,12 @@ one-screen choice between them, see [When to use what](when-to-use.md).
 | Skill | Use when | Lines |
 |---|---|---|
 | [engineering-loop](../skills/engineering-loop/SKILL.md) | Nontrivial work: external API, secrets or auth, schema or data, security tradeoff, multi-file design, or "done" means production behavior | 120 |
-| [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, auto-lane ready children, run the queue, stop on a one-way door or blocker | 92 |
+| [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, auto-lane ready children, run the queue, stop on a one-way door or blocker | 95 |
 | [parallel-lanes](../skills/parallel-lanes/SKILL.md) | Split work across two or three agents or sessions; define slices, ownership, worktrees, merge order, and integration | 77 |
-| [shipping](../skills/shipping/SKILL.md) | A reviewed patch is ready to land; open a ready PR, watch CI, require an independent verifier PASS, and merge only the verified patch | 115 |
+| [shipping](../skills/shipping/SKILL.md) | A reviewed patch is ready to land; open a ready PR, watch CI, require an independent verifier PASS, and merge only the verified patch | 116 |
 | [state-audit](../skills/state-audit/SKILL.md) | Stateful code: queues, retries, locks, sessions, lifecycle, recovery, concurrency, or a stuck/duplicate/lost bug; document states, invariants, transitions, and a Mermaid statechart, then fix confirmed invalid paths | 108 |
 | [ui-design](../skills/ui-design/SKILL.md) | UI or UX work: layout, component, styling, visual review, or interface copy | 89 |
-| [verification](../skills/verification/SKILL.md) | A change needs proof against the real app or a formal property; create or maintain a verify-<app> recipe, or model-check an invariant | 99 |
+| [verification](../skills/verification/SKILL.md) | A change needs proof against the real app or a formal property; create or maintain a verify-<app> recipe, or model-check an invariant | 100 |
 | [work-queue](../skills/work-queue/SKILL.md) | Work that is nontrivial, spans sessions, or runs in parallel; create and maintain durable tasks | 82 |
 
 Line counts are current and will drift. The budget is enforced by the lint, not

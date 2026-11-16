@@ -76,10 +76,11 @@ Run the gate:
 
 ```sh
 python3 bin/pr_watch.py --pr <number> \
-  --verifier-pass <verdict-file> --evidence <task-evidence-file> \
-  --required-check test --wait 900
+  --verifier-pass <verdict-file> --evidence <task-evidence-file> --wait 900
 ```
 
+Omit `--required-check` to require every check green. If you pass it, use the
+exact check-run name; matrix jobs are named like `test (3.10, 20)`, not `test`.
 Add `--repo OWNER/REPO` when the checkout cannot infer it. The script prints
 every failing gate and exits non-zero. It does not merge in dry-run mode.
 

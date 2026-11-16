@@ -4,21 +4,22 @@
 
 One rule: do trivial work directly; use the queue when the work must survive
 the chat, needs review, or has more than one deliverable. If you are unsure,
-run `/goal`; it routes the request.
+just describe the outcome; auto-intake creates the task and the harness routes
+it. The commands below are manual forms for intervention.
 
 ## First action
 
 | If you are about to... | Start with | What happens |
 |---|---|---|
 | Fix a typo, one-liner, or pure copy change | Just do it | No task, brief, or close needed |
-| Start a nontrivial request | `/goal <request>` | It decides: one task, or a goal with children; `go` auto-lanes ready children |
+| Start a nontrivial request | Just describe it | Auto-intake creates one task, and the harness runs brief, implement, verify, review, close, and ship. `/goal` is the manual form |
 | Continue an existing task | `/brief <task-id>` | One-page brief with scope, acceptance, risks, and first check |
 | Continue an existing goal | `/goal <goal-id>` | Finds the next ready child; `/goal` runs `goal-start` once |
 | Split independent work | `/goal go` | Auto-lanes up to three ready children; `/lane` only for manual or existing-task isolation |
 | Stop and resume later | `/handoff <task-id>`, later `/takeover <task-id>` | Durable state transfer, not a transcript |
 | Review a diff | `/review <task-id>` | Jev advisory first, independent challenge only when risk warrants |
 | Audit stateful code | `/state-audit <scope>` | Documents states, invariants, transitions, and a Mermaid statechart; fixes confirmed invalid paths |
-| Finish a task or goal | `/close <task-id>` | Integrates goal lanes, reviews, reaps clean worktrees, records evidence, done |
+| Finish a task or goal | Let the loop finish | The close step integrates lanes, reviews, reaps, records evidence, and ships. `/close` is the manual form |
 | Review a UI | `/design-review` | Blocking, quick wins, and keep notes; no code edits |
 | Prove real app behavior | `verification` skill | Create a `verify-<app>` recipe, maintain one, or formally check an invariant |
 | Inspect the queue | `/queue` | Ready tasks, board, or a specific packet |
@@ -46,7 +47,7 @@ command name and want its purpose.
 
 | Command | Use it when | Result |
 |---|---|---|
-| `/goal` | You have a request, task id, or goal id and want the single entry point | Routes to a direct task or a reviewed goal plan; `go` creates lanes |
+| `/goal` | You want the manual form of the entry step, or have a task id, goal id, or request | Routes to a direct task or a reviewed goal plan; `go` creates lanes |
 | `/brief` | Before implementing, to pin scope and acceptance | Read-only one-page brief |
 | `/queue` | You need to inspect, claim, block, or report queue state | Queue CLI output |
 | `/lane` | You need a manual worktree for an existing task; normal goals auto-lane | Worker packet for one lane |
@@ -64,12 +65,13 @@ Every command's arguments are in [Command reference](command-reference.md).
 
 Think in five stages, not twelve commands:
 
-- **Start or resume:** `/goal`, `/brief`, `/takeover`. `/goal go` auto-lanes
-  ready children; `/lane` is the manual escape hatch.
-- **Check:** `/review`, `tasks.py goal-status`. A review is not a finish step.
-- **Finish:** `/close` is the single finish command. For a goal with lanes, it
-  integrates them inline, runs the final review, and reaps clean merged
-  worktrees. Unfinished children stop the close until they are finished.
+- **Start or resume:** the auto-intake path. Manual forms are `/goal`, `/brief`,
+  and `/takeover`; `/lane` is only for a worktree you deliberately want.
+- **Check:** the review step (manual form `/review`) and
+  `tasks.py goal-status`. A review is not a finish step.
+- **Finish:** the close step (manual form `/close`) integrates goal lanes,
+  reviews, reaps clean worktrees, records evidence, and ships. Unfinished
+  children stop the close until they are finished.
 - **Maintain:** `/tune` is periodic process cleanup, not a task finish.
 - **Manual escape:** `/lane` only for an existing task or a worktree you
   deliberately want. `tasks.py reap` and `tasks.py remove-lane` are maintenance

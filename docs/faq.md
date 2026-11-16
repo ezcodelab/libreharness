@@ -10,9 +10,10 @@ reviewer called Jev.
 
 ## Which command should I use?
 
-See [When to use what](when-to-use.md) for a one-screen choice. `/goal` is
-the usual entry for a request; `/brief` is for an existing task; `/review` is
-for a diff; `/close` is for a finished task.
+You usually do not need one. Describe the outcome; auto-intake creates the
+task, and the harness runs brief, implement, verify, review, close, and ship.
+`/goal`, `/brief`, `/review`, and `/close` are manual forms for intervention.
+See [When to use what](when-to-use.md) for the one-screen choice.
 
 ## Is it a replacement for OpenCode?
 

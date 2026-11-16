@@ -82,7 +82,7 @@ function createTask(text, directory) {
       "--status",
       "inbox",
       "--scope",
-      "Auto-captured prompt; use /goal to confirm scope and acceptance.",
+      "Auto-captured prompt; confirm scope and acceptance before claiming.",
       "--acceptance",
       "- [ ] TBD — confirm before claiming.",
       "--",

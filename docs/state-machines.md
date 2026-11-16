@@ -2,8 +2,9 @@
 
 # State machines
 
-Status: 2026-11-15, initial audit. Residual risks: the queue lock and the
-worktree reaper have not been audited under concurrent failure.
+Status: 2026-11-15, LibreHarness task queue and goal, commit 943d7a5.
+Residual risks: the queue lock and the worktree reaper have not been audited
+under concurrent failure.
 
 The `state-audit` skill maintains this file. Each machine has one section, a
 Mermaid statechart from the user's point of view, and a findings table.
@@ -21,7 +22,8 @@ Mermaid statechart from the user's point of view, and a findings table.
 - States: `inbox`, `ready`, `active`, `review`, `done`, `blocked`,
   `abandoned`.
 - Invariants:
-  - only a `ready` task with dependencies final can be claimed;
+  - a ready or inbox task can be claimed; a blocked task only with `--force`;
+  - dependencies must be final unless `--force`;
   - one owner and one lane per active task;
   - `done` requires recorded evidence;
   - `review` means the review passed and the task awaits integration or close.
@@ -30,7 +32,9 @@ Mermaid statechart from the user's point of view, and a findings table.
 | From | Event / guard | To | Side effects |
 |---|---|---|---|
 | inbox | scope confirmed | ready | acceptance checked |
+| inbox | `claim`, dependencies final | active | owner, branch, worktree set |
 | ready | `claim` with dependencies final | active | owner, branch, worktree set |
+| blocked | `claim --force` | active | reason cleared, owner set |
 | active | review passed | review | verdict logged |
 | review | close with evidence | done | evidence recorded, lesson appended |
 | active / review | blocker or human gate | blocked | reason recorded |
@@ -40,14 +44,15 @@ Mermaid statechart from the user's point of view, and a findings table.
 stateDiagram-v2
   [*] --> inbox
   inbox --> ready: scope and acceptance confirmed
+  inbox --> active: claim, dependencies final
   ready --> active: claim, dependencies final
+  blocked --> active: claim --force or blocker cleared
   active --> review: review passed
   review --> done: evidence recorded
   active --> blocked: blocker or human gate
   review --> blocked: blocker or human gate
   active --> abandoned: superseded
   ready --> abandoned: superseded
-  blocked --> active: blocker cleared
   done --> [*]
   abandoned --> [*]
 ```

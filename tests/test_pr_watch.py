@@ -106,6 +106,28 @@ class PRWatchTest(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("does not match PR head", result.stderr)
 
+    def test_fail_mentioning_pass_blocks(self):
+        self.verifier.write_text(
+            f"FAIL: independent verifier did not PASS {SHA}\n", encoding="utf-8"
+        )
+        result = self.run_watch(self.pr(), "--merge")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("did not return PASS", result.stderr)
+
+    def test_pass_without_sha_blocks(self):
+        self.verifier.write_text("PASS\n", encoding="utf-8")
+        result = self.run_watch(self.pr(), "--merge")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("did not return PASS", result.stderr)
+
+    def test_neutral_check_blocks(self):
+        pr = self.pr(statusCheckRollup=[
+            {"name": "test", "status": "COMPLETED", "conclusion": "NEUTRAL"}
+        ])
+        result = self.run_watch(pr, "--merge")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("check test: NEUTRAL", result.stderr)
+
     def test_failed_check_blocks(self):
         pr = self.pr(statusCheckRollup=[
             {"name": "test", "status": "COMPLETED", "conclusion": "FAILURE"}

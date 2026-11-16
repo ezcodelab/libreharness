@@ -96,4 +96,5 @@ Stop and report instead of inventing a green check when:
 - the only instance is shared and cannot be isolated;
 - the check would mutate production, shared data, or an external account;
 - the evidence cannot survive cleanup;
-- a formal model cannot be traced to code, or the property is too vague to fail.
+- a formal model cannot be traced to code, or the property is too vague to fail;
+- the chosen formal tool cannot be installed or run reproducibly.
