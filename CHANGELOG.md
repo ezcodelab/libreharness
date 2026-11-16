@@ -2,6 +2,39 @@
 
 # Changelog
 
+## 1.2.0 — 2026-11-16
+
+Verified delivery automation: one path from a request to a merged, verified
+patch.
+
+### 🚀 Features
+
+- Verification has create, maintain, and formal modes. State audits now emit a
+  Mermaid statechart and maintain `docs/state-machines.md`.
+- Comment discipline adds a stdlib audit and non-blocking review guidance for
+  narration, workaround justifications, and stale comments.
+- The shipping skill and `bin/pr_watch.py` gate a ready PR on an independent
+  verifier PASS, the current head SHA, green CI, no conflicts, and evidence.
+- Auto-intake runs the default path without a required user-typed slash
+  command: brief, implement, verify, review, close, and ship.
+- The CI link check excludes `node_modules`, so the new plugin dependency does
+  not fail every matrix cell.
+
+### 🧭 Behaviour
+
+- The shipping gate accepts only a strict `PASS <sha>` or `PASS+NOTES <sha>`
+  verdict and only `SUCCESS` CI conclusions. Pending, skipped, neutral, and
+  failed checks block.
+- Queue documentation now matches the real claimable states: `inbox`, `ready`,
+  and `blocked --force`.
+- Slash commands remain manual forms; the normal path starts from a request.
+
+### ⚠️ Limits
+
+- A provider/model is still chosen by the user; the harness does not choose one.
+- The live shipping path was proven on PR #2; branch protection remains the
+  outer merge gate.
+
 ## 1.1.0 — 2026-11-08
 
 OpenCode V2 plugin distribution: commands, agents, and skills load from the

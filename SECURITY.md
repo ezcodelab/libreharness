@@ -6,11 +6,12 @@
 
 | Version | Supported |
 |---|---|
+| 1.2.x | Yes, best effort |
 | 1.1.x | Yes, best effort |
 | 1.0.x | Yes, best effort |
 | Earlier development snapshots | No |
 
-This is the 1.1.0 release tree. The public repository is
+This is the 1.2.0 release tree. The public repository is
 `https://github.com/ezcodelab/libreharness`, and there is no security team or
 response-time guarantee. Do not treat this file as a promise of a service-level
 agreement.

@@ -14,7 +14,7 @@ Add the package to the global `plugins` array in
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["libreharness@1.1.0"],
+  "plugins": ["libreharness@1.2.0"],
   "agents": {
     "devils-advocate": {},
     "explore": {},
@@ -47,9 +47,9 @@ From a checkout, use the absolute path instead of the npm name:
 
 The default state directory is `~/.local/state/libreharness`, created with mode
 700. To use a different directory, pass
-`{ "package": "libreharness@1.1.0", "options": { "state": "/your/state" } }`.
+`{ "package": "libreharness@1.2.0", "options": { "state": "/your/state" } }`.
 
-1.1.0 is the current release. The checkout path above and the offline copy
+1.2.0 is the current release. The checkout path above and the offline copy
 installer below remain supported.
 
 ## Offline copy install
