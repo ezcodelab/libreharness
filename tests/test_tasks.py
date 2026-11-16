@@ -134,6 +134,10 @@ class QueueTests(unittest.TestCase):
         subprocess.run(["git", "-C", str(repo), "config", "user.email", "test@example.com"], check=True)
         subprocess.run(["git", "-C", str(repo), "config", "user.name", "Test"], check=True)
         subprocess.run(
+            ["git", "-C", str(repo), "config", "commit.gpgsign", "false"],
+            check=True,
+        )
+        subprocess.run(
             ["git", "-C", str(repo), "commit", "-q", "--allow-empty", "-m", "base"],
             check=True,
         )
@@ -406,6 +410,10 @@ class QueueTests(unittest.TestCase):
         subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
         subprocess.run(["git", "-C", str(repo), "config", "user.email", "test@example.com"], check=True)
         subprocess.run(["git", "-C", str(repo), "config", "user.name", "Test"], check=True)
+        subprocess.run(
+            ["git", "-C", str(repo), "config", "commit.gpgsign", "false"],
+            check=True,
+        )
         subprocess.run(
             ["git", "-C", str(repo), "commit", "-q", "--allow-empty", "-m", "base"],
             check=True,

@@ -28,6 +28,7 @@ class ReapTests(unittest.TestCase):
         self.git("init", "-q", "-b", "main")
         self.git("config", "user.email", "test@example.com")
         self.git("config", "user.name", "Test")
+        self.git("config", "commit.gpgsign", "false")
         self.git("commit", "-q", "--allow-empty", "-m", "base")
 
     def tearDown(self) -> None:
