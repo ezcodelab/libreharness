@@ -459,6 +459,35 @@ tasks.py board
 
 Regenerates `$HARNESS_STATE/work/BOARD.md`.
 
+## Shipping CLI
+
+### `pr_watch.py`
+
+```sh
+python3 bin/pr_watch.py --pr <number> \
+  --verifier-pass <verdict-file> --evidence <evidence-file> [options]
+```
+
+Gates a PR on a fresh independent verifier PASS, recorded evidence, green CI,
+no conflicts, and a ready state. Dry-run is the default; `--merge` performs
+`gh pr merge --squash --match-head-commit`.
+
+| Option | Meaning |
+|---|---|
+| `--pr <number>` | Pull request number; required |
+| `--repo <owner/repo>` | Repository; `gh` infers it from the checkout by default |
+| `--verifier-pass <file>` | File containing `PASS <sha>` or `PASS+NOTES <sha>` |
+| `--evidence <file>` | Non-empty task evidence file |
+| `--required-check <name>` | Repeatable required check name |
+| `--allow-skipped` | Treat a skipped check as acceptable |
+| `--wait <seconds>` | Wait for CI up to this long; default 0 |
+| `--interval <seconds>` | Poll interval; default 10 |
+| `--merge` | Merge after every gate passes |
+| `--json` | JSON summary |
+
+Exit codes: `0` gate passed, `2` gate blocked, `3` no forge or merge failed.
+The script never pushes and never deletes a branch.
+
 ## Jev CLI
 
 These are standalone commands, not slash commands. The full behavior and exit
