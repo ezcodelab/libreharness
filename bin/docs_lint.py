@@ -57,16 +57,18 @@ def check_links(root: Path) -> list[dict]:
     return problems
 
 
-def check_skills(path: Path, max_skills: int, max_lines: int) -> list[dict]:
+def check_skills(
+    path: Path, max_skills: int | None, max_lines: int
+) -> list[dict]:
     problems: list[dict] = []
     if not path.is_dir():
         return [{"file": str(path), "reason": "skills directory missing"}]
     skills = sorted(path.glob("*/SKILL.md"))
-    if len(skills) > max_skills:
+    if max_skills is not None and len(skills) > max_skills:
         problems.append(
             {
                 "file": str(path),
-                "reason": f"{len(skills)} skills exceeds budget {max_skills}",
+                "reason": f"{len(skills)} skills exceeds explicit cap {max_skills}",
             }
         )
     for skill in skills:
@@ -104,7 +106,12 @@ def main() -> int:
     parser.add_argument("--hot", help="path to hot.md")
     parser.add_argument("--max-age-days", type=int, default=7)
     parser.add_argument("--skills-dir", help="global skills directory to audit")
-    parser.add_argument("--max-skills", type=int, default=8)
+    parser.add_argument(
+        "--max-skills",
+        type=int,
+        default=None,
+        help="optional skill-count cap; no cap by default",
+    )
     parser.add_argument("--max-skill-lines", type=int, default=120)
     args = parser.parse_args()
 

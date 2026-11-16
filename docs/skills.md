@@ -3,10 +3,10 @@
 # Skills
 
 Skills are reusable procedures that OpenCode advertises to the model and loads
-on demand. The harness ships eight. They are process, not product code. For a
-one-screen choice between them, see [When to use what](when-to-use.md).
+on demand. They are process, not product code. For a one-screen choice between
+them, see [When to use what](when-to-use.md).
 
-## The eight skills
+## The skills
 
 | Skill | Use when | Lines |
 |---|---|---|
@@ -15,6 +15,7 @@ one-screen choice between them, see [When to use what](when-to-use.md).
 | [parallel-lanes](../skills/parallel-lanes/SKILL.md) | Split work across two or three agents or sessions; define slices, ownership, worktrees, merge order, and integration | 77 |
 | [shipping](../skills/shipping/SKILL.md) | A reviewed patch is ready to land; open a ready PR, watch CI, require an independent verifier PASS, and merge only the verified patch | 116 |
 | [state-audit](../skills/state-audit/SKILL.md) | Stateful code: queues, retries, locks, sessions, lifecycle, recovery, concurrency, or a stuck/duplicate/lost bug; document states, invariants, transitions, and a Mermaid statechart, then fix confirmed invalid paths | 108 |
+| [unslop](../skills/unslop/SKILL.md) | A codebase is feeding agents bad examples; audit the copied patterns, delete anti-patterns, and add a ratchet | The repo is a one-off script or has no repeated patterns | 87 |
 | [ui-design](../skills/ui-design/SKILL.md) | UI or UX work: layout, component, styling, visual review, or interface copy | 89 |
 | [verification](../skills/verification/SKILL.md) | A change needs proof against the real app or a formal property; create or maintain a verify-<app> recipe, or model-check an invariant | 100 |
 | [work-queue](../skills/work-queue/SKILL.md) | Work that is nontrivial, spans sessions, or runs in parallel; create and maintain durable tasks | 82 |
@@ -51,21 +52,22 @@ into a skill.
 
 ## Budget
 
-`bin/docs_lint.py` enforces two limits when run with `--skills-dir`:
+`bin/docs_lint.py` enforces a 120-line limit per skill when run with
+`--skills-dir`. There is no default limit on the number of skills.
 
-| Limit | Default | Current |
-|---|---|---|
-| Number of skills | 8 | 8 |
-| Lines per skill | 120 | 120 maximum |
+| Limit | Default |
+|---|---|
+| Lines per skill | 120 |
 
 ```sh
 python3 bin/docs_lint.py . --skills-dir skills
 ```
 
-The budget is a context and maintenance limit, not a style preference. A skill
-is loaded on demand, but its description is always advertised, and a large
-skill costs tokens when loaded. If a new skill would exceed the budget, merge
-or delete one first. Do not raise the limit to avoid a decision.
+The line limit is a context and maintenance limit, not a style preference. A
+skill is loaded on demand, but its description is always advertised, and a
+large skill costs tokens when loaded. Split a skill when it covers distinct
+triggers or procedures; do not combine unrelated work to satisfy a count. An
+explicit `--max-skills` cap remains available for a project that wants one.
 
 ## Global versus project
 

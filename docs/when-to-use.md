@@ -22,6 +22,7 @@ it. The commands below are manual forms for intervention.
 | Finish a task or goal | Let the loop finish | The close step integrates lanes, reviews, reaps, records evidence, and ships. `/close` is the manual form |
 | Review a UI | `/design-review` | Blocking, quick wins, and keep notes; no code edits |
 | Prove real app behavior | `verification` skill | Create a `verify-<app>` recipe, maintain one, or formally check an invariant |
+| Clean a codebase for agent input | `unslop` skill | Read-only audit, ratchet plan, and one-pattern fixes |
 | Inspect the queue | `/queue` | Ready tasks, board, or a specific packet |
 | Clean up the workflow | `/tune` | Deletions first, then at most five evidence-backed patches |
 | Check a goal plan before approval | `bin/jev_plan.py` | Completeness, testability, largest gap, and risk; advisory |
@@ -35,6 +36,7 @@ it. The commands below are manual forms for intervention.
 | `parallel-lanes` | Two or three independent slices with disjoint files or a fixed interface | The work touches one file, shared state, or needs one owner |
 | `state-audit` | Stateful code: queues, retries, locks, sessions, lifecycle, recovery, concurrency, or a stuck/duplicate/lost bug; the audit adds a Mermaid statechart | The change is stateless, a typo, or a pure copy/docs edit |
 | `ui-design` | Layout, components, styling, visual review, or interface copy | The work is backend, data, or docs only |
+| `unslop` | A codebase contains anti-patterns agents will copy; audit and ratchet them | The repo is a one-off script or has no repeated patterns |
 | `verification` | You need to create or maintain proof against the real app, or formally check a property tests cannot reach | A unit test, type check, lint, or direct command already proves the change |
 | `work-queue` | Work must survive a session, needs ownership/dependencies/evidence, or runs in parallel | The work is trivial or a question that needs no change |
 

@@ -2,6 +2,19 @@
 
 # Changelog
 
+## Unreleased
+
+### 🚀 Features
+
+- Add the `unslop` skill: a read-only audit of the patterns agents copy, a
+  ratchet plan, and one-pattern fixes that delete the old example first.
+
+### 🧭 Behaviour
+
+- Remove the default eight-skill count cap. `docs_lint.py` now enforces only
+  the 120-line per-skill limit by default; `--max-skills` remains available as
+  an explicit project choice.
+
 ## 1.2.0 — 2026-11-16
 
 Verified delivery automation: one path from a request to a merged, verified

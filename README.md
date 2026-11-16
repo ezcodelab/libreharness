@@ -15,8 +15,8 @@ outlives one chat:
   a generated board.
 - A workflow that scales process to risk: trivial changes skip the queue,
   nontrivial changes get a brief, a review, and evidence.
-- Eight portable skills: engineering loop, goal loop, parallel lanes, shipping,
-  state audit, UI design, verification, and work queue.
+- Portable skills: engineering loop, goal loop, parallel lanes, shipping,
+  state audit, UI design, unslop, verification, and work queue.
 - Agents for exploration, implementation, integration, and independent
   challenge.
 - Commands for queue inspection, goal intake, briefs, lanes, takeover, review,

@@ -24,9 +24,10 @@ It uses existing OpenCode subagents. It does not port the Claude
 Do not run it on every task. It is a promotion and deletion gate, not a review
 step.
 
-The global skill budget is eight skills and 120 lines per skill. An evaluation
-that passes but would exceed the budget is not a promotion; delete or merge a
-skill first. See [skills.md](skills.md).
+Global skills have no fixed count; each skill must stay within 120 lines. Add a
+skill when it is a distinct, reusable procedure. Do not combine unrelated
+procedures to satisfy a count; split them when their triggers differ. See
+[skills.md](skills.md).
 
 ## Prepare
 
