@@ -22,7 +22,7 @@ Do not edit feature code in this turn.
      children claim the same file or interface;
    - merge in the declared order into one integration branch; for a single
      task, create that branch from its base and merge its branch into it. Keep
-     the work off main until the operator ships;
+     the work off main; land it only through a PR and the shipping gates;
    - stop on a conflict and leave the tree resumable;
    - run the full project check on the merged tree.
    Do not create a separate integration task or command; this is part of close.
@@ -57,4 +57,10 @@ Do not edit feature code in this turn.
    and `docs/skill-eval.md` handle promotion.
 10. Update the queue with the evidence:
     `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> done --evidence "<command and result>"`.
-11. Show what passed, what remains unproven, and the next action. Stop.
+11. If the task is mergeable and a forge is configured, use the `shipping`
+    skill: open a ready PR, run `bin/pr_watch.py`, require an independent
+    verifier PASS plus green CI and no conflicts, then merge. Stop at the
+    contract's human gates. If no forge resolves, print the manual PR and merge
+    commands and stop. Never push directly to main.
+12. Show what passed, what remains unproven, the PR state, and the next action.
+    Stop.

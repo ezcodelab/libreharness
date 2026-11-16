@@ -15,8 +15,8 @@ outlives one chat:
   a generated board.
 - A workflow that scales process to risk: trivial changes skip the queue,
   nontrivial changes get a brief, a review, and evidence.
-- Seven portable skills: engineering loop, goal loop, parallel lanes, state
-  audit, UI design, verification, and work queue.
+- Eight portable skills: engineering loop, goal loop, parallel lanes, shipping,
+  state audit, UI design, verification, and work queue.
 - Agents for exploration, implementation, integration, and independent
   challenge.
 - Commands for queue inspection, goal intake, briefs, lanes, takeover, review,
@@ -44,17 +44,28 @@ harness makes three things durable:
    to auth, secrets, data, or a public API gets a closer look. Jev is one
    input, never the deciding gate.
 
-## Choose the next action
+## One path
 
-| You are about to... | Start with |
+Describe the outcome in OpenCode. Auto-intake creates the task, and the agent
+runs brief, implement, verify, review, close, and ship. You do not need to type
+a slash command. The harness opens a ready pull request, waits for CI, requires
+an independent verifier, and merges only the verified patch. It stops at
+human-only gates such as secrets, production, releases, and force-pushes.
+
+Slash commands remain escape hatches when you want to intervene directly.
+
+## When you want to intervene
+
+| You are about to... | Use |
 |---|---|
-| Nontrivial work, or you are unsure | `/goal` |
+| Let the harness run a request | Just describe it; no command required |
+| Intervene in a task or goal | `/goal <request-or-id>` |
 | Continue a task | `/brief <task-id>` |
-| Run independent slices | `/goal go` auto-lanes; `/lane` only for manual isolation |
+| Run independent slices | Auto-lanes; `/lane` only for manual isolation |
 | Review a diff | `/review <task-id>` (a check, not a finish step) |
 | Audit stateful code | `/state-audit <path>` |
 | Resume after a pause | `/takeover <task-id>` |
-| Finish a task or goal | `/close <task-id>` (integrates goal lanes) |
+| Finish a task or goal | `/close <task-id>` (integrates lanes and ships) |
 | Review a UI | `/design-review` |
 | Prove real app behavior | `verification` skill |
 | Clean up the workflow | `/tune` |

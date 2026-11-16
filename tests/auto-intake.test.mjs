@@ -45,8 +45,13 @@ hook(first);
 if (!first.prompt.text.includes("[queue] Task ")) {
   throw new Error("task note was not injected");
 }
-if (!first.prompt.text.includes("goal skill") || first.prompt.text.includes("/intake")) {
-  throw new Error("queue notice does not route to the goal skill");
+if (
+  !first.prompt.text.includes("goal skill") ||
+  !first.prompt.text.includes("ship") ||
+  !first.prompt.text.includes("human gates") ||
+  first.prompt.text.includes("/intake")
+) {
+  throw new Error("queue notice does not route through shipping to the human gates");
 }
 const id = first.prompt.text.match(/Task ([^\s]+)/)?.[1];
 if (!id) throw new Error("task id missing");

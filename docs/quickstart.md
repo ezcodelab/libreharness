@@ -22,9 +22,17 @@ From a checkout, use `node bin/libreharness.js init`.
 Open OpenCode in your project and choose a provider and model with `/models`.
 The installer does not choose either for you.
 
-## 3. Create, claim, and close one task
+## 3. Describe the outcome
 
-Set the two roots once. They are the same defaults the installer uses.
+Describe the change in OpenCode. Auto-intake creates one task, and the agent
+runs brief, implement, verify, review, close, and ship. You do not need to type
+a slash command.
+
+## 4. Manual inspection and escape hatches
+
+The CLI below creates and closes a task by hand. Use it to inspect the queue,
+reproduce a problem, or intervene directly. Set the two roots once; they are the
+same defaults the installer uses.
 
 ```sh
 export HARNESS_HOME="${HARNESS_HOME:-$HOME/.config/opencode}"
@@ -43,10 +51,12 @@ python3 "$HARNESS_HOME/bin/tasks.py" board
 The evidence gate rejects `none`, `ok`, `pass`, and `tests pass`. Use a command
 and result, a measured check, or an explicit `[T]` with a plan.
 
-## 4. Use it from OpenCode
+## 5. Use it from OpenCode
 
-In OpenCode, use `/goal` for one task or a multi-deliverable goal. The harness
-loads the queue, skills, commands, and local plugins from the config directory.
+The normal path needs no command. `/goal`, `/brief`, `/review`, `/close`, and
+the shipping flow remain escape hatches for a human who wants to intervene. The
+harness loads the queue, skills, commands, agents, and local plugins from the
+plugin package.
 
 Optional Jev review without a key:
 
@@ -56,7 +66,7 @@ JEV_MODEL=example-model python3 "$HARNESS_HOME/bin/jev_review.py" \
   --mock good --diff "$HARNESS_STATE/demo.diff" --task "Quickstart"
 ```
 
-## 5. Compare on Terminal-Bench
+## 6. Compare on Terminal-Bench
 
 The standardized external benchmark is Terminal-Bench 2.0 through Harbor. Run
 plain OpenCode first, then OpenCode with LibreHarness, using the same model and

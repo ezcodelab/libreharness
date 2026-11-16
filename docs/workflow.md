@@ -12,50 +12,40 @@ one-screen choice of the next action, see [When to use what](when-to-use.md).
 request
   |
   v
-/goal  --->  one reviewable diff?  --- yes --->  task (ready)
-  |                    |
-  |                    no
-  |                    v
-  |               plan (children, lanes, owns, deps)
-  |                    |
-  |                    v
-  |                  /goal go
-  v                    |
-/brief <----------------+
+auto-intake task (inbox)
   |
   v
-goal-start  --->  up to 3 lanes for ready children
-  |                 or serial in the current tree
-  v
-implement
+goal/work-queue brief -> claim or lane -> implement
   |
   v
-run checks  --->  evidence, or [T] with a plan
+deterministic checks -> verification artifact
   |
   v
-/review  --->  Jev advisory + optional independent challenge
+review -> close -> ready PR -> CI + independent verifier PASS
   |
   v
-/close  --->  integrate lanes, final review, reap clean lanes, lesson, done
+merge only the verified patch -> post-merge check
 ```
 
-`/lane` remains a manual escape hatch. A normal goal does not ask the operator
-to type it.
+No slash command is required in that path. `/goal`, `/brief`, `/review`,
+`/close`, and `/lane` remain escape hatches for a human who wants to intervene
+directly. A normal goal does not ask the operator to type `/lane`.
 
 ## 1. Intake
 
-`/goal` is the single entry. It accepts a request, an existing task id, an
-existing goal id, or the `go` subcommand.
+A nontrivial request enters through auto-intake and becomes one `inbox` task.
+The agent then runs the goal and work-queue flow itself. `/goal` is an escape
+hatch that accepts the same request, an existing task id, an existing goal id,
+or the `go` subcommand.
 
 - A trivial request is done directly and does not enter the queue.
 - A request that is one reviewable diff becomes one task.
 - A request with several deliverables becomes a goal with two to six children.
 
 The intake step should produce a scope and an observable acceptance. If the
-request is ambiguous, ask one question. Do not invent acceptance.
-
-Auto-intake may create an `inbox` task from a nontrivial prompt. Use that task;
-do not create a duplicate. Confirm scope and acceptance before claiming.
+request is ambiguous, ask one question. Do not invent acceptance. Use the
+auto-created task; do not create a duplicate. Confirm scope and acceptance
+before claiming.
 
 ## 2. Brief
 
@@ -174,6 +164,17 @@ missing or the change crosses a transition, retry, lock, or lifecycle boundary.
 - appends one dated entry to the project's process ledger;
 - records the evidence with `status <id> done --evidence "<command and result>"`;
 - reports what passed, what remains unproven, and the next action.
+
+## 8. Ship
+
+When close leaves a mergeable task, the `shipping` skill resolves the forge,
+opens a ready PR, waits for CI, obtains an independent verifier PASS for the
+current head, and merges only the verified patch. `bin/pr_watch.py` enforces
+the gates and refuses a stale verdict.
+
+A missing forge, a failed or skipped check, a conflict, missing evidence, or a
+human-only gate stops the merge. The harness never pushes directly to `main`
+and never force-pushes a shared branch.
 
 A task or goal stays open if evidence is missing, a lane is retained, or a
 review sends back. `/review` is a check and `/tune` is periodic maintenance;

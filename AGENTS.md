@@ -35,13 +35,13 @@
   `Promote-to-global` when portable. "None" is a valid Surprise.
 
 ## Work intake and ownership
-- The durable unit is a task under `$HARNESS_STATE/work/tasks`. Use `/goal` for
-  any task, small or large; it executes a single task directly or plans a
-  multi-step one.
-- For a multi-deliverable outcome, `/goal` plans first, then `/goal go` creates
-  and executes the validated plan. `/goal go --unattended` enables the per-goal
-  watcher. A goal is done only when every child is final and its acceptance is
-  checked.
+- The durable unit is a task under `$HARNESS_STATE/work/tasks`. A nontrivial
+  request enters the queue automatically; run the goal and work-queue flow
+  directly for a task or goal. `/goal` is an escape hatch, not a required user
+  step.
+- For a multi-deliverable outcome, plan first, then create and execute the
+  validated plan. `go --unattended` enables the per-goal watcher. A goal is done
+  only when every child is final and its acceptance is checked.
 - Read the task packet before coding: scope, out of scope, acceptance,
   dependencies, context, evidence, handoff.
 - One task, one owner, one reviewable diff. Do not claim a task with open
@@ -103,8 +103,9 @@ in the repository.
 
 ## Verification and review
 - Define done as runnable checks. Run them and report actual results.
-- Run `/review` before declaring nontrivial work complete. The merged tree gets
-  the final review.
+- Run the review step before declaring nontrivial work complete; `/review` is
+  the manual invocation of the same check. The merged tree gets the final
+  review.
 - Stateful changes: when a change adds or alters a state machine, retry, lock,
   concurrency, session, queue, or lifecycle path, run the `state-audit` skill
   and update the project's `docs/state-machines.md` before `/review`. A

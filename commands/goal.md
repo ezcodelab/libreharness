@@ -6,6 +6,9 @@ Request: $ARGUMENTS
 
 Use the goal, work-queue, parallel-lanes, and engineering-loop skills.
 
+This command is an escape hatch. A normal request arrives through auto-intake
+and runs the same flow without the operator typing `/goal`.
+
 ## Existing goal or single task
 
 1. If `$ARGUMENTS` is an existing `kind: goal` task id, execute it:
