@@ -13,6 +13,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const cli = new URL("../bin/libreharness.js", import.meta.url).pathname;
+const packageVersion = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+).version;
 const root = join(tmpdir(), `libreharness-installer-${process.pid}`);
 rmSync(root, { recursive: true, force: true });
 
@@ -29,7 +32,10 @@ assert.match(help.stdout, /npx libreharness init/);
 
 const version = run(["--version"]);
 assert.equal(version.status, 0);
-assert.match(version.stdout, /1\.1\.0/);
+assert.match(
+  version.stdout,
+  new RegExp(packageVersion.replaceAll(".", "\\.")),
+);
 
 // A dry run must not create the target.
 const dryHome = join(root, "dry-home");

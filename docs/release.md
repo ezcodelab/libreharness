@@ -2,22 +2,22 @@
 
 # Release checklist
 
-Status: **procedure for 1.1.0.** Linux only, OpenCode only. The public
-repository is `https://github.com/ezcodelab/libreharness`. Verify that npm
-trusted publishing is configured for `ezcodelab/libreharness` and
-`release.yml` before pushing the tag; the publish step is the gate.
+Status: **procedure for 1.2.0.** Linux only, OpenCode only. The public
+repository is `https://github.com/ezcodelab/libreharness`. Trusted publishing is
+configured for `ezcodelab/libreharness` and `release.yml`; the first trusted
+publish is the validation gate.
 
 This page is the release gate. A green branch is not a green release. Run the
 checks on the tagged tree, and do not publish from a dirty working tree.
 
 ## 1. Confirm the release scope
 
-- [ ] The version is `1.1.0` in `package.json`, `bin/libreharness.js`, and
+- [ ] The version is `1.2.0` in `package.json`, `bin/libreharness.js`, and
   `CHANGELOG.md`.
 - [ ] `README.md`, `docs/README.md`, and `SECURITY.md` say Linux only and
   OpenCode only.
 - [ ] The plugin entry in `docs/install.md` is the normal
-  `"plugins": ["libreharness@1.1.0"]` form, with the four agent stubs.
+  `"plugins": ["libreharness@1.2.0"]` form, with the four agent stubs.
 - [ ] State defaults to `~/.local/state/libreharness`, is created with mode
   700, and is a real directory rather than a symlink.
 - [ ] No macOS, Windows, Claude Code, Hermes, or other host-support claim is
@@ -63,7 +63,7 @@ OpenCode service with only the plugin entry and the four agent stubs:
 
 ```sh
 tmp=$(mktemp -d)
-npm install --prefix "$tmp" ./libreharness-1.1.0.tgz
+npm install --prefix "$tmp" ./libreharness-1.2.0.tgz
 # Write a minimal opencode.json with:
 #   "plugins": ["$tmp/node_modules/libreharness"]
 #   four empty agent stubs
@@ -132,9 +132,9 @@ Only after the checks, the package inspection, and the public repository
 review:
 
 ```sh
-git tag -s v1.1.0 -m "LibreHarness 1.1.0"
-git verify-tag v1.1.0
-git push github v1.1.0
+git tag -s v1.2.0 -m "LibreHarness 1.2.0"
+git verify-tag v1.2.0
+git push github v1.2.0
 ```
 
 The maintainer verifies the tag locally before pushing. The release workflow

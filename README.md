@@ -78,7 +78,7 @@ client, is [When to use what](docs/when-to-use.md).
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["libreharness@1.1.0"],
+  "plugins": ["libreharness@1.2.0"],
   "agents": {
     "devils-advocate": {},
     "explore": {},
@@ -88,7 +88,7 @@ client, is [When to use what](docs/when-to-use.md).
 }
 ```
 
-1.1.0 is the current release. It is also available from a checkout and through
+1.2.0 is the current release. It is also available from a checkout and through
 the offline installer below.
 
 The plugin registers commands and skills, and fills the four declared agents.

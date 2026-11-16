@@ -2,7 +2,7 @@
 
 # Contributing
 
-This is the 1.1.0 release tree. The public repository is
+This is the 1.2.0 release tree. The public repository is
 `https://github.com/ezcodelab/libreharness`; contributions are welcome.
 
 ## Development setup
