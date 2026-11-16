@@ -91,6 +91,10 @@ Treat the author’s summary and conclusions as claims to verify, not as establi
    - **UNVERIFIED:** the evidence is incomplete, the path is conditional, or a required file or test was not available. This is the default when any of source, sink, or guard is missing.
 7. Do not use a numeric confidence score. A verdict without evidence is not a verdict.
 8. Separate verified behavior from assumptions, unresolved questions, and known limitations.
+9. Comment discipline (guidance, not a verdict axis): ask whether a comment narrates
+   the change, restates the code, or justifies a workaround without a checkable
+   external reason. `bin/comment_audit.py` flags candidates; raise them as P3 notes,
+   never as a blocking finding on their own.
 
 Primary review axes: correctness, security/authorization, failure & recovery, test adequacy, and misleading success states.
 
