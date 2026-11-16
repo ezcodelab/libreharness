@@ -140,7 +140,8 @@ reviewer's decision.
 ## Adding a skill
 
 1. Create `skills/<name>/SKILL.md` with `name` and `description` frontmatter.
-2. Keep it under 120 lines. The skill budget is eight; the current set is six.
+2. Keep it under 120 lines. There is no fixed skill count; split a skill when
+   its triggers or procedure are distinct.
 3. Write the trigger in the description, not only in the body.
 4. Test it with the method in [docs/skill-eval.md](docs/skill-eval.md).
 5. Do not promote a skill on a hunch. A neutral result is a reason to delete or

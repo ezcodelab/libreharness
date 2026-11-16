@@ -155,3 +155,16 @@ phrasings, and run every documented gate command against the real CI names.
 Doc updated: `bin/pr_watch.py`, `tests/test_pr_watch.py`,
 `skills/shipping/SKILL.md`, `docs/command-reference.md`.
 Promote-to-global: yes
+
+## 2026-11-16 - Cap skill lines, not the number of skills
+
+Surprise: the eight-skill cap forced unrelated procedures to share a skill even
+when their triggers and evidence differed. Removing the count cap did not make
+the context budget worse; the 120-line limit is the real constraint.
+Cost: one documentation cleanup and a regression test for uncapped skills.
+Rule: cap a skill's length, not the count. Add a skill when its trigger and
+procedure are distinct; split rather than combine. Keep `--max-skills` only as
+an explicit project choice, never as the default.
+Doc updated: `docs/skills.md`, `docs/skill-eval.md`, `CONTRIBUTING.md`,
+`bin/docs_lint.py`, `tests/test_docs_lint.py`.
+Promote-to-global: yes
