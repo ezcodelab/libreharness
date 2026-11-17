@@ -12,12 +12,13 @@ exists. The goal is one verified PR through the forge, not a direct push.
 ## Resolve the forge once
 
 1. `gh` when it exists and resolves the repository.
-2. `origin pr` when the Origin CLI exists and resolves the repository.
+2. Gitea when `GITEA_TOKEN` is set: `--forge gitea --repo OWNER/REPO` and
+   `GITEA_URL`. Read-only tokens inspect; `write:repository` merges.
 3. Manual fallback: print the exact PR and merge commands and stop. Do not claim
    the work merged.
 
-Record which forge you used. Never install a forge CLI silently. Never require
-both. Never push directly to `main` or force-push a shared branch.
+Record the forge. Never install a CLI silently or put a token in argv/output.
+Never require both forges; never push to `main` or force-push a shared branch.
 
 ## Required gates
 
@@ -52,8 +53,7 @@ Never open a draft. Use a one-minute briefing for a reviewer who has the diff:
 - `## Blast Radius`: who or what it touches and why that is safe.
 - `## Verification`: the real commands and results.
 
-Open it with `gh pr create --title ... --body-file ...` or
-`origin pr create --status open --title ... --body-file ...`. Keep the URL.
+Open it with `gh pr create` or the Gitea UI/API. Keep the URL.
 
 ## 3. Independent verification
 
@@ -84,15 +84,19 @@ exact check-run name; matrix jobs are named like `test (3.10, 20)`, not `test`.
 Add `--repo OWNER/REPO` when the checkout cannot infer it. The script prints
 every failing gate and exits non-zero. It does not merge in dry-run mode.
 
-After it reports `PASS`, merge the verified patch:
+For Gitea, select the forge and schedule auto-merge:
 
 ```sh
-python3 bin/pr_watch.py --pr <number> \
-  --verifier-pass <verdict-file> --evidence <task-evidence-file> --merge
+GITEA_URL=https://git.example/api/v1 GITEA_TOKEN=... \
+python3 bin/pr_watch.py --forge gitea --repo OWNER/REPO --pr <number> \
+  --verifier-pass <file> --evidence <file> \
+  --required-check "CI / check (pull_request)" --auto
 ```
 
-It uses `--match-head-commit`, so a head that moved after verification is
-refused. Only the verified patch on green CI merges.
+`--auto` schedules Gitea `merge_when_checks_succeed` at the verified head.
+Use `--merge` instead to merge immediately after the gate; GitHub always uses
+`--merge`. Both pin the head (`--match-head-commit` or `head_commit_id`), so a
+moved head is refused. Only the verified patch on green CI merges.
 
 ## 5. After the merge
 

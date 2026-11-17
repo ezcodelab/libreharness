@@ -8,6 +8,9 @@
 
 - Add the `unslop` skill: a read-only audit of the patterns agents copy, a
   ratchet plan, and one-pattern fixes that delete the old example first.
+- Add a Gitea backend to `pr_watch`: `--forge gitea`, `GITEA_URL` /
+  `GITEA_TOKEN`, exact status contexts, `head_commit_id`, and `--auto`
+  scheduling with `merge_when_checks_succeed`.
 
 ### 🧭 Behaviour
 

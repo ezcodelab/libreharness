@@ -476,19 +476,30 @@ no conflicts, and a ready state. Dry-run is the default; `--merge` performs
 | Option | Meaning |
 |---|---|
 | `--pr <number>` | Pull request number; required |
-| `--repo <owner/repo>` | Repository; `gh` infers it from the checkout by default |
+| `--forge auto\|github\|gitea` | Forge; auto uses `gh` first, then Gitea |
+| `--repo <owner/repo>` | Repository; required for Gitea, inferred by `gh` on GitHub |
+| `--api <url>` | Gitea API base; defaults to `GITEA_URL`, which must be set |
+| `--insecure` | Skip Gitea TLS verification for a local self-signed instance |
+| `--base <branch>` | Required Gitea base branch; default `main` |
 | `--verifier-pass <file>` | File containing `PASS <sha>` or `PASS+NOTES <sha>` |
 | `--evidence <file>` | Non-empty task evidence file |
-| `--required-check <name>` | Repeatable exact check-run name; matrix jobs are named like `test (3.10, 20)` |
+| `--required-check <name>` | Repeatable exact check context; Gitea contexts include the event, such as `CI / check (pull_request)` |
 | `--wait <seconds>` | Wait for CI up to this long; default 0 |
 | `--interval <seconds>` | Poll interval; default 10 |
-| `--merge` | Merge after every gate passes |
+| `--merge` | Merge immediately after every gate passes |
+| `--auto` | Gitea only: schedule `merge_when_checks_succeed` after the gate |
+| `--delete-branch` | Gitea only: delete the branch after a merge |
 | `--json` | JSON summary |
 
-Exit codes: `0` gate passed, `2` gate blocked, `3` no forge or merge failed.
-A pending, skipped, neutral, or failed check blocks; only `SUCCESS` is green.
-The verifier file must start with `PASS <sha>` or `PASS+NOTES <sha>`. The script
-never pushes and never deletes a branch.
+For Gitea, set `GITEA_URL` and `GITEA_TOKEN`; the token is read from the
+environment and is never written to argv or output. A read-only token can
+inspect; merging needs `write:repository`.
+
+Exit codes: `0` gate passed or scheduled, `2` gate blocked, `3` no forge or
+merge failed. A pending, skipped, neutral, or failed check blocks; only
+`SUCCESS` is green. The verifier file must start with `PASS <sha>` or
+`PASS+NOTES <sha>`. The script never pushes and never deletes a branch unless
+`--delete-branch` is passed.
 
 ## Jev CLI
 

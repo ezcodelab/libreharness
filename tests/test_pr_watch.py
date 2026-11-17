@@ -46,6 +46,7 @@ class PRWatchTest(unittest.TestCase):
     def run_watch(self, pr, *extra, path=None):
         env = os.environ.copy()
         env["PATH"] = path or f"{self.bin}:{env['PATH']}"
+        env.pop("GITEA_TOKEN", None)
         env["FAKE_PR_JSON"] = json.dumps(pr)
         env["FAKE_MERGE_LOG"] = str(self.merge_log)
         return subprocess.run(
@@ -152,7 +153,7 @@ class PRWatchTest(unittest.TestCase):
         empty.mkdir()
         result = self.run_watch(self.pr(), "--merge", path=str(empty))
         self.assertEqual(result.returncode, 3)
-        self.assertIn("gh is not installed", result.stderr)
+        self.assertIn("no forge found", result.stderr)
 
 
 if __name__ == "__main__":
