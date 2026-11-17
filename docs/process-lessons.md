@@ -212,3 +212,16 @@ an operator-supplied token, and agents must not hold a vault shim.
 Doc updated: `.gitea/scoped_workflows/auto-merge.yml`, `bin/pr_policy.py`,
 `bin/pr_merge.py`, `bin/pr_status.py`, `docs/auto-merge.md`.
 Promote-to-global: yes
+
+## 2026-11-17 - Use the platform job status, not a custom status write
+
+Surprise: the scoped `verify` job passed, but the publish job got HTTP 403
+posting `verifier / policy` with the built-in Actions token. Gitea already
+posts the automatic scoped `verify` job status, which is a first-class check.
+Cost: one failed scoped run and a follow-up fix.
+Rule: gate on the CI platform's automatic job status; do not add a custom
+status write unless the platform token scope supports it. Keep the write token
+in a job that never checks out PR code.
+Doc updated: `.gitea/scoped_workflows/auto-merge.yml`, `bin/pr_merge.py`,
+`docs/auto-merge.md`.
+Promote-to-global: yes

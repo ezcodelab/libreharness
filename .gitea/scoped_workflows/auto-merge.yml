@@ -62,7 +62,7 @@ jobs:
           cat > /tmp/gate-scripts.sha256 <<'EOF'
           b7a37b25cb55dbf49c66d4925b2d695681c3f2094dca110708e70c6af2cc89ab  base/bin/pr_policy.py
           b5b80c08a83902471dc619f32f88769484fb16f4f14842948b8ab06492fae5a5  base/bin/pr_status.py
-          20c145608484f203632859339a80a69fbef425fc08008e170333760cab692d2e  base/bin/pr_merge.py
+          de6de0772374cc9d9b4a39a199d1cccf86b042fe59f51c4ba163dfc0cb379404  base/bin/pr_merge.py
           77ea3f2b3294647ebbb696d129d59fabd8b1fbd314a2001e39e760e75ce51fec  base/bin/scan_private.py
           EOF
           sha256sum -c /tmp/gate-scripts.sha256
@@ -83,47 +83,8 @@ jobs:
           /tmp/gitleaks detect --source pr --config base/.gitleaks.toml --redact --verbose
           git -C pr diff --check "$BASE_SHA...$HEAD"
 
-  publish:
-    needs: verify
-    if: always() && (github.repository == 'admin/libreharness' || github.repository == 'admin/credarr') && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write
-      pull-requests: write
-    env:
-      REPO: ${{ github.repository }}
-      HEAD: ${{ github.event.pull_request.head.sha }}
-      RESULT: ${{ needs.verify.result }}
-      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    steps:
-      - name: Check out the trusted base
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-          path: base
-          fetch-depth: 1
-
-      - name: Publish verifier status
-        env:
-          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
-          API_URL: ${{ github.api_url }}
-        run: |
-          set -euo pipefail
-          if [ "$RESULT" = "success" ]; then
-            state=success
-            description="policy and repository checks passed"
-          else
-            state=failure
-            description="policy or repository checks failed ($RESULT)"
-          fi
-          python3 base/bin/pr_status.py \
-            --repo "$REPO" --head "$HEAD" --state "$state" \
-            --context "verifier / policy" --description "$description" \
-            --target-url "$RUN_URL" --api "$API_URL"
-
   merge:
-    needs: [verify, publish]
+    needs: verify
     if: needs.verify.result == 'success' && (github.repository == 'admin/libreharness' || github.repository == 'admin/credarr') && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -149,4 +110,5 @@ jobs:
           set -euo pipefail
           python3 base/bin/pr_merge.py \
             --repo "$REPO" --pr "$PR" --head "$HEAD" --base main \
+            --required-context "admin/libreharness: auto-merge / verify (pull_request_target)" \
             --api "$API_URL"

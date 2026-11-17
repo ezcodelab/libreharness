@@ -27,7 +27,7 @@ them.
 The consumer base branch provides the trusted scripts:
 
 - `bin/pr_policy.py`
-- `bin/pr_status.py`
+- `bin/pr_status.py` (operator utility; not executed by the gate)
 - `bin/pr_merge.py`
 - `bin/verify_pr.sh` for repo-specific checks; LibreHarness runs docs, SPDX,
   and the private-path scan there
@@ -42,12 +42,12 @@ to run if a consumer copy drifts. `verify_pr.sh` is the repo-specific hook.
 | Job | Repository access | PR code | What it does |
 |---|---|---|---|
 | `verify` | read | checks out the tree, never executes it | Runs the trusted base policy and scanners against the PR tree. |
-| `publish` | write | none | Sets the `verifier / policy` commit status from the verify result. |
-| `merge` | write | none | Re-reads the PR, requires a successful `verifier / policy` status, then schedules the merge. |
+| `merge` | write | none | Re-reads the PR, requires the scoped `verify` status, then schedules the merge. |
 
-The write jobs do not check out or execute the PR. The only token is Gitea's
-short-lived, repository-scoped Actions token (`GITEA_TOKEN`); no personal token
-is distributed to agents.
+The merge job does not check out or execute the PR. The gate is Gitea's
+automatic scoped `verify` job status; no custom status write is needed. The
+only token is Gitea's short-lived, repository-scoped Actions token
+(`GITEA_TOKEN`); no personal token is distributed to agents.
 
 ## One-time source registration
 
@@ -58,8 +58,8 @@ An owner or site administrator registers `admin/libreharness` at
 Do not mark it required globally while other owner repos are unprotected: add
 the exact scoped status context
 `admin/libreharness: auto-merge / verify (pull_request_target)` to the branch
-protection of the two target repositories. The workflow also publishes
-`verifier / policy`; `pr_merge.py` requires it. Gitea enforces branch-protection
+protection of the two target repositories. The scoped `verify` status is the
+gate; `pr_merge.py` requires the same context. Gitea enforces branch-protection
 contexts only on protected branches.
 
 ## What the verifier checks
@@ -94,7 +94,8 @@ The `merge` job calls the Gitea merge API with:
 
 A merge commit preserves the PR head as an ancestor, so the public mirror can
 fast-forward without rewriting GitHub. The head is pinned; a moved head is
-refused. Branch protection must require the scoped verifier status and the
+refused. Branch protection must require
+`admin/libreharness: auto-merge / verify (pull_request_target)` and the
 repository CI checks.
 
 ## Protected paths
@@ -107,7 +108,7 @@ agents. The default agent path is AGit plus the trusted scoped workflow.
 
 ## Failure behaviour
 
-If any verify step fails, `publish` sets `verifier / policy` to failure and
-`merge` does not run. Fix the branch and push again; the synchronize event
-creates a fresh run for the new head. A PR that is closed, draft, retargeted, or
-labelled for blocking is never auto-merged.
+If any verify step fails, the scoped `verify` job fails and `merge` does not
+run. Fix the branch and push again; the synchronize event creates a fresh run
+for the new head. A PR that is closed, draft, retargeted, or labelled for
+blocking is never auto-merged.

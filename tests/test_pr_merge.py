@@ -124,6 +124,22 @@ class PRMergeTests(unittest.TestCase):
         self.assertIn("missing required status", result.stderr)
         self.assertEqual(MergeHandler.merges, [])
 
+    def test_custom_required_context(self):
+        context = "admin/libreharness: auto-merge / verify (pull_request_target)"
+        MergeHandler.commit_status = {
+            "state": "success",
+            "statuses": [{"context": context, "status": "success"}],
+        }
+        result = self.run_merge("--required-context", context)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(MergeHandler.merges), 1)
+
+    def test_missing_custom_context_blocks(self):
+        context = "admin/libreharness: auto-merge / verify (pull_request_target)"
+        result = self.run_merge("--required-context", context)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("missing required status", result.stderr)
+
     def test_failed_verifier_status_blocks(self):
         MergeHandler.commit_status["statuses"][0]["status"] = "failure"
         result = self.run_merge()
