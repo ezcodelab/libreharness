@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
+# Read the atomic status on an independent schedule; do not wait for a hung mirror.
 [Unit]
 Description=Check that the LibreHarness public mirror is fresh
-After=libreharness-mirror.service
 OnFailure=libreharness-mirror-alert.service
 
 [Service]

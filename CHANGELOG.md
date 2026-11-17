@@ -19,7 +19,8 @@
   copies only `main` and tags, never prunes, and leaves GitHub-only refs alone.
 - The mirror holds an exclusive lock, writes an atomic freshness status, and
   ships check/alert systemd units. A failed or >20-minute-stale mirror fails the
-  check unit and logs an alert.
+  check unit and logs an alert. The mirror service is bounded to 15 minutes, and
+  the check runs independently so a hung run still trips the stale alert.
 
 ### 🧭 Behaviour
 

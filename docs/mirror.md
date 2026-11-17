@@ -54,10 +54,12 @@ On a systemd host, install the units in `ops/systemd/` and enable
 holds `mirror.lock` for the whole run, so overlapping timers skip cleanly.
 
 The mirror writes an atomic `mirror-status.json` with the last attempt, last
-success, duration, and per-repo result. The check unit fails if the last
-successful push is older than 20 minutes or the last run failed. Its `OnFailure`
-alert unit writes a `user.err` journal entry; point that unit at your own email
-or webhook if you need active notification.
+success, duration, and per-repo result. The mirror service is bounded to 15
+minutes. The check unit runs independently on its own timer, reads the atomic
+status, and fails if the last successful push is older than 20 minutes or the
+last run failed; it must not wait on a hung mirror. Its `OnFailure` alert unit
+writes a `user.err` journal entry; point that unit at your own email or webhook
+if you need active notification.
 
 The units under `ops/systemd/` target a Linux VM or runner with
 `/opt/libreharness` and `/workspace`, and a `libreharness` system user. For a

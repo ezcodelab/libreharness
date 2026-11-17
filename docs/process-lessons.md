@@ -180,3 +180,20 @@ Rule: Gitea is canonical. Mirror only `main` and tags from a host that can reach
 Gitea; never use `--mirror` or prune. Keep GitHub releases out of the mirror.
 Doc updated: `docs/mirror.md`, `bin/mirror_public.py`, tests.
 Promote-to-global: yes
+
+## 2026-11-17 - Prove mirror writes in the scheduler, not the shell
+
+Surprise: the mirror worked from the interactive shell but failed under the
+systemd user service because `GIT_ASKPASS` was not inherited; Credarr's HTTPS
+remote could not authenticate. SSH writes worked. Separately, a Gitea squash
+merge made the GitHub-original commits non-ancestors, so the no-rewrite guard
+refused until a two-parent merge commit preserved both histories. The check unit
+also waited on the mirror, which would hide a hung run.
+Cost: two failed service/check runs, one extra merge PR and CI run, one remote
+URL change.
+Rule: prove writes inside the real scheduler environment, use SSH for mirror
+pushes, reconcile divergent public history with a merge commit rather than a
+force-push, and let health checks read atomic state without waiting on the
+worker.
+Doc updated: `docs/mirror.md`, `ops/systemd/*`, user units.
+Promote-to-global: yes
