@@ -115,6 +115,10 @@ in the repository.
   and update the project's `docs/state-machines.md` before `/review`. A
   confirmed invalid transition gets a regression test before the fix.
 - Prefer independent review for nontrivial changes. If no review ran, say so.
+- Gitea merges: open with AGit (`git push origin HEAD:refs/for/main`); the
+  trusted scoped `auto-merge` workflow merges eligible PRs without an agent
+  token. Gate changes require an operator-supplied `GITEA_TOKEN`; do not add a
+  local token shim, ask for a token, or print one.
 - When a failure pattern appears twice, encode it as a test, lint rule, or
   instruction.
 

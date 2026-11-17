@@ -84,15 +84,15 @@ exact check-run name; matrix jobs are named like `test (3.10, 20)`, not `test`.
 Add `--repo OWNER/REPO` when the checkout cannot infer it. The script prints
 every failing gate and exits non-zero. It does not merge in dry-run mode.
 
-For Gitea, select the forge and schedule auto-merge:
+For Gitea, the trusted scoped `auto-merge` workflow merges eligible AGit PRs; use `pr_watch` only for bootstrap or protected changes with an operator-supplied `GITEA_TOKEN`:
 
 ```sh
-GITEA_URL=https://git.example/api/v1 GITEA_TOKEN=... \
 python3 bin/pr_watch.py --forge gitea --repo OWNER/REPO --pr <number> \
   --verifier-pass <file> --evidence <file> \
   --required-check "CI / check (pull_request)" --auto
 ```
 
+Set `GITEA_URL` and `GITEA_TOKEN` in the operator environment; never put the token in argv/output.
 `--auto` schedules Gitea `merge_when_checks_succeed` at the verified head.
 Use `--merge` instead to merge immediately after the gate; GitHub always uses
 `--merge`. Both pin the head (`--match-head-commit` or `head_commit_id`), so a

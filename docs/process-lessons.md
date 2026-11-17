@@ -197,3 +197,18 @@ force-push, and let health checks read atomic state without waiting on the
 worker.
 Doc updated: `docs/mirror.md`, `ops/systemd/*`, user units.
 Promote-to-global: yes
+
+## 2026-11-17 - Put the merge gate on the protected base branch
+
+Surprise: AGit opens a Gitea PR over SSH without a token, but auto-merge still
+needs an API call. A `pull_request` workflow runs from the PR head, so a PR can
+rewrite its own gate. `pull_request_target` runs the base-branch workflow, and
+the built-in `GITEA_TOKEN` is short-lived and repository-scoped.
+Cost: one bootstrap merge, a probe workflow, and a three-job split.
+Rule: put the merge gate on the protected base branch with
+`pull_request_target`; give the write token only to jobs that never check out
+PR code; require the verifier status in branch protection; gate changes require
+an operator-supplied token, and agents must not hold a vault shim.
+Doc updated: `.gitea/scoped_workflows/auto-merge.yml`, `bin/pr_policy.py`,
+`bin/pr_merge.py`, `bin/pr_status.py`, `docs/auto-merge.md`.
+Promote-to-global: yes

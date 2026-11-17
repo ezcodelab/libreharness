@@ -31,6 +31,7 @@ No document here makes a performance claim.
 | [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
 | [Release checklist](release.md) | Checks, signed tag, public remote, npm publish approval, and rollback |
 | [Public mirror](mirror.md) | Gitea canonical, GitHub read-only mirror for Credarr and LibreHarness, and the no-prune local job |
+| [Trusted auto-merge](auto-merge.md) | AGit PRs, the trusted scoped `pull_request_target` gate, protected paths, and the tokenless merge path |
 
 ## Jev
 

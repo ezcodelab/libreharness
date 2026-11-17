@@ -21,6 +21,10 @@
   ships check/alert systemd units. A failed or >20-minute-stale mirror fails the
   check unit and logs an alert. The mirror service is bounded to 15 minutes, and
   the check runs independently so a hung run still trips the stale alert.
+- Add a trusted scoped `pull_request_target` auto-merge gate: a read-only
+  verifier sets `verifier / policy`, and a write-only merge job schedules the
+  merge with the built-in `GITEA_TOKEN`. AGit opens the PR over SSH; agents
+  hold no token.
 
 ### 🧭 Behaviour
 

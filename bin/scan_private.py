@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 SKIP_DIRS = {".git", "node_modules", "state", "__pycache__", ".venv", "bench/results", "jobs"}
@@ -19,7 +20,7 @@ DEFAULT_PATTERNS = [
     r"\bgh[pousr]_[A-Za-z0-9]{30,}\b",
     r"\bsk-[A-Za-z0-9]{20,}\b",
     r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
-    r"\b(?:10|172\.(?:1[6-9]|2[0-9]|3[01])|192\.168)\.[0-9]{1,3}\.[0-9]{1,3}\b",
+    r"\b(?:10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[01])\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3})\b",
 ]
 
 
@@ -33,7 +34,7 @@ def load_patterns(path: Path | None) -> list[re.Pattern[str]]:
     return patterns
 
 
-def files(root: Path):
+def files(root: Path) -> Iterator[Path]:
     for path in root.rglob("*"):
         if not path.is_file():
             continue
@@ -49,7 +50,7 @@ def files(root: Path):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path("."))
+    parser.add_argument("--root", type=Path, default=Path())
     parser.add_argument("--denylist", type=Path, default=Path("scripts/denylist.txt"))
     args = parser.parse_args()
     root = args.root.resolve()
