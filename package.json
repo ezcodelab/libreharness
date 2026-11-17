@@ -42,7 +42,8 @@
     "bin/libreharness.js",
     "docs",
     "harbor_agent/*.py",
-    "harbor_agent/*.md"
+    "harbor_agent/*.md",
+    "ops"
   ],
   "os": ["linux"],
   "engines": {

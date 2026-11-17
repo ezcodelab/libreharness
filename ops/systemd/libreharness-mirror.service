@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: MIT
+[Unit]
+Description=LibreHarness Gitea to GitHub public mirror
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=libreharness
+WorkingDirectory=/opt/libreharness
+Environment=GIT_TERMINAL_PROMPT=0
+NoNewPrivileges=true
+ExecStart=/usr/bin/python3 /opt/libreharness/bin/mirror_public.py --repo /workspace/credarr --repo /workspace/libreharness --source origin --target github

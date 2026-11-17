@@ -15,6 +15,8 @@
   work. Unattended runs stop only at one-way doors, secrets or production,
   missing decisions or credentials, or ambiguous acceptance. The independent
   reviewer keeps its read-only edit boundary and mutating-git denies.
+- Add a local Gitea-to-GitHub public mirror for Credarr and LibreHarness. It
+  copies only `main` and tags, never prunes, and leaves GitHub-only refs alone.
 
 ### 🧭 Behaviour
 

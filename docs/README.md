@@ -30,6 +30,7 @@ No document here makes a performance claim.
 | [Benchmark proof protocol](benchmark-proof.md) | What would make an “objectively best” claim valid, and what would falsify it |
 | [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
 | [Release checklist](release.md) | Checks, signed tag, public remote, npm publish approval, and rollback |
+| [Public mirror](mirror.md) | Gitea canonical, GitHub read-only mirror for Credarr and LibreHarness, and the no-prune local job |
 
 ## Jev
 
