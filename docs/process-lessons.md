@@ -168,3 +168,15 @@ an explicit project choice, never as the default.
 Doc updated: `docs/skills.md`, `docs/skill-eval.md`, `CONTRIBUTING.md`,
 `bin/docs_lint.py`, `tests/test_docs_lint.py`.
 Promote-to-global: yes
+
+## 2026-11-17 - A push mirror prunes; a public mirror should pull
+
+Surprise: Gitea's push mirror uses `git push --mirror`. It deleted GitHub tags
+for refs absent in Gitea, turned releases into drafts, and then failed on
+workflow-file permissions. A GitHub-hosted pull mirror also failed because the
+private Gitea host is not resolvable from GitHub runners.
+Cost: restoring tags/releases and replacing the mirror with a local no-prune job.
+Rule: Gitea is canonical. Mirror only `main` and tags from a host that can reach
+Gitea; never use `--mirror` or prune. Keep GitHub releases out of the mirror.
+Doc updated: `docs/mirror.md`, `bin/mirror_public.py`, tests.
+Promote-to-global: yes
