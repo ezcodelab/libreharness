@@ -1,0 +1,62 @@
+name: gitea-ci
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitea-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    if: github.server_url != 'https://github.com'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+
+  docs:
+    if: github.server_url != 'https://github.com'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docs and repository checks
+        run: |
+          python3 bin/docs_lint.py . --skills-dir skills
+          python3 bin/check_spdx.py --root .
+          python3 bin/scan_private.py --root .
+          git diff --check
+
+  node:
+    if: github.server_url != 'https://github.com'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node 22
+        run: |
+          set -euo pipefail
+          version=22.23.4
+          base="https://nodejs.org/dist/v${version}"
+          curl -fsSLo /tmp/SHASUMS256.txt "${base}/SHASUMS256.txt"
+          curl -fsSLo "/tmp/node-v${version}-linux-x64.tar.xz" "${base}/node-v${version}-linux-x64.tar.xz"
+          (cd /tmp && grep " node-v${version}-linux-x64.tar.xz$" SHASUMS256.txt | sha256sum -c -)
+          tar -xJf "/tmp/node-v${version}-linux-x64.tar.xz" -C /tmp
+          echo "/tmp/node-v${version}-linux-x64/bin" >> "$GITHUB_PATH"
+          node --version
+          npm --version
+      - name: Node tests
+        run: |
+          npm install --no-audit --no-fund --no-package-lock
+          node tests/auto-intake.test.mjs
+          node tests/goal-watch.test.mjs
+          node tests/review-protocol.test.mjs
+          node tests/security-guard.test.mjs
+          node tests/plugin.test.mjs
+          node tests/installer.test.mjs
