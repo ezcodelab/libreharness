@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+[Unit]
+Description=Alert that the LibreHarness public mirror is stale
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/logger -p user.err -t libreharness-mirror "Public mirror is stale or failed; run systemctl status libreharness-mirror.service"

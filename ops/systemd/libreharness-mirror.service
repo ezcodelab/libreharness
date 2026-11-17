@@ -10,4 +10,6 @@ User=libreharness
 WorkingDirectory=/opt/libreharness
 Environment=GIT_TERMINAL_PROMPT=0
 NoNewPrivileges=true
-ExecStart=/usr/bin/python3 /opt/libreharness/bin/mirror_public.py --repo /workspace/credarr --repo /workspace/libreharness --source origin --target github
+RuntimeDirectory=libreharness-mirror
+StateDirectory=libreharness
+ExecStart=/usr/bin/python3 /opt/libreharness/bin/mirror_public.py --repo /workspace/credarr --repo /workspace/libreharness --source origin --target github --lock-file /run/libreharness-mirror/mirror.lock --status-file /var/lib/libreharness/mirror-status.json

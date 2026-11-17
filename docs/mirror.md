@@ -50,7 +50,33 @@ python3 bin/mirror_public.py \
 ```
 
 On a systemd host, install the units in `ops/systemd/` and enable
-`libreharness-mirror.timer`.
+`libreharness-mirror.timer` and `libreharness-mirror-check.timer`. The mirror
+holds `mirror.lock` for the whole run, so overlapping timers skip cleanly.
+
+The mirror writes an atomic `mirror-status.json` with the last attempt, last
+success, duration, and per-repo result. The check unit fails if the last
+successful push is older than 20 minutes or the last run failed. Its `OnFailure`
+alert unit writes a `user.err` journal entry; point that unit at your own email
+or webhook if you need active notification.
+
+The units under `ops/systemd/` target a Linux VM or runner with
+`/opt/libreharness` and `/workspace`, and a `libreharness` system user. For a
+user-level install, create these units in `~/.config/systemd/user/`:
+
+- `libreharness-mirror.service` with your checkout paths, and
+  `--lock-file %t/libreharness-mirror.lock --status-file %S/libreharness/mirror-status.json`
+- `libreharness-mirror.timer`
+- `libreharness-mirror-check.service` with the same `--status-file`
+- `libreharness-mirror-check.timer`
+- `libreharness-mirror-alert.service`
+
+Then enable both timers and allow the user manager to run while logged out:
+
+```sh
+systemctl --user daemon-reload
+systemctl --user enable --now libreharness-mirror.timer libreharness-mirror-check.timer
+loginctl enable-linger "$USER"
+```
 
 The script refuses to rewrite a GitHub `main` that has commits not in Gitea. It
 leaves GitHub-only tags and branches alone. A tag conflict fails the run instead

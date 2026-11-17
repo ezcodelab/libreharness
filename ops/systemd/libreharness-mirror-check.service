@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+[Unit]
+Description=Check that the LibreHarness public mirror is fresh
+After=libreharness-mirror.service
+OnFailure=libreharness-mirror-alert.service
+
+[Service]
+Type=oneshot
+User=libreharness
+ExecStart=/usr/bin/python3 /opt/libreharness/bin/mirror_public.py --check --max-age 1200 --status-file /var/lib/libreharness/mirror-status.json

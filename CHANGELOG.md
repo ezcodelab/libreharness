@@ -17,6 +17,9 @@
   reviewer keeps its read-only edit boundary and mutating-git denies.
 - Add a local Gitea-to-GitHub public mirror for Credarr and LibreHarness. It
   copies only `main` and tags, never prunes, and leaves GitHub-only refs alone.
+- The mirror holds an exclusive lock, writes an atomic freshness status, and
+  ships check/alert systemd units. A failed or >20-minute-stale mirror fails the
+  check unit and logs an alert.
 
 ### 🧭 Behaviour
 
