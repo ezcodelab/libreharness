@@ -69,7 +69,8 @@ Stop and report instead of guessing when:
 - a child is blocked by a missing decision, credential, service, or person;
 - the same child fails review twice on the same axis;
 - two lanes conflict on the same file/interface;
-- the next action would push, deploy, or touch production;
+- the next action would deploy, touch production, or mutate shared
+  infrastructure; a verified PR push/merge is part of the normal path;
 - the goal's acceptance is ambiguous after one clarifying question.
 
 Leave the goal `active`, the child `blocked` or `active`, and a handoff naming

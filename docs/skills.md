@@ -11,7 +11,7 @@ them, see [When to use what](when-to-use.md).
 | Skill | Use when | Lines |
 |---|---|---|
 | [engineering-loop](../skills/engineering-loop/SKILL.md) | Nontrivial work: external API, secrets or auth, schema or data, security tradeoff, multi-file design, or "done" means production behavior | 120 |
-| [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, auto-lane ready children, run the queue, stop on a one-way door or blocker | 95 |
+| [goal](../skills/goal/SKILL.md) | A multi-step outcome, optionally unattended; create an umbrella and child tasks, auto-lane ready children, run the queue, stop on a one-way door or blocker | 96 |
 | [parallel-lanes](../skills/parallel-lanes/SKILL.md) | Split work across two or three agents or sessions; define slices, ownership, worktrees, merge order, and integration | 77 |
 | [shipping](../skills/shipping/SKILL.md) | A reviewed patch is ready to land; open a ready PR, watch CI, require an independent verifier PASS, and merge only the verified patch | 120 |
 | [state-audit](../skills/state-audit/SKILL.md) | Stateful code: queues, retries, locks, sessions, lifecycle, recovery, concurrency, or a stuck/duplicate/lost bug; document states, invariants, transitions, and a Mermaid statechart, then fix confirmed invalid paths | 108 |

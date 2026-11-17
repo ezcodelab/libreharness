@@ -11,6 +11,10 @@
 - Add a Gitea backend to `pr_watch`: `--forge gitea`, `GITEA_URL` /
   `GITEA_TOKEN`, exact status contexts, `head_commit_id`, and `--auto`
   scheduling with `merge_when_checks_succeed`.
+- Harness agents no longer ask for shell command permission on reversible
+  work. Unattended runs stop only at one-way doors, secrets or production,
+  missing decisions or credentials, or ambiguous acceptance. The independent
+  reviewer keeps its read-only edit boundary and mutating-git denies.
 
 ### 🧭 Behaviour
 

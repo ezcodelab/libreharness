@@ -18,7 +18,8 @@ and runs the same flow without the operator typing `/goal`.
    test, `/review`, `/close`. Do not ask the operator to run `/lane` for each
    child; `/lane` is only for manual or existing-task isolation.
    Stop on a one-way door, blocker, two same-axis send-backs, a merge conflict,
-   a push/deploy, or ambiguous acceptance.
+   a deploy or production mutation, or ambiguous acceptance. A verified PR
+   push/merge is part of the normal path, not a stop.
 2. If `$ARGUMENTS` is an existing `kind: task` id with status `inbox` or
    `ready`, first decide whether the packet is **one reviewable diff**. If it is
    more than one, plan it as a goal with this task's title/scope as the first

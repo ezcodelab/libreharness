@@ -83,9 +83,9 @@ The merged tree is reviewed, not just each lane; a green lane is not a green int
 ## 7. Integrate and reap
 
 `/close` integrates reviewed lanes in the declared order, reruns the full
-check, and reaps clean merged worktrees. One integrator owns the merge; do not
-push or force-push without approval. If integration or reaping cannot complete,
-leave the task `review` or `blocked` with the failing command.
+check, and reaps clean merged worktrees. One integrator owns the merge; a
+verified PR may push a feature branch and merge through the shipping gate;
+never force-push. Leave a failed integration `review` or `blocked` with the command.
 
 ## 8. Capture the lesson
 

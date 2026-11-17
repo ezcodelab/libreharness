@@ -33,6 +33,10 @@
 - A completed task appends one dated entry to the project's
   `docs/process-lessons.md`: Surprise, Cost, Rule, Doc updated, and
   `Promote-to-global` when portable. "None" is a valid Surprise.
+- Do not stop for command permission on reversible work. Proceed and report.
+  Stop only for a one-way door, secrets or production, a missing decision or
+  credential, or ambiguous acceptance. A verified PR push and merge through the
+  shipping gate is the normal path; never push directly to `main` or force-push.
 
 ## Work intake and ownership
 - The durable unit is a task under `$HARNESS_STATE/work/tasks`. A nontrivial

@@ -134,6 +134,45 @@ for (const id of ["state-audit", "verification", "engineering-loop"]) {
   assert.ok(skills.some((skill) => skill.id === id), `missing skill ${id}`);
 }
 
+for (const id of ["implementer", "integrator", "devils-advocate"]) {
+  const agent = updatedAgents.get(id);
+  assert.ok(
+    agent.permissions.some(
+      (rule) =>
+        rule.action === "shell" &&
+        rule.resource === "*" &&
+        rule.effect === "allow",
+    ),
+    `${id} must allow shell commands without a prompt`,
+  );
+}
+const devils = updatedAgents.get("devils-advocate");
+assert.ok(
+  devils.permissions.some(
+    (rule) => rule.action === "edit" && rule.effect === "deny",
+  ),
+  "devils-advocate must remain read-only",
+);
+for (const resource of [
+  "rm -rf*",
+  "sudo *",
+  "git reset --hard*",
+  "git clean*",
+  "git checkout*",
+  "npm publish*",
+  "pnpm publish*",
+]) {
+  assert.ok(
+    devils.permissions.some(
+      (rule) =>
+        rule.action === "shell" &&
+        rule.resource === resource &&
+        rule.effect === "deny",
+    ),
+    `devils-advocate must deny ${resource}`,
+  );
+}
+
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 assert.equal(process.env.HARNESS_HOME, root);
 assert.equal(process.env.HARNESS_STATE, state);
