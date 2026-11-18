@@ -249,3 +249,16 @@ and install a pre-push guard. Monitor the read-only copy against the canonical
 HEAD, with the canonical commit age as the grace clock.
 Doc updated: `docs/mirror.md`, `.githooks/pre-push`, `bin/check_mirror.py`.
 Promote-to-global: yes
+
+## 2026-11-17 - Popular agent skills are not harness features
+
+Surprise: most of the ten trending repositories improve a coding agent's output
+style or research reach, not a harness's durable state, review, or recovery
+loop. Only one zero-dependency practice, the pre-change reachability list,
+addressed a real gap.
+Cost: one review document and a docs check; no dependency added.
+Rule: judge an external skill by the gap it fills, its trust boundary, and its
+license, not by stars. Prefer a practice over a package; pilot a tool only with
+predeclared metrics.
+Doc updated: `docs/agent-skill-review-2026-11-17.md`, `docs/README.md`.
+Promote-to-global: yes
