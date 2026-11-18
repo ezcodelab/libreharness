@@ -9,7 +9,7 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "templates" / "gitea-auto-merge.yml"
@@ -36,6 +36,8 @@ POLICY = {
 class FakeGitea(BaseHTTPRequestHandler):
     pr = {}
     files = [{"filename": "docs/readme.md"}]
+    files_page2 = []
+    move_head_after_files = None
     policy = POLICY
     policy_status = 200
     merge_status = 200
@@ -66,7 +68,13 @@ class FakeGitea(BaseHTTPRequestHandler):
                     data["mergeable"] = True
             self.send_json(data)
         elif path == "/api/v1/repos/admin/demo/pulls/1/files":
-            self.send_json(self.files)
+            page = int(
+                parse_qs(urlparse(self.path).query).get("page", ["1"])[0]
+            )
+            self.send_json(self.files if page == 1 else self.files_page2)
+            if self.move_head_after_files:
+                self.__class__.pr["head"]["sha"] = self.move_head_after_files
+                self.__class__.move_head_after_files = None
         elif path == "/api/v1/repos/admin/demo/contents/.github/merge-policy.json":
             if self.policy_status != 200:
                 self.send_json({"message": "not found"}, self.policy_status)
@@ -108,6 +116,8 @@ class GateTests(unittest.TestCase):
             "labels": [],
         }
         FakeGitea.files = [{"filename": "docs/readme.md"}]
+        FakeGitea.files_page2 = []
+        FakeGitea.move_head_after_files = None
         FakeGitea.policy = POLICY
         FakeGitea.policy_status = 200
         FakeGitea.merge_status = 200
@@ -184,6 +194,38 @@ class GateTests(unittest.TestCase):
         result = self.run_gate()
         self.assertEqual(result.returncode, 1)
         self.assertIn("protected path", result.stderr)
+
+    def test_refuses_gitea_workflow_path(self):
+        FakeGitea.files = [{"filename": ".gitea/workflows/auto-merge.yml"}]
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("protected path", result.stderr)
+
+    def test_refuses_policy_listed_path(self):
+        FakeGitea.policy = {**POLICY, "protected_paths": ["Makefile"]}
+        FakeGitea.files = [{"filename": "Makefile"}]
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("protected path", result.stderr)
+
+    def test_refuses_head_move_during_verification(self):
+        FakeGitea.move_head_after_files = OTHER
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("head moved during verification", result.stderr)
+        self.assertEqual(FakeGitea.merge_calls, [])
+
+    def test_pagination_scans_later_pages(self):
+        FakeGitea.files = [
+            {"filename": f"docs/{index}.md"} for index in range(50)
+        ]
+        FakeGitea.files_page2 = [
+            {"filename": ".gitea/workflows/auto-merge.yml"}
+        ]
+        result = self.run_gate()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("protected path", result.stderr)
+        self.assertEqual(FakeGitea.merge_calls, [])
 
     def test_refuses_renamed_protected_path(self):
         FakeGitea.files = [
