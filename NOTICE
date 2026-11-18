@@ -5,8 +5,8 @@
 LibreHarness
 Copyright (c) 2026 LibreHarness contributors
 
-This project is licensed under the MIT License. Documentation under
-`docs/**/*.md` is licensed under CC BY 4.0; see `docs/LICENSE`.
+This project is licensed under the MIT License. All source code, documentation,
+and snippets are MIT; see `LICENSE`.
 
 ## Jev client origin
 

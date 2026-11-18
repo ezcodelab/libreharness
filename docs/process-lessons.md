@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- SPDX-License-Identifier: MIT -->
 # Process lessons
 
 One dated entry per completed task. Keep it short: what surprised us, what it
@@ -334,6 +334,8 @@ Rule: check diff size before fetching a diff, keep a path allowlist for removed
 synthetic fixtures that remain in history, and replace a gate script only with
 checks that preserve protected paths, forbidden files, size, private markers,
 and exact-head behavior. A native rewrite is not a simplification if it drops a
-safety property.
-Doc updated: `docs/reference.md`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md`.
+safety property. Keep one license and one install example: a second docs license
+or a duplicated config file is maintenance without a reader.
+Doc updated: `docs/reference.md`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md`,
+`NOTICE`, `CHANGELOG.md`.
 Promote-to-global: yes

@@ -27,15 +27,13 @@
     "CHANGELOG.md",
     "SECURITY.md",
     "CONTRIBUTING.md",
-    "opencode.example.json",
     "src",
     "agents",
     "commands",
     "skills",
     "plugins",
     "bin/*.py",
-    "docs/reference.md",
-    "docs/LICENSE"
+    "docs/reference.md"
   ],
   "os": [
     "linux"

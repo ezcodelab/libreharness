@@ -24,6 +24,10 @@ assets, native-duplicated scripts, and most narrative documentation.
   `markdownlint-cli2`, `lychee`, `gitleaks`, `shellcheck`, and `actionlint`;
   shipping uses `gh pr checks` and `gh pr merge`.
 - Consolidate the documentation set into `README.md` and `docs/reference.md`.
+- Relicense documentation under MIT and remove `docs/LICENSE`; code,
+  documentation, and snippets now share one license.
+- Remove `opencode.example.json`; the plugin config in `README.md` is the single
+  example.
 - Remove `GOVERNANCE.md` and `CODE_OF_CONDUCT.md`.
 
 ### 🚀 Features

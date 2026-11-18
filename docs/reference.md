@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+<!-- SPDX-License-Identifier: MIT -->
 
 # Reference
 
@@ -375,6 +375,4 @@ let `.github/workflows/release.yml` publish the npm package and GitHub release.
 
 ## License
 
-Code in `bin/`, `plugins/`, `tests/`, `agents/`, `commands/`, `skills/`, `src/`,
-and JSON configuration is MIT. Narrative documentation under `docs/**/*.md` is
-CC BY 4.0; code snippets are MIT. See `LICENSE`, `NOTICE`, and `docs/LICENSE`.
+All code, documentation, and snippets are MIT. See `LICENSE` and `NOTICE`.

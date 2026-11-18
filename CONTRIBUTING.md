@@ -40,13 +40,15 @@ npm run test:node
 node --check src/plugin.js
 node --check plugins/auto-intake.js
 node --check plugins/goal-watch.js
-python3 -m json.tool opencode.example.json >/dev/null
+python3 -m json.tool package.json >/dev/null
 npm pack --dry-run
 npx --yes markdownlint-cli2@0.18.1 '**/*.md'
 ```
 
 CI also runs `lychee` for offline links, `gitleaks` for secrets, `shellcheck`
-for shell files, and `actionlint` for workflows.
+for shell files, and `actionlint` for workflows. The Markdown rule set is in
+`.markdownlint-cli2.jsonc`; it is correctness-only, so style preferences do not
+fail a pull request.
 
 The Python suite uses temporary state roots. The Node tests use temporary
 directories and mocks. No test makes a live model call or needs a Jev key.
@@ -71,8 +73,7 @@ Use a Conventional Commits prefix: `feat:`, `fix:`, `docs:`, `test:`,
   string.
 - Add an SPDX header to every new file: `# SPDX-License-Identifier: MIT` for
   Python and shell, `// SPDX-License-Identifier: MIT` for JavaScript and MJS,
-  `<!-- SPDX-License-Identifier: MIT -->` for project Markdown, and
-  `<!-- SPDX-License-Identifier: CC-BY-4.0 -->` for Markdown under `docs/`.
+  and `<!-- SPDX-License-Identifier: MIT -->` for Markdown.
 - Documentation uses plain English and ASCII punctuation. Do not include a
   private home path, hostname, token, or personal data.
 
@@ -99,9 +100,8 @@ The sign-off certifies that you wrote the change or have the right to submit it
 under the project license. A separate contributor license agreement is not
 required. The sign-off is recommended, not enforced by CI.
 
-By contributing, you agree that your contribution is licensed under the same
-terms as the path it touches: MIT for code and configuration, CC BY 4.0 for
-narrative documentation under `docs/`.
+By contributing, you agree that your contribution is licensed under the MIT
+License.
 
 ## Pull request checklist
 

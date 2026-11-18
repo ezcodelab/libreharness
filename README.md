@@ -108,7 +108,9 @@ at the workflow level. See [the reference](docs/reference.md#jev).
 [docs/reference.md](docs/reference.md) is the operator reference: install,
 concepts, workflow, commands, skills, agents, plugins, Jev, security, and CI.
 
-Project history is in [CHANGELOG.md](CHANGELOG.md).
+Project history is in [CHANGELOG.md](CHANGELOG.md). Contributions are welcome;
+see [CONTRIBUTING.md](CONTRIBUTING.md) and the issue and pull request templates
+in `.github/`.
 
 ## Requirements
 
@@ -117,7 +119,5 @@ provider of your choice. Jev needs an endpoint and a key only when you use it.
 
 ## License
 
-Code in `bin/`, `plugins/`, `tests/`, `agents/`, `commands/`, `skills/`, `src/`,
-and JSON configuration is MIT. Narrative documentation under `docs/**/*.md` is
-CC BY 4.0; code snippets are MIT. See [LICENSE](LICENSE), [NOTICE](NOTICE), and
-[docs/LICENSE](docs/LICENSE).
+All code, documentation, and snippets are MIT. See [LICENSE](LICENSE) and
+[NOTICE](NOTICE).
