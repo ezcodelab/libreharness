@@ -60,6 +60,33 @@ permissions:
   - action: read
     resource: "*"
     effect: allow
+  - action: edit
+    resource: "/tmp/*"
+    effect: allow
+  - action: external_directory
+    resource: "/tmp/*"
+    effect: allow
+  - action: webfetch
+    resource: "*"
+    effect: allow
+  - action: websearch
+    resource: "*"
+    effect: allow
+  - action: grep_app_searchGitHub
+    resource: "*"
+    effect: allow
+  - action: context7_query_docs
+    resource: "*"
+    effect: allow
+  - action: context7_resolve_library_id
+    resource: "*"
+    effect: allow
+  - action: opencode_list_mcp_resources
+    resource: "*"
+    effect: allow
+  - action: opencode_read_mcp_resource
+    resource: "*"
+    effect: allow
 
 ---
 <!-- SPDX-License-Identifier: MIT -->
