@@ -23,6 +23,7 @@ class MirrorHandler(BaseHTTPRequestHandler):
     github_date = ""
     github_error = False
     gitea_error = False
+    github_failures_remaining = 0
 
     def log_message(self, *args):
         pass
@@ -38,7 +39,10 @@ class MirrorHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if path == "/repos/gh/repo/commits/main":
-            if self.github_error:
+            if self.github_failures_remaining > 0:
+                MirrorHandler.github_failures_remaining -= 1
+                self.send_json({"message": "transient"}, 500)
+            elif self.github_error:
                 self.send_json({"message": "error"}, 500)
             else:
                 self.send_json(
@@ -64,6 +68,7 @@ class MirrorCheckTests(unittest.TestCase):
         MirrorHandler.github_date = datetime.now(timezone.utc).isoformat()
         MirrorHandler.github_error = False
         MirrorHandler.gitea_error = False
+        MirrorHandler.github_failures_remaining = 0
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), MirrorHandler)
         self.thread = threading.Thread(
             target=self.server.serve_forever, daemon=True
@@ -138,6 +143,12 @@ class MirrorCheckTests(unittest.TestCase):
         result = self.run_check("--json")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('"ok": true', result.stdout)
+
+    def test_retries_transient_github_error(self):
+        MirrorHandler.github_failures_remaining = 1
+        result = self.run_check()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("mirror OK", result.stdout)
 
 
 if __name__ == "__main__":
