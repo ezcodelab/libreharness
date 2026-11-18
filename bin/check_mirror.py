@@ -14,6 +14,7 @@ import json
 import os
 import ssl
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -23,7 +24,7 @@ class CheckError(RuntimeError):
     pass
 
 
-def fetch_json(url, token, scheme, insecure):
+def fetch_json(url, token, scheme, insecure, attempts=2):
     headers = {
         "Accept": "application/json",
         "User-Agent": "libreharness-mirror-check",
@@ -34,13 +35,21 @@ def fetch_json(url, token, scheme, insecure):
     if insecure:
         kwargs["context"] = ssl._create_unverified_context()
     request = urllib.request.Request(url, headers=headers)
-    try:
-        with urllib.request.urlopen(request, **kwargs) as response:
-            return json.load(response)
-    except urllib.error.HTTPError as error:
-        raise CheckError(f"HTTP {error.code} for {url}") from None
-    except (urllib.error.URLError, OSError, json.JSONDecodeError) as error:
-        raise CheckError(f"{error} for {url}") from None
+    last_error = None
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(request, **kwargs) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as error:
+            last_error = CheckError(f"HTTP {error.code} for {url}")
+            if error.code < 500 or attempt + 1 >= attempts:
+                raise last_error from None
+        except (urllib.error.URLError, OSError, json.JSONDecodeError) as error:
+            last_error = CheckError(f"{error} for {url}")
+            if attempt + 1 >= attempts:
+                raise last_error from None
+        time.sleep(1)
+    raise last_error or CheckError(f"request failed for {url}")
 
 
 def parse_pair(value):
