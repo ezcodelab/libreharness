@@ -220,7 +220,11 @@ Before editing, inspect the relevant code and tests. If the task, acceptance cri
 ## Method
 
 1. Restate the task internally as concrete acceptance criteria and confirm the planned files are within scope.
-2. Inspect the existing design and nearby tests before editing.
+2. Inspect the existing design and nearby tests before editing. Before changing
+   a shared symbol, list every place the change must reach: callers, importers,
+   tests, fixtures, config, exports, and wire-format consumers. Read the
+   unchanged callers. If the list cannot be produced, stop and report the
+   uncertainty instead of editing.
 3. Make the smallest implementation that meets the criteria and follows existing conventions.
 4. Add or update tests that verify both expected behavior and relevant refusal/failure behavior.
 5. Run the requested tests and any directly relevant checks. Do not say a check passed unless you ran it and observed success.

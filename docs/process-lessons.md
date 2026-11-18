@@ -276,3 +276,16 @@ webfetch and websearch, and test the rule shape. A missing rule defaults to
 `ask`, not `allow`.
 Doc updated: `agents/*.md`, `docs/plugins.md`, `tests/plugin.test.mjs`.
 Promote-to-global: yes
+
+## 2026-11-18 - Reachability is blast radius, not a caller list
+
+Surprise: the first plan matched the easy half, a caller list. pstack's
+blast-radius skill names the hard half: the breakage grep will not show, the
+pinned library behavior, runtime path, wire format, and downstream consumer.
+Cost: one plan rewrite and one small protocol change.
+Rule: the brief and implementer enumerate reach; the review reads unchanged
+callers and names the one safety fact, then goes beyond grep for high-risk
+changes. Prove the fact; a rename fixture is only the easy case.
+Doc updated: `commands/brief.md`, `agents/implementer.md`, `commands/review.md`,
+`tests/review-protocol.test.mjs`.
+Promote-to-global: yes

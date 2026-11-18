@@ -54,10 +54,14 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
    **CONFIRMED**, **REFUTED**, or **UNVERIFIED**, with the source, sink or
    failure point, and guard cited as `file:line`. Ask for the six
    silent-failure checks. It reviews; it does not fix.
-7. Name the one safety fact. For every non-trivial diff, state the single fact
-   the change is safe because of. Require a runnable proof such as a test,
-   script, or command output; if it cannot be proved, mark it **UNVERIFIED**.
-   A plausible explanation is not evidence.
+7. Blast radius and the one safety fact. For every changed shared symbol, list
+   its callers, importers, tests, fixtures, config, exports, and wire-format
+   consumers, and read the unchanged callers the diff does not show. State the
+   single fact the change is safe because of, with a runnable proof such as a
+   test, script, or command output. For a high-risk change, go beyond grep:
+   read the pinned library source and version, the runtime path, the wire
+   format, feature flags, and downstream consumers. If a fact cannot be proved,
+   mark it **UNVERIFIED**. A plausible explanation is not evidence.
 8. State impact. If the diff adds or changes a state machine, retry, lock,
    session, queue, concurrency, or lifecycle path, require the `state-audit`
    skill's `docs/state-machines.md` to be updated and a regression test for
