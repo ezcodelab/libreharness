@@ -30,7 +30,7 @@ class QueueTests(unittest.TestCase):
             "Fix the widget",
             project="demo",
             scope="Only the widget.",
-            acceptance="- [ ] widget works",
+            acceptance="- [x] widget works",
         )
         self.assertEqual(task["meta"]["status"], "ready")
         claimed = tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
@@ -52,7 +52,9 @@ class QueueTests(unittest.TestCase):
         self.assertIn(task["meta"]["id"], board)
 
     def test_done_requires_claim_and_real_evidence(self) -> None:
-        task = tasks.new_task(self.root, "Needs proof")
+        task = tasks.new_task(
+            self.root, "Needs proof", acceptance="- [x] proof exists"
+        )
         with self.assertRaises(SystemExit):
             tasks.set_status(self.root, task["meta"]["id"], "done")
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
@@ -64,6 +66,20 @@ class QueueTests(unittest.TestCase):
             self.root, task["meta"]["id"], "done", evidence="make check: 42 passed"
         )
         self.assertEqual(done["meta"]["status"], "done")
+
+    def test_done_rejects_unchecked_acceptance(self) -> None:
+        task = tasks.new_task(
+            self.root, "Unfinished", acceptance="- [ ] widget works\n- [x] docs"
+        )
+        tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
+        with self.assertRaises(SystemExit) as caught:
+            tasks.set_status(
+                self.root,
+                task["meta"]["id"],
+                "done",
+                evidence="make check: 42 passed",
+            )
+        self.assertIn("widget works", str(caught.exception))
 
     def test_claim_records_base_and_rejects_equivalent_worktree(self) -> None:
         first = tasks.new_task(self.root, "First lane")
@@ -86,7 +102,9 @@ class QueueTests(unittest.TestCase):
             )
 
     def test_metrics_not_duplicated_on_reopen(self) -> None:
-        task = tasks.new_task(self.root, "Reopened")
+        task = tasks.new_task(
+            self.root, "Reopened", acceptance="- [x] reopened"
+        )
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
         tasks.set_status(self.root, task["meta"]["id"], "done", evidence="make check: 1 passed")
         tasks.set_status(self.root, task["meta"]["id"], "active")
@@ -95,7 +113,7 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(len(rows), 2)  # header + one task row
 
     def test_dependencies_gate_ready(self) -> None:
-        first = tasks.new_task(self.root, "First", acceptance="- [ ] first")
+        first = tasks.new_task(self.root, "First", acceptance="- [x] first")
         second = tasks.new_task(
             self.root,
             "Second",
@@ -154,7 +172,7 @@ class QueueTests(unittest.TestCase):
             self.root,
             "Ship the demo",
             scope="The demo works.",
-            acceptance="- [ ] demo runs",
+            acceptance="- [x] demo runs",
             autorun=True,
         )
         self.assertEqual(goal["meta"]["kind"], "goal")
@@ -165,7 +183,7 @@ class QueueTests(unittest.TestCase):
             self.root,
             "Demo endpoint",
             parent=goal["meta"]["id"],
-            acceptance="- [ ] endpoint answers",
+            acceptance="- [x] endpoint answers",
         )
         self.assertEqual(child["meta"]["parent"], goal["meta"]["id"])
         with self.assertRaises(SystemExit):

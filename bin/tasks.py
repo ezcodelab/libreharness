@@ -808,6 +808,16 @@ def valid_evidence(text: str) -> bool:
     return bool(normalized) and normalized not in PLACEHOLDER_EVIDENCE
 
 
+def unchecked_acceptance(task: dict) -> list[str]:
+    """Acceptance items that still say "- [ ]"; done means all of them checked."""
+    section = task["sections"].get("Acceptance", "")
+    return [
+        line.strip()
+        for line in section.splitlines()
+        if line.strip().startswith("- [ ]")
+    ]
+
+
 def set_status(root: Path, key: str, status: str, *, note: str = "", evidence: str = "") -> dict:
     if status not in STATUSES:
         raise SystemExit(f"error: unknown status {status!r}")
@@ -819,6 +829,13 @@ def set_status(root: Path, key: str, status: str, *, note: str = "", evidence: s
                 raise SystemExit(
                     "error: done needs a claimed task in active/review, not "
                     f"{task['meta'].get('status')}"
+                )
+            unchecked = unchecked_acceptance(task)
+            if unchecked:
+                preview = "; ".join(unchecked[:3])
+                raise SystemExit(
+                    "error: done needs every acceptance item checked "
+                    f"(still open: {preview})"
                 )
             if not valid_evidence(evidence):
                 raise SystemExit(

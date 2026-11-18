@@ -35,7 +35,16 @@ const goal = tasks(
   "--max-continuations",
   "3",
 );
-tasks("new", "Child one", "--project", "demo", "--parent", goal);
+tasks(
+  "new",
+  "Child one",
+  "--project",
+  "demo",
+  "--parent",
+  goal,
+  "--acceptance",
+  "- [x] child exists",
+);
 if (!goal) throw new Error("goal not created");
 
 process.env.GOAL_WATCH_ROOT = root;
@@ -90,7 +99,16 @@ await new Promise((r) => setTimeout(r, 250));
 if (prompts.length !== 3) throw new Error("nudged with two active goals");
 
 const closeGoal = tasks("goal", "Close me", "--project", "demo", "--session", "s1");
-const closeChild = tasks("new", "Done child", "--project", "demo", "--parent", closeGoal);
+const closeChild = tasks(
+  "new",
+  "Done child",
+  "--project",
+  "demo",
+  "--parent",
+  closeGoal,
+  "--acceptance",
+  "- [x] child done",
+);
 tasks("claim", closeChild, "--owner", "test");
 tasks("status", closeChild, "done", "--evidence", "node: done");
 emit({ type: "session.idle", data: { sessionID: "s1" } });

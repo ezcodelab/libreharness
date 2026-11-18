@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { copyFileSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -80,6 +80,16 @@ if (!otherSession.prompt.text.includes("Existing task")) {
 const afterOther = readFileSync(join(root, "work/tasks", `${id}.md`), "utf8");
 if (!afterOther.includes("status: inbox")) throw new Error("task changed");
 
+// The inbox template starts with an unchecked acceptance. A finishing agent
+// must replace it with the concrete, checked criterion before `done`.
+const taskPath = join(root, "work/tasks", `${id}.md`);
+writeFileSync(
+  taskPath,
+  readFileSync(taskPath, "utf8").replace(
+    /^- \[ \] TBD.*$/m,
+    "- [x] login redirect is fixed",
+  ),
+);
 taskCli("claim", id, "--owner", "test");
 taskCli("status", id, "done", "--evidence", "unit: pass");
 const closed = {
