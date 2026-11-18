@@ -65,7 +65,9 @@ GitHub's default policy blocks `pull_request_target` in public repositories from
 2026-12-02 unless an applicable Actions policy explicitly allows it. Both
 Credarr and LibreHarness have an active repository policy that allows only
 `.github/workflows/auto-merge.yml` to use `pull_request_target`. If the policy
-is removed or the workflow path changes, the gate will not run.
+is removed or the workflow path changes, the gate will not run. That is an
+availability failure, not an unauthorized merge; check the policy before the
+deadline and after any workflow rename.
 
 ## Gitea mirror
 

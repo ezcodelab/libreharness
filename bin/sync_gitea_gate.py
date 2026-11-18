@@ -97,14 +97,22 @@ def main() -> int:
                 )
                 failed = True
                 continue
-        if inactive.is_file():
-            print(
-                f"sync_gitea_gate: stale gate at {inactive}; "
-                f"Gitea only reads {active}",
-                file=sys.stderr,
+        inactive_dir = inactive.parent
+        if inactive_dir.is_dir():
+            stray = sorted(
+                path.name
+                for path in inactive_dir.iterdir()
+                if path.suffix in (".yml", ".yaml")
             )
-            failed = True
-            continue
+            if stray:
+                print(
+                    "sync_gitea_gate: workflow in the non-scanned directory "
+                    f"{inactive_dir}: {', '.join(stray)}; Gitea only reads "
+                    f"{active.parent}",
+                    file=sys.stderr,
+                )
+                failed = True
+                continue
         if active.is_file() and digest(active) == wanted:
             print(f"gate OK {target}")
             continue
