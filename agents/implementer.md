@@ -174,6 +174,18 @@ permissions:
   - action: read
     resource: "*"
     effect: allow
+  - action: glob
+    resource: "*"
+    effect: allow
+  - action: grep
+    resource: "*"
+    effect: allow
+  - action: skill
+    resource: "*"
+    effect: allow
+  - action: todowrite
+    resource: "*"
+    effect: allow
   - action: external_directory
     resource: "/tmp/*"
     effect: allow
