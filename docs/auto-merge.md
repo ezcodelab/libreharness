@@ -95,9 +95,10 @@ exists in the other one.
 The gate accepts same-repository branches only. A fork PR needs a manual review
 and merge because the gate cannot prove the fork's CI workflow. The gate refuses
 a missing or malformed policy, a draft, a blocking label, a moved head, a
-protected path, or a forbidden file. Branch protection must also require the
-repository CI check; the gate schedules the merge but does not substitute for
-CI.
+protected path, or a forbidden file. After the file scan it re-reads the PR and
+re-checks state, head, labels, and mergeability, so the tree it inspected is the
+head it pins. Branch protection must also require the repository CI check; the
+gate schedules the merge but does not substitute for CI.
 
 ## Autonomy
 
