@@ -72,9 +72,10 @@ is removed or the workflow path changes, the gate will not run.
 Gitea pulls GitHub `main` and tags and is read-only. It does not accept PRs and
 never pushes to GitHub. See [the mirror doc](mirror.md).
 
-## Private and agent-only Gitea repositories
+## Gitea-canonical repositories
 
-Every active Gitea repository uses the same base-controlled gate at
+Every active Gitea-canonical repository, public or private, uses the same
+base-controlled gate at
 `.github/workflows/auto-merge.yml` on `pull_request_target`, plus a
 `.github/merge-policy.json` that lists the repository's protected paths. The gate
 job has no checkout; it validates the PR and schedules

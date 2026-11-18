@@ -11,7 +11,7 @@ Use after the task is `review` or `done`, the diff is reviewed, and evidence exi
 ## Resolve the forge once
 
 1. Public repos (Credarr, LibreHarness): `gh`; GitHub is canonical and Gitea is a read-only mirror.
-2. Private or agent-only Gitea repos: push an AGit PR to `refs/for/main/<topic>`. The repository gate schedules the merge after CI; no agent token is needed.
+2. Gitea-canonical repos (Brain and the homelab repos): push an AGit PR to `refs/for/main/<topic>`. The repository gate schedules the merge after CI; no agent token is needed.
 3. `pr_watch` is only for a bootstrap or protected change when the operator supplies a token. Do not use it for normal work.
 4. If no forge path resolves, stop with the exact command and the missing capability. Do not claim the work merged.
 

@@ -78,7 +78,7 @@ After the merge:
 | Repository kind | Canonical forge | Contribution path | Merge path |
 |---|---|---|---|
 | Public: Credarr, LibreHarness | GitHub | ready GitHub PR | GitHub Actions gate with `GITHUB_TOKEN` |
-| Private or agent-only: Brain and homelab repos | Gitea | AGit PR to `refs/for/main/<topic>` | repository gate on `pull_request_target` with the repo `MERGE_TOKEN` secret |
+| Gitea-canonical: Brain and the homelab repos | Gitea | AGit PR to `refs/for/main/<topic>` | repository gate on `pull_request_target` with the repo `MERGE_TOKEN` secret |
 | Gitea mirror of a public repo | Gitea (read-only) | none | Gitea pulls GitHub; never push or open a PR there |
 
 Agents hold no personal token. The Gitea gate secret is repository-scoped and
