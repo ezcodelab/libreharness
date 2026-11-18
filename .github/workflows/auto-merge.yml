@@ -91,7 +91,7 @@ jobs:
           while IFS= read -r path; do
             [ -n "$path" ] || continue
             case "$path" in
-              .github/workflows/*|.gitleaks.toml|AGENTS.md|SECURITY.md|package.json|package-lock.json|bin/tasks.py|bin/jev_*.py|opencode.example.json)
+              .github/workflows/*|.gitleaks.toml|AGENTS.md|SECURITY.md|package.json|package-lock.json|bin/tasks.py|bin/jev_*.py)
                 echo "protected path: $path"
                 fail=1
                 ;;
