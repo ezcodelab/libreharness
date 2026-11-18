@@ -13,8 +13,11 @@ labels: bug
 - Python:
 - Node:
 - OpenCode:
-## Doctor output
+## Checks
 ```text
-python3 bin/doctor.py
+python3 -m unittest discover -s tests -p 'test_*.py'
+node --version
+python3 --version
+opencode --version
 ```
 Do not paste secrets or private data.

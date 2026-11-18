@@ -3,9 +3,8 @@
 useDefault = true
 
 [[allowlists]]
-description = "Synthetic secret shapes used only by guard and benchmark fixtures"
+description = "Synthetic shapes in tests and in the benchmark fixture removed in 2.0.0 (history)"
 paths = [
-  '''tests/fixtures/.*''',
-  '''tests/auto-intake\.test\.mjs''',
   '''bench/fixtures/ablation/.*''',
+  '''tests/auto-intake\.test\.mjs''',
 ]

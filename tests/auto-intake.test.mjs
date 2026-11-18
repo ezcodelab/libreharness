@@ -145,7 +145,7 @@ const closeNudge = {
 };
 hook(closeNudge);
 if (closeNudge.prompt.text.includes("[queue] Task ")) {
-  throw new Error("close-reminder prompt was queued");
+  throw new Error("close nudge was queued as a task");
 }
 
 const delegation = {

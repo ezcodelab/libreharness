@@ -175,9 +175,7 @@ const plugin = Plugin.define({
     const cleanups = [];
     for (const featurePath of [
       "../plugins/auto-intake.js",
-      "../plugins/close-reminder.js",
       "../plugins/goal-watch.js",
-      "../plugins/security-guard.js",
     ]) {
       try {
         const { default: feature } = await import(featurePath);

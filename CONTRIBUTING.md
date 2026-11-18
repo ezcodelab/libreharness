@@ -2,18 +2,18 @@
 
 # Contributing
 
-This is the 1.2.0 release tree. The public repository is
-`https://github.com/ezcodelab/libreharness`; contributions are welcome.
+The public repository is `https://github.com/ezcodelab/libreharness`.
+Contributions are welcome.
 
 ## Development setup
 
-Requirements: Linux, Git, Python 3.10 or newer, and Node 20 or newer
-for plugin tests. No Python package is required. `npm install` is only needed
-for editor types from the development dependency; the tests run without
+Requirements: Linux, Git, Python 3.10 or newer, and Node 20 or newer. No Python
+package is required. `npm install` is required for the Node tests because
+`src/plugin.js` imports `@opencode/plugin`; the Python suite runs without
 `node_modules`.
 
 ```sh
-git clone <repository-url> libreharness
+git clone https://github.com/ezcodelab/libreharness
 cd libreharness
 python3 --version
 node --version
@@ -29,67 +29,63 @@ export HARNESS_STATE="$(mktemp -d)"
 Do not run queue commands against a state root that contains work you care
 about while developing.
 
-## Tests and checks
+## Checks
 
 Run these before sending a change:
 
 ```sh
 python3 -m compileall -q bin tests
 python3 -m unittest discover -s tests -p 'test_*.py' -v
-node tests/auto-intake.test.mjs
-node tests/goal-watch.test.mjs
-node tests/review-protocol.test.mjs
-node tests/security-guard.test.mjs
-node tests/installer.test.mjs
-python3 bin/docs_lint.py . --skills-dir skills
+npm run test:node
+node --check src/plugin.js
 node --check plugins/auto-intake.js
-node --check plugins/close-reminder.js
 node --check plugins/goal-watch.js
-node --check plugins/security-guard.js
-python3 -m json.tool opencode.example.json >/dev/null
+python3 -m json.tool package.json >/dev/null
 npm pack --dry-run
+npx --yes markdownlint-cli2@0.18.1 '**/*.md'
 ```
 
-The Python suite uses temporary state roots. The Node tests use temporary
-directories and mocks. No test should make a live model call or need a Jev key.
+CI also runs `lychee` for offline links, `gitleaks` for secrets, `shellcheck`
+for shell files, and `actionlint` for workflows. The Markdown rule set is in
+`.markdownlint-cli2.jsonc`; it is correctness-only, so style preferences do not
+fail a pull request.
 
-If you add a Python test, use `unittest`, not a new test framework. If you add
-a Node test, use `node:test` or the existing assert style. Keep state in a
-temporary directory and clean it up.
+The Python suite uses temporary state roots. The Node tests use temporary
+directories and mocks. No test makes a live model call or needs a Jev key.
+
+If you add a Python test, use `unittest`. If you add a Node test, use the
+existing `assert` style. Keep state in a temporary directory and clean it up.
 
 ## Commits
 
 Use a Conventional Commits prefix: `feat:`, `fix:`, `docs:`, `test:`,
-`chore:`, or `refactor:`. Keep one reviewable change per commit. Sign off
-with `git commit -s`.
+`chore:`, or `refactor:`. Keep one reviewable change per commit. Sign off with
+`git commit -s`.
 
 ## Style
 
-- Prefer the standard library and Node built-ins. Do not add a dependency for
-  a few lines.
+- Prefer the standard library and Node built-ins. Do not add a dependency for a
+  few lines.
 - Keep the Markdown queue format backward compatible within a minor release.
-- Put a new behavior behind an explicit flag or environment variable when it
-  changes an existing workflow.
 - Do not hardcode a model ID in core code or the example config. The user
   chooses the provider and model.
 - Keep shell commands quoted. Do not interpolate untrusted input into a shell
   string.
 - Add an SPDX header to every new file: `# SPDX-License-Identifier: MIT` for
   Python and shell, `// SPDX-License-Identifier: MIT` for JavaScript and MJS,
-  `<!-- SPDX-License-Identifier: MIT -->` for project Markdown, and
-  `<!-- SPDX-License-Identifier: CC-BY-4.0 -->` for Markdown under `docs/`.
-- Documentation uses plain English and ASCII punctuation. Do not add an em
-  dash. Do not include a private home path, hostname, token, or personal data.
+  and `<!-- SPDX-License-Identifier: MIT -->` for Markdown.
+- Documentation uses plain English and ASCII punctuation. Do not include a
+  private home path, hostname, token, or personal data.
 
 ## No secrets
 
-Never commit a key, token, password, private key, session export, or `.env`
-file. Do not paste one into an issue, a task, a handoff, a lesson, a test
-fixture, or a log. Use a placeholder and describe the shape instead.
+Never commit a key, token, password, private key, session export, or `.env` file.
+Do not paste one into an issue, a task, a handoff, a lesson, a test fixture, or a
+log. Use a placeholder and describe the shape instead.
 
 `auto-intake` and the Jev client have secret-shaped input guards. Those guards
-are a last line of defense, not permission to include a secret. If you believe
-a secret was committed, stop, rotate it, and report it through the process in
+are a last line of defense, not permission to include a secret. If you believe a
+secret was committed, stop, rotate it, and report it through the process in
 [SECURITY.md](SECURITY.md).
 
 ## Developer Certificate of Origin
@@ -100,14 +96,12 @@ Sign off every commit:
 git commit -s -m "docs: clarify the queue state root"
 ```
 
-The sign-off certifies that you wrote the change or have the right to submit
-it under the project license. A separate contributor license agreement is not
-required. In 1.0.0 the sign-off is recommended, not enforced by CI. A pull
-request without it may still be reviewed, but maintainers may ask for it.
+The sign-off certifies that you wrote the change or have the right to submit it
+under the project license. A separate contributor license agreement is not
+required. The sign-off is recommended, not enforced by CI.
 
-By contributing, you agree that your contribution is licensed under the same
-terms as the path it touches: MIT for code and configuration, CC BY 4.0 for
-narrative documentation under `docs/`.
+By contributing, you agree that your contribution is licensed under the MIT
+License.
 
 ## Pull request checklist
 
@@ -117,7 +111,7 @@ narrative documentation under `docs/`.
 - [ ] New behavior has a test or a measured check.
 - [ ] No secret, private path, hostname, personal data, or generated state.
 - [ ] New files have the correct SPDX header.
-- [ ] Documentation links resolve and the docs lint passes.
+- [ ] Markdown links resolve and the Markdown check passes.
 - [ ] The changelog is updated for a user-visible change.
 - [ ] The commit is signed off with `git commit -s`.
 
@@ -140,26 +134,24 @@ reviewer's decision.
 ## Adding a skill
 
 1. Create `skills/<name>/SKILL.md` with `name` and `description` frontmatter.
-2. Keep it under 120 lines. There is no fixed skill count; split a skill when
-   its triggers or procedure are distinct.
+2. Keep it under 120 lines. Split a skill when its triggers or procedure are
+   distinct.
 3. Write the trigger in the description, not only in the body.
-4. Test it with the method in [docs/skill-eval.md](docs/skill-eval.md).
-5. Do not promote a skill on a hunch. A neutral result is a reason to delete or
-   leave it project-local.
+4. Prove it pays off on one real task with and without the skill. A neutral
+   result is a reason to delete it or keep it project-local.
 
 ## Adding a plugin
 
 1. Put a bundled plugin in `plugins/<name>.js` and add a test under `tests/`.
-2. Use Node built-ins only. Resolve paths from `HARNESS_HOME` and state from
+2. Use Node built-ins only. Resolve code from `HARNESS_HOME` and state from
    `HARNESS_STATE`.
 3. Never block a session when the plugin is misconfigured. Log one short
    warning and continue.
-4. Add the disable switch and document it in [docs/plugins.md](docs/plugins.md).
+4. Add a disable switch and document it in
+   [docs/reference.md](docs/reference.md#plugins).
 5. Run `node --check` on the file.
 
 ## Release changes
 
-Release and governance decisions follow [GOVERNANCE.md](GOVERNANCE.md). A
-release needs a changelog entry, passing checks, and no unbacked performance
-claim. A benchmark claim also needs the protocol, raw data, analysis script,
-and limitations.
+A release needs a changelog entry, passing checks, and no unbacked performance
+claim. A benchmark claim needs raw data, an analysis script, and limitations.

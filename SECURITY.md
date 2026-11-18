@@ -6,12 +6,10 @@
 
 | Version | Supported |
 |---|---|
-| 1.2.x | Yes, best effort |
-| 1.1.x | Yes, best effort |
-| 1.0.x | Yes, best effort |
-| Earlier development snapshots | No |
+| 2.0.x | Yes, best effort |
+| 1.x | No |
 
-This is the 1.2.0 release tree. The public repository is
+This is the 2.0.0 release tree. The public repository is
 `https://github.com/ezcodelab/libreharness`, and there is no security team or
 response-time guarantee. Do not treat this file as a promise of a service-level
 agreement.
@@ -71,8 +69,7 @@ key.
 - The Jev review client refuses a diff or task that matches a secret-shaped
   pattern unless `--allow-secret-shaped` is passed. That flag is for a
   deliberate, reviewed exception, not a convenience. The plan client rejects a
-  secret-shaped plan state. Triage does not apply the guard to its close state
-  in 1.0.0.
+  secret-shaped plan state. Triage does not apply the guard to its close state.
 - The queue does not encrypt task files. Use filesystem permissions and full
   disk encryption if the state contains sensitive work.
 - State should be mode 700 and key files mode 600. The queue uses the process
@@ -85,9 +82,9 @@ key.
 - A malicious repository, prompt injection, or tool output that convinces an
   agent to run a command. Review commands and permissions.
 - Third-party plugins, custom Jev adapters, and external MCP servers.
-- macOS and Windows in 1.0.0; Linux is the only supported platform.
+- macOS and Windows are not supported; Linux is the only supported platform.
 - A leaked key that was already committed before this policy existed. Rotate
   it and treat the exposure as real.
 
-See [docs/security-privacy.md](docs/security-privacy.md) for the data boundary
-and egress details.
+See [docs/reference.md](docs/reference.md#security-and-privacy) for the data
+boundary and egress details.

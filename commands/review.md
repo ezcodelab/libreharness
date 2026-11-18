@@ -24,18 +24,17 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
      (the merge target, not the lane's own tip);
    - if all are empty, ask what to review. Never review an unrelated leftover
      change from another lane.
-3. Comment discipline (non-blocking): run
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/comment_audit.py"` on the
-   changed files, skipping deleted paths. Report findings as P3 notes for low-risk
-   diffs, not a gate; ask for a fix when a new workaround or `do not remove/change`
-   comment lacks an external reference. `--allow` or an inline
-   `comment-discipline: allow <reason>` accepts deliberate cases.
-4. Preflight the free model:
+3. Comment discipline (non-blocking): read the changed files for narration,
+   stale comments, and workaround justifications that lack an external
+   reference. Report those as P3 notes for low-risk diffs; they are not a gate.
+   Ask for a fix when a new workaround or `do not remove/change` comment has no
+   external reference. An inline `comment-discipline: allow <reason>` accepts a
+   deliberate case.
+4. Preflight the configured model:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/jev_review.py" --check`
-   - exit 4 → **stop**. Say: "Free Jev is gone. Update `DEFAULT_MODEL` in
-     `bin/jev_review.py` to `jev-1.13` (paid), or pass the same `--model` to
-     both the check and the review; no review was run." Do not silently start
-     paying.
+   - exit 4 → **stop**. Say: "The configured Jev model is gone. Set `JEV_MODEL`
+     to a model your endpoint offers, or pass `--model` to both the check and
+     the review; no review was run." Do not silently start paying.
    - exit 3 → note "Jev unavailable" and go to step 6 (subagent fallback).
 5. Run Jev:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/jev_review.py" --diff /tmp/opencode/review-$TASK.diff --task-file /tmp/opencode/review-task-$TASK.txt`

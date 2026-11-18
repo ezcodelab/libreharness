@@ -2,6 +2,7 @@
 # Agent rules
 
 ## Absolute constraints
+
 - Never commit, log, print, or embed secrets, tokens, API keys, production
   credentials, or PII.
 - Never mutate production systems, live data, shared infrastructure, or billing
@@ -10,39 +11,35 @@
   `master`.
 - Prefer the smallest complete change. Do not expand scope or improve unrelated
   code.
-- When a task asks to replace specific values in existing files, use targeted
-  string replacement and preserve every other byte. Replace only the value
-  itself; do not rewrite the containing line, embedded diff, or file structure.
-  Do not reformat, reserialize, quote, or reflow unrelated content. Check
-  `git diff` before finishing.
 - When a task names the files or acceptance set to change, do not edit outside
-  it. If you find a related issue outside that set, report it; the task owner
-  decides whether to widen the scope.
+  it. Report a related issue outside that set; the task owner decides.
 - Do not claim a test, build, lint, or check passed unless you ran it and saw
   the result.
 - If requirements are ambiguous or a decision is hard to reverse, ask before
   acting.
 
 ## Task scale
+
 - **Trivial** (typo, one-liner, pure copy): make the change, quick check, done.
 - **Nontrivial** (external API, secrets or auth, schema or data model,
   multi-file design, security tradeoff, or production behavior): load the
   `engineering-loop` skill and follow it.
-- Read the project `AGENTS.md` and `docs/process-lessons.md` before significant
-  changes. Keep facts, assumptions, and open verification items distinct.
+- Read this file, `docs/reference.md`, and the project's
+  `docs/process-lessons.md` when present before significant changes. Keep facts,
+  assumptions, and open verification distinct.
 - A completed task appends one dated entry to the project's
   `docs/process-lessons.md`: Surprise, Cost, Rule, Doc updated, and
   `Promote-to-global` when portable. "None" is a valid Surprise.
 - Do not stop for command permission on reversible work. Proceed and report.
   Stop only for a one-way door, secrets or production, a missing decision or
   credential, or ambiguous acceptance. A verified PR push and merge through the
-  shipping gate is the normal path; never push directly to `main` or force-push.
+  shipping gate is the normal path.
 
 ## Work intake and ownership
+
 - The durable unit is a task under `$HARNESS_STATE/work/tasks`. A nontrivial
   request enters the queue automatically; run the goal and work-queue flow
-  directly for a task or goal. `/goal` is an escape hatch, not a required user
-  step.
+  directly. `/goal` is an escape hatch, not a required user step.
 - For a multi-deliverable outcome, plan first, then create and execute the
   validated plan. `go --unattended` enables the per-goal watcher. A goal is done
   only when every child is final and its acceptance is checked.
@@ -56,19 +53,21 @@
   in-scope work; do not leave a deferred list or an unmerged green PR.
 
 ## Context and handoff
-- Load in this order: task packet and handoff; project `AGENTS.md`,
-  `docs/process-lessons.md`, and `docs/README.md`; the named source and tests; at
-  most three matching lessons and one matching skill.
+
+- Load in this order: task packet and handoff; this file, `docs/reference.md`,
+  and the project's `docs/process-lessons.md` when present; the named source and
+  tests; at most three matching lessons and one matching skill.
 - Do not read the whole state directory, the whole lesson ledger, a full
   transcript, or unrelated projects. Prefer indexes and `rg`.
 - At a phase boundary, before a model switch, or around 60% context, run
   `/handoff`. Do not carry a finished phase's tool output forward.
-- Keep transient task state in the task file; keep durable project rules in the
-  repo; keep cross-project rules in the state directory.
+- Keep transient task state in the task file; durable project rules in the repo;
+  cross-project rules in the state directory.
 - No secrets, token values, or production data in a task, handoff, lesson, or
   log.
 
 ## Parallel work
+
 - Parallelize only independent slices with disjoint files or a fixed interface,
   a testable acceptance, and review capacity. Cap at two or three lanes.
 - Write the ownership map first: lane, task, files or interfaces,
@@ -78,9 +77,9 @@
   the full check. A green lane is not a green integration.
 
 ## Named principles
+
 Use these names to steer a decision. When one applies, name the principle and
-the decision it changed. The long form with examples is in `docs/principles.md`
-in the repository.
+the decision it changed.
 
 - **Attack the premise.** When two fixes that share a premise fail the same
   gate, write the premise down and test it before a third fix.
@@ -100,6 +99,7 @@ in the repository.
   architecture, types, lint, or a test; docs last.
 
 ## Decision authority
+
 - **Two-way doors** (easy to reverse): decide and act.
 - **One-way doors** (data models, migrations, auth boundaries, public API
   contracts, infrastructure, CI/CD, tenancy, major dependencies, publication):
@@ -107,23 +107,22 @@ in the repository.
   tradeoffs, and ask before committing.
 
 ## Verification and review
+
 - Define done as runnable checks. Run them and report actual results.
-- Run the review step before declaring nontrivial work complete; `/review` is
-  the manual invocation of the same check. The merged tree gets the final
-  review.
+- Run `/review` before declaring nontrivial work complete. The merged tree gets
+  the final review.
 - Stateful changes: when a change adds or alters a state machine, retry, lock,
   concurrency, session, queue, or lifecycle path, run the `state-audit` skill
-  and update the project's `docs/state-machines.md` before `/review`. A
-  confirmed invalid transition gets a regression test before the fix.
+  and update `docs/state-machines.md` before `/review`. A confirmed invalid
+  transition gets a regression test before the fix.
 - Prefer independent review for nontrivial changes. If no review ran, say so.
 - Public repos (Credarr, LibreHarness): GitHub is canonical. Open a ready
   GitHub PR; the GitHub Actions `auto-merge` gate merges it when the required
   checks pass. Gitea is a read-only mirror: never open a Gitea PR or push to it
   for these repos.
 - Gitea-canonical repos (Brain and the homelab repos): push an AGit PR; the
-  repository's base-controlled gate schedules the merge after CI with its
-  repository secret.
-  Do not ask for a token. Gate, workflow, auth, and deploy changes require a
+  repository gate schedules the merge after CI with its repository secret. Do
+  not ask for a token. Gate, workflow, auth, and deploy changes require a
   manual operator merge in the same task.
 - Auto-merge is the default after independent review and green required checks.
   Do not leave a reviewed, green PR open for the operator.
@@ -131,6 +130,7 @@ in the repository.
   instruction.
 
 ## Completion report
+
 - **Substantial:** Gate, Done, Evidence, Lessons, Unfinished (must be empty;
   name the operator-only blocker), Stopped because.
 - **Routine nontrivial:** what changed, what was run, what remains unproven.

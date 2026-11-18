@@ -11,7 +11,6 @@ const commands = [];
 const skills = [];
 const prompts = [];
 const hooks = [];
-const toolHooks = [];
 const subscriptions = [];
 let contextHook;
 const agentIds = ["explore", "implementer", "integrator", "devils-advocate"];
@@ -66,12 +65,6 @@ const ctx = {
     subscribe: (options) => {
       subscriptions.push(options?.types ?? []);
       return (async function* () {})();
-    },
-  },
-  tool: {
-    hook: (name) => {
-      toolHooks.push(name);
-      return { dispose() {} };
     },
   },
 };
@@ -205,8 +198,6 @@ contextHook({ system });
 assert.ok(system.some((part) => part.text.includes("## Task scale")));
 
 assert.ok(hooks.includes("prompt"), "auto-intake prompt hook missing");
-assert.ok(toolHooks.includes("execute.before"), "close-reminder hook missing");
-assert.ok(toolHooks.includes("execute.after"), "security-guard hook missing");
 assert.ok(
   subscriptions.some((types) => types.includes("session.idle")),
   "goal-watch subscription missing",

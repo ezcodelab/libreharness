@@ -34,17 +34,17 @@ jobs:
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - name: Check out the trusted base
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: base
           fetch-depth: 0
 
-      # actions/checkout is pinned to v4.4.0. If upgrading, the fork merge ref
-      # requires allow-unsafe-pr-checkout: true; this tree is scanned as data,
-      # never executed.
+      # actions/checkout is pinned to v4.4.0. Fork merge refs require
+      # allow-unsafe-pr-checkout: true in a later major; this tree is scanned as
+      # data, never executed.
       - name: Check out the PR merge ref
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           repository: ${{ github.repository }}
           ref: refs/pull/${{ github.event.pull_request.number }}/merge
@@ -67,18 +67,54 @@ jobs:
             exit 1
           fi
 
-      - name: Policy and repository checks
+      - name: Policy checks
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_API_URL: ${{ github.api_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          python3 base/bin/pr_policy.py --forge github --repo "$REPO" --pr "$PR" --head "$HEAD" --base main
-          if [ -x base/bin/verify_pr.sh ]; then
-            BASE_ROOT=base PR_ROOT=pr base/bin/verify_pr.sh
-          else
-            echo "no repo-specific verifier; generic checks only"
+          meta=$(gh pr view "$PR" --json state,isDraft,baseRefName,headRefOid,labels,additions,deletions,files)
+          test "$(jq -r .state <<<"$meta")" = "OPEN"
+          test "$(jq -r .isDraft <<<"$meta")" = "false"
+          test "$(jq -r .baseRefName <<<"$meta")" = "main"
+          test "$(jq -r .headRefOid <<<"$meta")" = "$HEAD"
+          test "$(jq -r '.additions + .deletions' <<<"$meta")" -le 2000
+          test "$(jq -r '.files | length' <<<"$meta")" -le 50
+          if jq -r '.labels[].name' <<<"$meta" | grep -Eq '^(do-not-merge|no-auto-merge|wip)$'; then
+            echo "blocked label present"
+            exit 1
           fi
+
+          gh api "repos/$REPO/pulls/$PR/files?per_page=100" --paginate \
+            --jq '.[] | .filename, (.previous_filename // empty)' > /tmp/pr-files.txt
+          fail=0
+          while IFS= read -r path; do
+            [ -n "$path" ] || continue
+            case "$path" in
+              .github/workflows/*|.gitleaks.toml|AGENTS.md|SECURITY.md|package.json|package-lock.json|bin/tasks.py|bin/jev_*.py)
+                echo "protected path: $path"
+                fail=1
+                ;;
+            esac
+            case "$(basename "$path")" in
+              *.env|.npmrc|.pypirc|*.key|*.p12|*.pem|*.pfx|credentials|id_ed25519|id_rsa|secrets.json|secrets.yaml|secrets.yml)
+                echo "forbidden file: $path"
+                fail=1
+                ;;
+            esac
+          done < /tmp/pr-files.txt
+
+          gh pr diff "$PR" > /tmp/pr.diff
+          home_marker="/home/$(printf 'cachyos')"
+          docs_marker="Documents/$(printf 'homelab')"
+          for marker in "$home_marker" "$docs_marker" ".vault_pass" "GITEA_API_TOKEN" "BEGIN OPENSSH PRIVATE KEY" "BEGIN RSA PRIVATE KEY" "BEGIN PRIVATE KEY"; do
+            if grep -E '^\+' /tmp/pr.diff | grep -Fq -- "$marker"; then
+              echo "private marker in added line: $marker"
+              fail=1
+            fi
+          done
+          test "$fail" -eq 0
+
           /tmp/gitleaks detect --source pr --config base/.gitleaks.toml --redact --verbose
           git -C pr diff --check "$BASE_SHA...$HEAD"
 

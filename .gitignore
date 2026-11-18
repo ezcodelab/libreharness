@@ -7,8 +7,6 @@ state/
 .env.*
 *.key
 auth.json
-bench/results/*
-!bench/results/.gitkeep
 __pycache__/
 .pytest_cache/
 .venv/
