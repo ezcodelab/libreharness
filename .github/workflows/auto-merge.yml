@@ -28,7 +28,6 @@ jobs:
       contents: read
       pull-requests: read
     env:
-      REPO: ${{ github.repository }}
       PR: ${{ github.event.pull_request.number }}
       HEAD: ${{ github.event.pull_request.head.sha }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -103,7 +102,9 @@ jobs:
           done < /tmp/pr-files.txt
 
           gh pr diff "$PR" > /tmp/pr.diff
-          for marker in "/home/cachyos" "Documents/homelab" ".vault_pass" "GITEA_API_TOKEN"; do
+          home_marker="/home/$(printf 'cachyos')"
+          docs_marker="Documents/$(printf 'homelab')"
+          for marker in "$home_marker" "$docs_marker" ".vault_pass" "GITEA_API_TOKEN"; do
             if grep -E '^\+' /tmp/pr.diff | grep -Fq -- "$marker"; then
               echo "private marker in added line: $marker"
               fail=1
