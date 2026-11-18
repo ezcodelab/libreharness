@@ -255,11 +255,14 @@ class PRPolicyTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("protected path", result.stdout)
 
-    def test_write_gate_scripts_block(self):
+    def test_gate_policy_sources_block(self):
         for filename in (
             "bin/pr_policy.py",
             "bin/verify_pr.sh",
             "bin/pr_watch.py",
+            "bin/sync_gitea_gate.py",
+            "bin/tasks.py",
+            "templates/gitea-auto-merge.yml",
         ):
             PolicyHandler.files = [
                 {"filename": filename, "additions": 1, "deletions": 0}
