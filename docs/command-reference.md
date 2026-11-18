@@ -473,6 +473,10 @@ Gates a PR on a fresh independent verifier PASS, recorded evidence, green CI,
 no conflicts, and a ready state. Dry-run is the default; `--merge` performs
 `gh pr merge --squash --match-head-commit`.
 
+Public repos (Credarr, LibreHarness) use GitHub canonical and the GitHub
+Actions `auto-merge` workflow. The Gitea path here is for private repos and
+manual bootstrap merges.
+
 | Option | Meaning |
 |---|---|
 | `--pr <number>` | Pull request number; required |

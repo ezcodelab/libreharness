@@ -20,6 +20,7 @@ class PolicyHandler(BaseHTTPRequestHandler):
     files = []
     diff = ""
     pr_error = False
+    last_accept = ""
 
     def log_message(self, *args):
         pass
@@ -42,15 +43,20 @@ class PolicyHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
-        if path == "/api/v1/repos/o/r/pulls/1":
-            if self.pr_error:
+        if path.startswith("/api/v1"):
+            path = path[len("/api/v1") :]
+        if path == "/repos/o/r/pulls/1.diff":
+            self.send_text(self.diff)
+        elif path == "/repos/o/r/pulls/1":
+            PolicyHandler.last_accept = self.headers.get("Accept", "")
+            if "diff" in PolicyHandler.last_accept:
+                self.send_text(self.diff)
+            elif self.pr_error:
                 self.send_json({"message": "not found"}, 404)
             else:
                 self.send_json(self.pr)
-        elif path == "/api/v1/repos/o/r/pulls/1/files":
+        elif path == "/repos/o/r/pulls/1/files":
             self.send_json(self.files)
-        elif path == "/api/v1/repos/o/r/pulls/1.diff":
-            self.send_text(self.diff)
         else:
             self.send_json({"message": "not found"}, 404)
 
@@ -61,6 +67,7 @@ class PRPolicyTests(unittest.TestCase):
         self.verifier = Path(self.tmp.name) / "verifier.txt"
         self.verifier.write_text(f"PASS {SHA}\n", encoding="utf-8")
         PolicyHandler.pr_error = False
+        PolicyHandler.last_accept = ""
         PolicyHandler.pr = {
             "number": 1,
             "state": "open",
@@ -82,18 +89,32 @@ class PRPolicyTests(unittest.TestCase):
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), PolicyHandler)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
-        self.api = f"http://127.0.0.1:{self.server.server_port}/api/v1"
+        self.root = f"http://127.0.0.1:{self.server.server_port}"
+        self.api = f"{self.root}/api/v1"
 
     def tearDown(self):
         self.server.shutdown()
         self.server.server_close()
         self.tmp.cleanup()
 
-    def run_policy(self, *extra, env_extra=None):
-        env = os.environ.copy()
-        env.update({"GITEA_URL": self.api, "GITEA_TOKEN": "test-token"})
+    def run_policy(self, *extra, forge="gitea", env_extra=None):
+        child = os.environ.copy()
+        if forge == "github":
+            child.update(
+                {"GITHUB_API_URL": self.root, "GITHUB_TOKEN": "test-token"}
+            )
+            child.pop("GITEA_URL", None)
+            child.pop("GITEA_TOKEN", None)
+            api = self.root
+            forge_args = ["--forge", "github"]
+        else:
+            child.update({"GITEA_URL": self.api, "GITEA_TOKEN": "test-token"})
+            child.pop("GITHUB_API_URL", None)
+            child.pop("GITHUB_TOKEN", None)
+            api = self.api
+            forge_args = []
         if env_extra:
-            env.update(env_extra)
+            child.update(env_extra)
         return subprocess.run(
             [
                 sys.executable,
@@ -105,12 +126,13 @@ class PRPolicyTests(unittest.TestCase):
                 "--head",
                 SHA,
                 "--api",
-                self.api,
+                api,
+                *forge_args,
                 *extra,
             ],
             text=True,
             capture_output=True,
-            env=env,
+            env=child,
             check=False,
         )
 
@@ -123,6 +145,27 @@ class PRPolicyTests(unittest.TestCase):
         result = self.run_policy("--json")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('"ok": true', result.stdout)
+
+    def test_github_pass(self):
+        result = self.run_policy(forge="github")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("pr_policy: PASS", result.stdout)
+
+    def test_github_uses_diff_accept(self):
+        result = self.run_policy(forge="github")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("vnd.github.v3.diff", PolicyHandler.last_accept)
+
+    def test_github_blocked_label(self):
+        PolicyHandler.pr["labels"] = [{"name": "do-not-merge"}]
+        result = self.run_policy(forge="github")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("blocked label", result.stdout)
+
+    def test_github_fork_allowed(self):
+        PolicyHandler.pr["head"]["repo"]["full_name"] = "contributor/r"
+        result = self.run_policy(forge="github")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_closed_blocks(self):
         PolicyHandler.pr["state"] = "closed"
@@ -215,9 +258,8 @@ class PRPolicyTests(unittest.TestCase):
     def test_write_gate_scripts_block(self):
         for filename in (
             "bin/pr_policy.py",
-            "bin/pr_status.py",
-            "bin/pr_merge.py",
             "bin/verify_pr.sh",
+            "bin/pr_watch.py",
         ):
             PolicyHandler.files = [
                 {"filename": filename, "additions": 1, "deletions": 0}

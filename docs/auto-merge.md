@@ -1,77 +1,44 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-# Trusted Gitea auto-merge
+# Trusted GitHub auto-merge
 
-Gitea is canonical. Agents open pull requests over SSH with AGit; no agent
-needs a long-lived Gitea token. A scoped workflow on the protected base of the
-consuming repository decides whether an eligible PR merges.
+GitHub is canonical for **Credarr** and **LibreHarness**. Gitea is a read-only
+mirror. Agents open GitHub pull requests; the merge gate runs on GitHub Actions
+with the short-lived `GITHUB_TOKEN`.
 
-## Open a PR without a token
+## Open a PR
 
-```sh
-git push origin HEAD:refs/for/main
-```
-
-Gitea creates the pull request from the pushed head. Use a topic suffix, such as
-`refs/for/main/fix-login`, when the branch name is not descriptive.
+Open a normal GitHub pull request from a branch or a fork. No agent token is
+needed. Draft PRs are ignored; mark the PR ready when it is reviewable.
 
 ## Trust model
 
-The gate is a **scoped workflow** from `admin/libreharness` at
-`.gitea/scoped_workflows/auto-merge.yml`, pinned to that repository's default
-branch. It is registered once at the owner level and marked required. It runs
-in each consuming repository with that repository's runner, secrets, and
-short-lived `GITEA_TOKEN`. Consumer PRs cannot edit the workflow that judges
-them.
+`.github/workflows/auto-merge.yml` on the default branch uses
+`pull_request_target`, so the workflow that judges a PR comes from the protected
+base branch, not from the PR head.
 
-The consumer base branch provides the trusted scripts:
-
-- `bin/pr_policy.py`
-- `bin/pr_status.py` (operator utility; not executed by the gate)
-- `bin/pr_merge.py`
-- `bin/verify_pr.sh` for repo-specific checks; LibreHarness runs docs, SPDX,
-  and the private-path scan there
-
-The workflow checks out the consumer base and the PR tree. It executes only the
-base scripts; it never executes PR code. Fork PRs are excluded.
-
-The scoped workflow pins SHA-256 hashes for the generic consumer scripts
-(`pr_policy.py`, `pr_status.py`, `pr_merge.py`, `scan_private.py`) and refuses
-to run if a consumer copy drifts. `verify_pr.sh` is the repo-specific hook.
-
-| Job | Repository access | PR code | What it does |
+| Job | Token | PR code | What it does |
 |---|---|---|---|
-| `verify` | read | checks out the tree, never executes it | Runs the trusted base policy and scanners against the PR tree. |
-| `merge` | write | none | Re-reads the PR, requires the scoped `verify` status, then schedules the merge. |
+| `verify` | read-only | checks out the PR merge ref, never executes it | Runs the trusted base policy and scanners against the PR tree. |
+| `merge` | write | none | Waits for required checks, then merges the exact verified head. |
 
-The merge job does not check out or execute the PR. The gate is Gitea's
-automatic scoped `verify` job status; no custom status write is needed. The
-only token is Gitea's short-lived, repository-scoped Actions token
-(`GITEA_TOKEN`); no personal token is distributed to agents.
+The merge job never checks out or runs PR code. The only token is GitHub's
+short-lived, repository-scoped Actions token. No personal token is distributed
+to agents.
 
-## One-time source registration
-
-An owner or site administrator registers `admin/libreharness` at
-**User Settings -> Actions -> Scoped Workflows**. The workflow is limited to
-`admin/libreharness` and `admin/credarr`; other owner repos skip it.
-
-Do not mark it required globally while other owner repos are unprotected: add
-the exact scoped status context
-`admin/libreharness: auto-merge / verify (pull_request_target)` to the branch
-protection of the two target repositories. The scoped `verify` status is the
-gate; `pr_merge.py` requires the same context. Gitea enforces branch-protection
-contexts only on protected branches.
+Fork PRs are supported: the verify job is read-only and scans the merge ref in
+the base repository; the merge job has no checkout.
 
 ## What the verifier checks
 
-`bin/pr_policy.py` checks the PR metadata and diff:
+`bin/pr_policy.py --forge github` checks the GitHub PR metadata and diff:
 
 - open, not merged, not a draft, base `main`, head SHA matches the event
-- same-repository head, not a fork
+- a non-empty head repository; fork heads are allowed
 - no `do-not-merge`, `no-auto-merge`, or `wip` label
 - at most 50 changed files and 2000 changed lines
-- no protected paths: workflows, scoped workflows, policy/auth/mirror scripts,
-  `AGENTS.md`, `SECURITY.md`, build and dependency manifests, `ops/`
+- no protected paths: workflows, policy/mirror scripts, `AGENTS.md`,
+  `SECURITY.md`, build and dependency manifests, deploy scripts
 - no forbidden files such as private keys, `.env`, or secret files
 - no private markers or private keys in added diff lines
 
@@ -79,36 +46,26 @@ The `verify` job also runs the trusted private-path scan, SPDX check, docs lint,
 gitleaks with the base config, and `git diff --check` against the PR tree. It
 rejects added symlinks and submodules.
 
-## Merge behaviour
+## Branch protection
 
-The `merge` job calls the Gitea merge API with:
+Require `auto-merge / verify` and the repository CI checks on `main`. Disable
+force pushes and branch deletion. The merge job waits for those required checks
+with `gh pr checks --watch --required` and merges with
+`gh pr merge --merge --match-head-commit`.
 
-```json
-{
-  "do": "merge",
-  "merge_when_checks_succeed": true,
-  "head_commit_id": "<verified head>",
-  "delete_branch_after_merge": false
-}
-```
+## Gitea mirror
 
-A merge commit preserves the PR head as an ancestor, so the public mirror can
-fast-forward without rewriting GitHub. The head is pinned; a moved head is
-refused. Branch protection must require
-`admin/libreharness: auto-merge / verify (pull_request_target)` and the
-repository CI checks.
+Gitea pulls GitHub `main` and tags and is read-only. It does not accept PRs and
+never pushes to GitHub. See [the mirror doc](mirror.md).
 
-## Protected paths
+## Protected paths and gate changes
 
-Changes to the gate itself, build/dependency manifests, and other protected
-paths intentionally cannot auto-merge. A gate change requires an
-operator-supplied `GITEA_TOKEN` and the verified `pr_watch` path; see the
-command reference. Do not add a local token shim or distribute the token to
-agents. The default agent path is AGit plus the trusted scoped workflow.
+Changes to the gate workflow, policy scripts, build/dependency manifests, and
+deploy scripts cannot auto-merge. A gate change requires a manual reviewed
+merge. Do not add a local token shim or distribute a token to agents.
 
 ## Failure behaviour
 
-If any verify step fails, the scoped `verify` job fails and `merge` does not
-run. Fix the branch and push again; the synchronize event creates a fresh run
-for the new head. A PR that is closed, draft, retargeted, or labelled for
-blocking is never auto-merged.
+If verification fails, the `auto-merge / verify` check fails and the merge job
+does not run. Fix the branch and push again. A PR that is closed, draft,
+retargeted, or labelled for blocking is never auto-merged.

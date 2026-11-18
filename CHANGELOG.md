@@ -15,16 +15,10 @@
   work. Unattended runs stop only at one-way doors, secrets or production,
   missing decisions or credentials, or ambiguous acceptance. The independent
   reviewer keeps its read-only edit boundary and mutating-git denies.
-- Add a local Gitea-to-GitHub public mirror for Credarr and LibreHarness. It
-  copies only `main` and tags, never prunes, and leaves GitHub-only refs alone.
-- The mirror holds an exclusive lock, writes an atomic freshness status, and
-  ships check/alert systemd units. A failed or >20-minute-stale mirror fails the
-  check unit and logs an alert. The mirror service is bounded to 15 minutes, and
-  the check runs independently so a hung run still trips the stale alert.
-- Add a trusted scoped `pull_request_target` auto-merge gate: a read-only
-  verifier sets `verifier / policy`, and a write-only merge job schedules the
-  merge with the built-in `GITEA_TOKEN`. AGit opens the PR over SSH; agents
-  hold no token.
+- Flip Credarr and LibreHarness to GitHub canonical: a GitHub Actions
+  `pull_request_target` gate merges eligible PRs (including fork PRs) with the
+  short-lived `GITHUB_TOKEN`, and Gitea becomes a read-only pull mirror. Remove
+  the outbound Gitea mirror, the Gitea gate, and the skipped Gitea CI.
 
 ### 🧭 Behaviour
 
