@@ -28,6 +28,7 @@ jobs:
       contents: read
       pull-requests: read
     env:
+      REPO: ${{ github.repository }}
       PR: ${{ github.event.pull_request.number }}
       HEAD: ${{ github.event.pull_request.head.sha }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -84,9 +85,11 @@ jobs:
             exit 1
           fi
 
-          gh pr diff "$PR" --name-only > /tmp/pr-files.txt
+          gh api "repos/$REPO/pulls/$PR/files?per_page=100" --paginate \
+            --jq '.[] | .filename, (.previous_filename // empty)' > /tmp/pr-files.txt
           fail=0
           while IFS= read -r path; do
+            [ -n "$path" ] || continue
             case "$path" in
               .github/workflows/*|.gitleaks.toml|AGENTS.md|SECURITY.md|package.json|package-lock.json|bin/tasks.py|bin/jev_*.py|opencode.example.json)
                 echo "protected path: $path"
