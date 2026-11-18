@@ -250,6 +250,21 @@ HEAD, with the canonical commit age as the grace clock.
 Doc updated: `docs/mirror.md`, `.githooks/pre-push`, `bin/check_mirror.py`.
 Promote-to-global: yes
 
+## 2026-11-18 - Private Gitea needs a base-controlled secret gate
+
+Surprise: Gitea's built-in Actions token can verify but not merge (`405 User
+not allowed to merge PR`). A `pull_request_target` workflow with a repository
+`MERGE_TOKEN` secret, no PR checkout, and a required gate status is the working
+pattern; Gitea blocks workflows on the PR that introduces the trigger, so the
+gate bootstrap is a manual merge.
+Cost: one manual bootstrap and a repository secret.
+Rule: public repos use the GitHub canonical gate; private Gitea repos use AGit
+PRs plus a base-controlled auto-merge workflow with a repo secret; branch
+protection requires CI and the gate; gate/workflow/bin changes stay manual;
+agents hold no token.
+Doc updated: Brain auto-merge workflow, `docs/auto-merge.md`, global AGENTS.
+Promote-to-global: yes
+
 ## 2026-11-17 - Popular agent skills are not harness features
 
 Surprise: most of the ten trending repositories improve a coding agent's output
