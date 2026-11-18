@@ -77,3 +77,7 @@ merge. Do not add a local token shim or distribute a token to agents.
 If verification fails, the `auto-merge / verify` check fails and the merge job
 does not run. Fix the branch and push again. A PR that is closed, draft,
 retargeted, or labelled for blocking is never auto-merged.
+
+## First proof
+
+The GitHub gate was first exercised on 2026-11-17 with a docs-only PR.
