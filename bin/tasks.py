@@ -818,6 +818,17 @@ def unchecked_acceptance(task: dict) -> list[str]:
     ]
 
 
+def deferred_sections(task: dict) -> list[str]:
+    """Named follow-up lists that still contain work; done means none."""
+    names = ("Deferred", "Follow-ups", "Followups")
+    return [
+        name
+        for name, body in task["sections"].items()
+        if name in names
+        and body.strip().lower() not in ("", "none", "n/a", "no")
+    ]
+
+
 def set_status(root: Path, key: str, status: str, *, note: str = "", evidence: str = "") -> dict:
     if status not in STATUSES:
         raise SystemExit(f"error: unknown status {status!r}")
@@ -836,6 +847,12 @@ def set_status(root: Path, key: str, status: str, *, note: str = "", evidence: s
             if "TBD" in acceptance.upper():
                 raise SystemExit(
                     "error: done needs concrete acceptance, not a TBD placeholder"
+                )
+            deferred = deferred_sections(task)
+            if deferred:
+                raise SystemExit(
+                    "error: done has a non-empty deferred section: "
+                    + ", ".join(deferred)
                 )
             unchecked = unchecked_acceptance(task)
             if unchecked:

@@ -42,6 +42,12 @@ and it must exercise the real artifact, not just read the diff. This follows the
 pstack `shipping` rule: verify independently, then land only the verified run.
 See [pstack shipping](https://github.com/backnotprop/pstack/blob/main/skills/poteto-mode/playbooks/shipping.md).
 
+The forge gate proves CI, not the reviewer's identity. Independence is an
+agent-protocol requirement: a fresh context that did not write the patch. A
+forge approval would require a second account and would block unattended merge;
+when a repository has one, require it as well. A local `PASS` file is a process
+record, not forge-verified proof.
+
 The exception is the gate itself. A change that edits or loosens a gate, CI,
 auth, or deploy path needs an independent review and an operator merge, because
 the gate cannot certify its own weakening. That merge belongs to the same task;
@@ -94,7 +100,10 @@ The contract is not only prose:
 - Each Gitea repo has a base-controlled gate, a `.github/merge-policy.json`, a
   repository `MERGE_TOKEN` secret, and branch protection that requires CI plus
   the gate check.
-- The task tool refuses `done` without concrete, fully checked acceptance.
+- The task tool refuses `done` without concrete, fully checked acceptance, and
+  with a non-empty `Deferred` or `Follow-ups` section.
+- Branch, worktree, process, and temp-file cleanup is a reviewed protocol step;
+  the task tool cannot see the forge or the process table.
 - The gate refuses protected paths, forbidden files, drafts, blocking labels,
   moved heads, and missing policy.
 - CI turns repeated failures into tests or lints, following pstack's

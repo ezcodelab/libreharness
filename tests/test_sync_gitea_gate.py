@@ -68,7 +68,17 @@ class SyncGateTests(unittest.TestCase):
         stale.write_text("stale\n")
         result = self.run_sync("--check")
         self.assertEqual(result.returncode, 1)
-        self.assertIn("stale gate", result.stderr)
+        self.assertIn("non-scanned", result.stderr)
+
+    def test_workflow_in_non_scanned_directory_fails(self):
+        (self.target / ".gitea/workflows").mkdir(parents=True)
+        self.write_policy([".gitea/"])
+        inactive = self.target / ".github/workflows/other.yml"
+        inactive.parent.mkdir(parents=True)
+        inactive.write_text("name: other\n")
+        result = self.run_sync("--check")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("non-scanned", result.stderr)
 
     def test_missing_policy_fails(self):
         result = self.run_sync()

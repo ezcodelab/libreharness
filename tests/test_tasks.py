@@ -93,6 +93,22 @@ class QueueTests(unittest.TestCase):
             )
         self.assertIn("TBD", str(caught.exception))
 
+    def test_done_rejects_deferred_section(self) -> None:
+        task = tasks.new_task(
+            self.root, "Deferred", acceptance="- [x] main work"
+        )
+        task["sections"]["Deferred"] = "- cleanup later"
+        tasks.write_task(task)
+        tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
+        with self.assertRaises(SystemExit) as caught:
+            tasks.set_status(
+                self.root,
+                task["meta"]["id"],
+                "done",
+                evidence="make check: 42 passed",
+            )
+        self.assertIn("deferred", str(caught.exception).lower())
+
     def test_claim_records_base_and_rejects_equivalent_worktree(self) -> None:
         first = tasks.new_task(self.root, "First lane")
         second = tasks.new_task(self.root, "Second lane")
