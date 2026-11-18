@@ -355,7 +355,11 @@ gh pr merge <number> --squash --match-head-commit "$HEAD" --delete-branch
 ```
 
 A change to a gate, CI, auth, deploy, or release path stops at merge-ready and
-waits for the operator. Never push to `main` or force-push a shared branch.
+waits for the operator. Ask once in the same turn with the exact
+`--admin --match-head-commit` command. If authorized, merge that head; if
+declined, close the PR with the reason. Never leave a reviewed PR open.
+
+Never push to `main` or force-push a shared branch.
 
 The repository checks are native tools:
 

@@ -60,7 +60,11 @@ Do not edit feature code in this turn.
 11. If the task is mergeable and a forge is configured, use the `shipping`
     skill: open a ready PR, wait for the required checks, require an independent
     verifier PASS on the exact head, and merge with
-    `gh pr merge --match-head-commit`. Stop at the contract's human gates. If no
+    `gh pr merge --match-head-commit`. Stop at the contract's human gates. If
+    the only failing required check is the gate on a gate or CI change, ask the
+    operator once in the same turn; if authorized, merge the exact head with
+    `gh pr merge --admin --match-head-commit <sha> --delete-branch`; if
+    declined, close the PR with the reason. Never leave a red PR open. If no
     forge resolves, print the manual PR and merge commands and stop. Never push
     directly to main.
 12. Show what passed, what remains unproven, the PR state, and the next action.

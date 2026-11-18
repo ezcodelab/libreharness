@@ -28,8 +28,12 @@ Once the required checks and the independent verdict pass, merge in the same
 task. Do not ask the operator to merge a green, reviewed PR or leave it open as
 "ready for review"; an unmerged reviewed patch is unfinished work. The exception
 is a gate, CI, auth, deploy, or release change: it still gets the verdict, then
-stops at merge-ready because the gate cannot certify its own weakening. Record
-the exact merge and finish it when the operator answers.
+stops at merge-ready because the gate cannot certify its own weakening.
+
+A gate-only failure is one decision, not an indefinite open PR. Ask the operator
+once in the same turn with the exact `--admin --match-head-commit` command. If
+authorized, merge that head now. If declined, close the PR with the reason.
+Never end a task with a reviewed PR open.
 
 ## Required gates
 
