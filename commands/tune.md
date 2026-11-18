@@ -31,8 +31,9 @@ feature work, and do not edit global config yet.
    named principles in `AGENTS.md`, as a unified diff. For each, quote the
    evidence, name the target, and say what it replaces or deletes.
 7. Prefer folding a rule into an existing bullet over adding a new one. For a
-   skill promotion, run the with/without check in `CONTRIBUTING.md` first and
-   include the trigger rate, pass delta, sample size, and limits. A neutral or
-   negative result is a deletion candidate, not a promotion.
+   skill promotion, run the with/without check in the project's
+   `CONTRIBUTING.md` when present and include the trigger rate, pass delta,
+   sample size, and limits. A neutral or negative result is a deletion
+   candidate, not a promotion.
 8. Stop for approval. Nothing is promoted in this turn.
 9. After the operator approves or rejects, record the date in the metrics file.

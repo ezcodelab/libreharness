@@ -24,11 +24,12 @@
 - **Nontrivial** (external API, secrets or auth, schema or data model,
   multi-file design, security tradeoff, or production behavior): load the
   `engineering-loop` skill and follow it.
-- Read this file, `docs/reference.md`, and `docs/process-lessons.md` before
-  significant changes. Keep facts, assumptions, and open verification distinct.
-- A completed task appends one dated entry to `docs/process-lessons.md`:
-  Surprise, Cost, Rule, Doc updated, and `Promote-to-global` when portable.
-  "None" is a valid Surprise.
+- Read this file, `docs/reference.md`, and the project's
+  `docs/process-lessons.md` when present before significant changes. Keep facts,
+  assumptions, and open verification distinct.
+- A completed task appends one dated entry to the project's
+  `docs/process-lessons.md`: Surprise, Cost, Rule, Doc updated, and
+  `Promote-to-global` when portable. "None" is a valid Surprise.
 - Do not stop for command permission on reversible work. Proceed and report.
   Stop only for a one-way door, secrets or production, a missing decision or
   credential, or ambiguous acceptance. A verified PR push and merge through the
@@ -54,8 +55,8 @@
 ## Context and handoff
 
 - Load in this order: task packet and handoff; this file, `docs/reference.md`,
-  and `docs/process-lessons.md`; the named source and tests; at most three
-  matching lessons and one matching skill.
+  and the project's `docs/process-lessons.md` when present; the named source and
+  tests; at most three matching lessons and one matching skill.
 - Do not read the whole state directory, the whole lesson ledger, a full
   transcript, or unrelated projects. Prefer indexes and `rg`.
 - At a phase boundary, before a model switch, or around 60% context, run
