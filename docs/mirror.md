@@ -36,12 +36,31 @@ A two-way mirror diverges on squash, rebase, and merge commits, and leaves two
 competing merge gates. The rule is one canonical branch per repository:
 GitHub for public repos, Gitea for private/agent-only repos.
 
-## Monitoring
+## Local remotes
 
-Gitea records the last mirror update on the repository. A stale mirror is a
-Gitea-side problem; it is not fixed by pushing from the old local mirror. If a
-freshness alarm is needed, query the Gitea API and alert when the mirror is
-older than the configured interval plus a margin.
+`origin` is GitHub; `gitea` is the read-only mirror. Run
+`git config core.hooksPath .githooks` once per clone. The pre-push hook rejects
+pushes to `gitea` with a clear message.
+
+## Freshness check
+
+`bin/check_mirror.py` compares each Gitea mirror's `main` with GitHub `main`.
+It is tokenless by default; set `GITHUB_TOKEN` or `GITEA_TOKEN` only if an API
+requires authentication.
+
+```sh
+python3 bin/check_mirror.py \
+  --pair ezcodelab/libreharness=admin/libreharness \
+  --pair ezcodelab/credarr=admin/credarr \
+  --gitea-api https://git.ezcloud.casa/api/v1 --max-age 1200
+```
+
+If the SHAs match, the mirror is fresh. If the mirror is behind, the GitHub
+`main` commit age is the grace clock: a commit newer than 1200 seconds is
+within the 10-minute mirror interval, and an older commit is stale. Exit codes
+are `0` fresh/within grace, `1` stale, and `2` API error. The systemd user
+check runs every five minutes; its `OnFailure` alert unit writes a `user.err`
+journal entry.
 
 ## Retired scoped source
 

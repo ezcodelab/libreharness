@@ -238,3 +238,14 @@ Never run a bidirectional main mirror.
 Doc updated: `docs/auto-merge.md`, `docs/mirror.md`,
 `.github/workflows/auto-merge.yml`, `AGENTS.md`.
 Promote-to-global: yes
+
+## 2026-11-17 - Make the wrong remote fail at the first command
+
+Surprise: after the flip, `origin` still pointed at the read-only Gitea mirror,
+so the default `git push origin` would hit the mirror instead of GitHub.
+Cost: one remote swap, a pre-push hook, and a tokenless freshness check.
+Rule: after a forge flip, make the canonical remote `origin`, name the mirror,
+and install a pre-push guard. Monitor the read-only copy against the canonical
+HEAD, with the canonical commit age as the grace clock.
+Doc updated: `docs/mirror.md`, `.githooks/pre-push`, `bin/check_mirror.py`.
+Promote-to-global: yes

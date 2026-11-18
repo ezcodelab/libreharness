@@ -19,6 +19,8 @@
   `pull_request_target` gate merges eligible PRs (including fork PRs) with the
   short-lived `GITHUB_TOKEN`, and Gitea becomes a read-only pull mirror. Remove
   the outbound Gitea mirror, the Gitea gate, and the skipped Gitea CI.
+- Add a tokenless Gitea mirror freshness check and a pre-push guard that
+  rejects the read-only Gitea remote.
 
 ### 🧭 Behaviour
 

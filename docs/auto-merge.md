@@ -11,6 +11,10 @@ with the short-lived `GITHUB_TOKEN`.
 Open a normal GitHub pull request from a branch or a fork. No agent token is
 needed. Draft PRs are ignored; mark the PR ready when it is reviewable.
 
+`origin` is GitHub in the local checkouts; `gitea` is the read-only mirror. Run
+`git config core.hooksPath .githooks` once per clone; the pre-push hook rejects
+the mirror.
+
 ## Trust model
 
 `.github/workflows/auto-merge.yml` on the default branch uses
@@ -70,7 +74,9 @@ never pushes to GitHub. See [the mirror doc](mirror.md).
 
 Changes to the gate workflow, policy scripts, build/dependency manifests, and
 deploy scripts cannot auto-merge. A gate change requires a manual reviewed
-merge. Do not add a local token shim or distribute a token to agents.
+merge. Repo admins can use the GitHub admin override for these changes after
+review; the auto-merge bot cannot. Do not add a local token shim or distribute
+a token to agents.
 
 ## Failure behaviour
 
