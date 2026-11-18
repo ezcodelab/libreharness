@@ -59,9 +59,9 @@ Do not edit feature code in this turn.
     `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> done --evidence "<command and result>"`.
 11. If the task is mergeable and a forge is configured, use the `shipping`
     skill: open a ready PR, wait for the required checks, require an independent
-    verifier PASS on the exact head, and merge with `gh pr merge
-    --match-head-commit`. Stop at the contract's human gates. If no forge
-    resolves, print the manual PR and merge commands and stop. Never push
+    verifier PASS on the exact head, and merge with
+    `gh pr merge --match-head-commit`. Stop at the contract's human gates. If no
+    forge resolves, print the manual PR and merge commands and stop. Never push
     directly to main.
 12. Show what passed, what remains unproven, the PR state, and the next action.
     Stop.
