@@ -1,10 +1,12 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-# Trusted GitHub auto-merge
+# Trusted auto-merge
 
 GitHub is canonical for **Credarr** and **LibreHarness**. Gitea is a read-only
 mirror. Agents open GitHub pull requests; the merge gate runs on GitHub Actions
-with the short-lived `GITHUB_TOKEN`.
+with the short-lived `GITHUB_TOKEN`. The operating contract, including the
+no-deferral rule and the auto-merge default, is in
+[autonomy.md](autonomy.md).
 
 ## Open a PR
 
@@ -70,23 +72,49 @@ is removed or the workflow path changes, the gate will not run.
 Gitea pulls GitHub `main` and tags and is read-only. It does not accept PRs and
 never pushes to GitHub. See [the mirror doc](mirror.md).
 
-## Private Gitea repositories
+## Private and agent-only Gitea repositories
 
-Private Gitea repositories such as Brain use a base-controlled
-`.github/workflows/auto-merge.yml` on `pull_request_target`. The gate job has no
-checkout; it validates the PR and schedules `merge_when_checks_succeed` with a
-repository `MERGE_TOKEN` secret. Branch protection requires the repository CI
-check and `auto-merge / gate (pull_request_target)`. Workflow, gate, and `bin/`
-changes require a manual merge. Agents push AGit PRs and hold no token. Use a
-dedicated bot token for `MERGE_TOKEN`; the gate job never checks out PR code.
+Every active Gitea repository uses the same base-controlled gate at
+`.github/workflows/auto-merge.yml` on `pull_request_target`, plus a
+`.github/merge-policy.json` that lists the repository's protected paths. The gate
+job has no checkout; it validates the PR and schedules
+`merge_when_checks_succeed` with a repository `MERGE_TOKEN` secret. Branch
+protection requires the repository CI check and
+`auto-merge / gate (pull_request_target)`. The policy, workflow, auth, and
+deploy paths require a manual operator merge. Agents push AGit PRs and hold no
+token. Use a dedicated bot token for `MERGE_TOKEN`; the gate job never checks out
+PR code.
+
+Gitea scans `.gitea/workflows/` first. If that directory exists, it ignores
+`.github/workflows/` completely. The gate must live in the scanned directory,
+and moving a repository between layouts is a manual gate change. `bin/
+sync_gitea_gate.py` writes to the correct directory and fails if a stale copy
+exists in the other one.
+
+The gate accepts same-repository branches only. A fork PR needs a manual review
+and merge because the gate cannot prove the fork's CI workflow. The gate refuses
+a missing or malformed policy, a draft, a blocking label, a moved head, a
+protected path, a forbidden file, or a PR with no required checks.
+
+## Autonomy
+
+Open every PR ready. Auto-merge is the default after independent review and
+green required checks; do not leave a green, reviewed PR for the operator. The
+review must be from an agent or person that did not write the patch, and it must
+exercise the real artifact, not only read the diff. A `PASS` or `PASS+NOTES`
+verdict is tied to the exact head.
+
+The exception is a change that edits or loosens a gate, CI, auth, or deploy
+path. It gets independent review and an operator merge in the same task. The
+gate cannot certify its own weakening.
 
 ## Protected paths and gate changes
 
-Changes to the gate workflow, policy scripts, build/dependency manifests, and
-deploy scripts cannot auto-merge. A gate change requires a manual reviewed
-merge. Repo admins can use the GitHub admin override for these changes after
-review; the auto-merge bot cannot. Do not add a local token shim or distribute
-a token to agents.
+Changes to the gate workflow, the merge policy, policy scripts, build and
+dependency manifests, and deploy scripts cannot auto-merge. A gate change
+requires a manual reviewed merge. Repo admins can use the GitHub admin override
+for these changes after review; the auto-merge bot cannot. Do not add a local
+token shim or distribute a token to agents.
 
 ## Failure behaviour
 
