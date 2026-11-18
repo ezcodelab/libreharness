@@ -38,6 +38,19 @@ guard such as `envsitter-guard` or `cc-safety-net`, or add one global rule:
 ]
 ```
 
+## Agent autonomy
+
+The four subagents carry explicit V2 permissions so routine review does not
+stall on a prompt. `explore` and `devils-advocate` keep `edit * deny` for the
+repository, but may write review artifacts under `/tmp`, fetch web references,
+and run the read-only shell commands their roles need. `implementer` and
+`integrator` may edit and run their test commands.
+
+A missing rule defaults to `ask`. When a subagent stalls on a prompt, add the
+narrow action and resource to that agent's file, not a broad global allow.
+`tests/plugin.test.mjs` asserts the review roles keep their deny rule and get
+the `/tmp` and webfetch allowances.
+
 ## Bundled plugins
 
 | Plugin | Use when | What it does | Disable | Failure mode |

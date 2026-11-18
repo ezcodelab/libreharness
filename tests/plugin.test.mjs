@@ -153,6 +153,24 @@ assert.ok(
   ),
   "devils-advocate must remain read-only",
 );
+assert.ok(
+  devils.permissions.some(
+    (rule) =>
+      rule.action === "edit" &&
+      rule.resource === "/tmp/*" &&
+      rule.effect === "allow",
+  ),
+  "devils-advocate must write review artifacts under /tmp without a prompt",
+);
+assert.ok(
+  devils.permissions.some(
+    (rule) =>
+      rule.action === "webfetch" &&
+      rule.resource === "*" &&
+      rule.effect === "allow",
+  ),
+  "devils-advocate must fetch references without a prompt",
+);
 for (const resource of [
   "rm -rf*",
   "sudo *",
