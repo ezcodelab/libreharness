@@ -13,6 +13,7 @@ Usage:
 
 import argparse
 import hashlib
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -73,6 +74,29 @@ def main() -> int:
             )
             failed = True
             continue
+        if (target / ".gitea/workflows").is_dir():
+            try:
+                protected = json.loads(policy.read_text()).get(
+                    "protected_paths", []
+                )
+            except (OSError, json.JSONDecodeError, AttributeError):
+                print(
+                    f"sync_gitea_gate: policy is not valid JSON: {policy}",
+                    file=sys.stderr,
+                )
+                failed = True
+                continue
+            if not any(
+                item == ".gitea/" or item == ".gitea/workflows/"
+                for item in protected
+            ):
+                print(
+                    "sync_gitea_gate: policy must protect .gitea/ or "
+                    f".gitea/workflows/ because {target} uses that layout",
+                    file=sys.stderr,
+                )
+                failed = True
+                continue
         if inactive.is_file():
             print(
                 f"sync_gitea_gate: stale gate at {inactive}; "
