@@ -5,6 +5,8 @@ import { readFileSync } from "node:fs";
 const root = new URL("..", import.meta.url);
 const devil = readFileSync(new URL("agents/devils-advocate.md", root), "utf8");
 const review = readFileSync(new URL("commands/review.md", root), "utf8");
+const brief = readFileSync(new URL("commands/brief.md", root), "utf8");
+const implementer = readFileSync(new URL("agents/implementer.md", root), "utf8");
 
 for (const token of [
   "CONFIRMED",
@@ -34,8 +36,24 @@ for (const token of [
   "Only a CONFIRMED devils P0/P1 blocks",
   "REFUTED is dropped from the blocking list",
   "state-audit",
+  "Blast radius and the one safety fact",
+  "unchanged callers",
+  "wire-format",
+  "pinned library source",
 ]) {
   assert.ok(reviewPlain.includes(token), `review command is missing ${token}`);
+}
+
+for (const token of ["**Reach**", "wire-format consumers"]) {
+  assert.ok(brief.includes(token), `brief is missing ${token}`);
+}
+
+for (const token of [
+  "Before changing",
+  "callers, importers",
+  "unchanged callers",
+]) {
+  assert.ok(implementer.includes(token), `implementer is missing ${token}`);
 }
 
 for (const file of ["commands/state-audit.md", "skills/state-audit/SKILL.md"]) {
