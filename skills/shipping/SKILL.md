@@ -83,7 +83,7 @@ exact check-run name; matrix jobs are named like `test (3.10, 20)`, not `test`.
 Add `--repo OWNER/REPO` when the checkout cannot infer it. The script prints
 every failing gate and exits non-zero. It does not merge in dry-run mode.
 
-For private Gitea repos, use `pr_watch` only for bootstrap or protected changes with an operator-supplied `GITEA_TOKEN`:
+For private Gitea repos, push an AGit PR; the auto-merge workflow schedules after CI. Use `pr_watch` only for bootstrap/protected changes with an operator token:
 
 ```sh
 python3 bin/pr_watch.py --forge gitea --repo OWNER/REPO --pr <number> \

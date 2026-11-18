@@ -21,6 +21,10 @@
   the outbound Gitea mirror, the Gitea gate, and the skipped Gitea CI.
 - Add a tokenless Gitea mirror freshness check and a pre-push guard that
   rejects the read-only Gitea remote.
+- Add a private Gitea auto-merge gate: a base-controlled
+  `pull_request_target` workflow, a repository `MERGE_TOKEN` secret, and
+  required CI plus `auto-merge / gate` checks. Gate, workflow, and `bin/`
+  changes remain manual.
 
 ### 🧭 Behaviour
 
