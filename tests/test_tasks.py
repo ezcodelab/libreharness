@@ -81,6 +81,18 @@ class QueueTests(unittest.TestCase):
             )
         self.assertIn("widget works", str(caught.exception))
 
+    def test_done_rejects_tbd_acceptance(self) -> None:
+        task = tasks.new_task(self.root, "Placeholder", acceptance="- TBD")
+        tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
+        with self.assertRaises(SystemExit) as caught:
+            tasks.set_status(
+                self.root,
+                task["meta"]["id"],
+                "done",
+                evidence="make check: 42 passed",
+            )
+        self.assertIn("TBD", str(caught.exception))
+
     def test_claim_records_base_and_rejects_equivalent_worktree(self) -> None:
         first = tasks.new_task(self.root, "First lane")
         second = tasks.new_task(self.root, "Second lane")

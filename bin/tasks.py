@@ -830,6 +830,13 @@ def set_status(root: Path, key: str, status: str, *, note: str = "", evidence: s
                     "error: done needs a claimed task in active/review, not "
                     f"{task['meta'].get('status')}"
                 )
+            acceptance = task["sections"].get("Acceptance", "").strip()
+            if not acceptance:
+                raise SystemExit("error: done needs an Acceptance section")
+            if "TBD" in acceptance.upper():
+                raise SystemExit(
+                    "error: done needs concrete acceptance, not a TBD placeholder"
+                )
             unchecked = unchecked_acceptance(task)
             if unchecked:
                 preview = "; ".join(unchecked[:3])
