@@ -339,3 +339,17 @@ or a duplicated config file is maintenance without a reader.
 Doc updated: `docs/reference.md`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md`,
 `NOTICE`, `CHANGELOG.md`.
 Promote-to-global: yes
+
+## 2026-11-18 - A red gate is not an open PR
+
+Surprise: the cleanup PR was correct and green except for the old gate, which
+could not fetch its 23k-line diff; the agent stopped at the operator gate and
+left the PR open until the operator asked again. The gate was the only red
+check, not the change.
+Cost: one extra turn and a manual admin merge.
+Rule: a gate-only failure is one explicit operator decision in the same turn. If
+authorized, merge the exact head with `--admin --match-head-commit`; if declined,
+close the PR with the reason. Never end a turn with a reviewed PR open.
+Doc updated: `skills/shipping/SKILL.md`, `commands/close.md`,
+`docs/reference.md`.
+Promote-to-global: yes
