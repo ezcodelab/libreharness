@@ -91,14 +91,28 @@ to hand an agent a token.
 The contract is not only prose:
 
 - `AGENTS.md` carries the rule into every session.
-- Each Gitea repo has a base-controlled `.github/workflows/auto-merge.yml`, a
-  `.github/merge-policy.json`, and branch protection that requires CI plus the
-  gate check.
-- The task tool refuses `done` when an acceptance box is unchecked.
+- Each Gitea repo has a base-controlled gate, a `.github/merge-policy.json`, a
+  repository `MERGE_TOKEN` secret, and branch protection that requires CI plus
+  the gate check.
+- The task tool refuses `done` without concrete, fully checked acceptance.
 - The gate refuses protected paths, forbidden files, drafts, blocking labels,
   moved heads, and missing policy.
 - CI turns repeated failures into tests or lints, following pstack's
   `principle-encode-lessons-in-structure`.
+
+Adding an active Gitea repo is not complete until all four exist. Put the gate
+in the scanned workflow directory (`.gitea/workflows/` if it exists, otherwise
+`.github/workflows/`), add the policy, create the secret, and require both
+checks. Then verify the copies have not drifted:
+
+```sh
+python3 bin/sync_gitea_gate.py --check \
+  --target ../brain --target ../aequitas \
+  --target ../homelab-applications --target ../homelab-infrastructure
+```
+
+A repo missing the gate is not eligible for agent work; fix the repo, do not
+give the agent a token.
 
 ## References
 
