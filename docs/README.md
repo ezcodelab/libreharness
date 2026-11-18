@@ -30,8 +30,8 @@ No document here makes a performance claim.
 | [Benchmark proof protocol](benchmark-proof.md) | What would make an “objectively best” claim valid, and what would falsify it |
 | [Benchmark tool review](benchmark-tools.md) | Why Harbor and Terminal-Bench are the standardized external benchmark |
 | [Release checklist](release.md) | Checks, signed tag, public remote, npm publish approval, and rollback |
-| [Public mirror](mirror.md) | Gitea canonical, GitHub read-only mirror for Credarr and LibreHarness, and the no-prune local job |
-| [Trusted auto-merge](auto-merge.md) | AGit PRs, the trusted scoped `pull_request_target` gate, protected paths, and the tokenless merge path |
+| [Gitea read-only mirror](mirror.md) | GitHub canonical for Credarr and LibreHarness; Gitea pulls main and tags read-only |
+| [Trusted auto-merge](auto-merge.md) | GitHub canonical; the `pull_request_target` gate, fork PRs, protected paths, and `GITHUB_TOKEN` merges |
 
 ## Jev
 

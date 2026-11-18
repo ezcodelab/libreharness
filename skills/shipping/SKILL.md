@@ -11,9 +11,8 @@ exists. The goal is one verified PR through the forge, not a direct push.
 
 ## Resolve the forge once
 
-1. `gh` when it exists and resolves the repository.
-2. Gitea when `GITEA_TOKEN` is set: `--forge gitea --repo OWNER/REPO` and
-   `GITEA_URL`. Read-only tokens inspect; `write:repository` merges.
+1. `gh` when it exists and resolves the repository. Public repos are GitHub canonical; Gitea is a read-only mirror.
+2. Private Gitea repos when `GITEA_TOKEN` is set: `--forge gitea --repo OWNER/REPO`; see the command reference.
 3. Manual fallback: print the exact PR and merge commands and stop. Do not claim
    the work merged.
 
@@ -84,7 +83,7 @@ exact check-run name; matrix jobs are named like `test (3.10, 20)`, not `test`.
 Add `--repo OWNER/REPO` when the checkout cannot infer it. The script prints
 every failing gate and exits non-zero. It does not merge in dry-run mode.
 
-For Gitea, the trusted scoped `auto-merge` workflow merges eligible AGit PRs; use `pr_watch` only for bootstrap or protected changes with an operator-supplied `GITEA_TOKEN`:
+For private Gitea repos, use `pr_watch` only for bootstrap or protected changes with an operator-supplied `GITEA_TOKEN`:
 
 ```sh
 python3 bin/pr_watch.py --forge gitea --repo OWNER/REPO --pr <number> \

@@ -1,90 +1,50 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 
-# Public mirror
+# Gitea read-only mirror
 
-Gitea is canonical. GitHub is a read-only public mirror for **Credarr** and
-**LibreHarness** only. Other repositories stay on Gitea.
+GitHub is canonical for **Credarr** and **LibreHarness**. Gitea is a read-only
+pull mirror for private homelab/agent access and backup. It is not a
+contribution surface and never pushes to GitHub.
 
-The mirror copies:
+## Direction
 
-- Gitea `main` to GitHub `main`
-- Gitea tags to GitHub tags
-
-It never copies internal branches, never deletes GitHub branches or tags, and
-never creates or deletes GitHub releases.
-
-## Why not a Gitea push mirror
-
-Gitea's push mirror uses `git push --mirror`. It prunes GitHub refs that are not
-in Gitea, can delete release tags, and needs a token with `workflow` scope to
-update `.github/workflows`. A failed sync is not atomic; tags can disappear
-before a later ref is rejected.
-
-This repository uses a local pull mirror instead.
-
-## Run it
-
-The job must run on a host that can reach both Gitea and GitHub, such as the NAS
-runner. The checkout needs:
-
-- `origin` pointing at Gitea
-- `github` pointing at GitHub
-- write access to GitHub, normally an SSH deploy key
-
-Run once:
-
-```sh
-python3 bin/mirror_public.py \
-  --repo /workspace/credarr \
-  --repo /workspace/libreharness \
-  --source origin --target github
+```text
+GitHub main/tags  ->  Gitea mirror
 ```
 
-Run continuously in a container:
+The mirror is one-way. GitHub PRs merge on GitHub; Gitea catches up on the
+mirror interval. Gitea does not accept PRs for these repositories and does not
+push branches or tags back to GitHub.
 
-```sh
-python3 bin/mirror_public.py \
-  --repo /workspace/credarr \
-  --repo /workspace/libreharness \
-  --source origin --target github --loop --interval 600
-```
+## Setup
 
-On a systemd host, install the units in `ops/systemd/` and enable
-`libreharness-mirror.timer` and `libreharness-mirror-check.timer`. The mirror
-holds `mirror.lock` for the whole run, so overlapping timers skip cleanly.
+The old Gitea repositories are archived as `*-gitea-archive` so their PR and
+issue history stays readable. The canonical Gitea names are then created as
+pull mirrors:
 
-The mirror writes an atomic `mirror-status.json` with the last attempt, last
-success, duration, and per-repo result. The mirror service is bounded to 15
-minutes. The check unit runs independently on its own timer, reads the atomic
-status, and fails if the last successful push is older than 20 minutes or the
-last run failed; it must not wait on a hung mirror. Its `OnFailure` alert unit
-writes a `user.err` journal entry; point that unit at your own email or webhook
-if you need active notification.
+- source: `https://github.com/ezcodelab/<repo>.git`
+- interval: 10 minutes
+- code and tags only; no issues, pull requests, or releases
+- read-only: no pushes, no PRs, no merges
 
-The units under `ops/systemd/` target a Linux VM or runner with
-`/opt/libreharness` and `/workspace`, and a `libreharness` system user. For a
-user-level install, create these units in `~/.config/systemd/user/`:
+Gitea's built-in mirror owns the sync. There is no local outbound mirror job
+and no bidirectional sync.
 
-- `libreharness-mirror.service` with your checkout paths, and
-  `--lock-file %t/libreharness-mirror.lock --status-file %S/libreharness/mirror-status.json`
-- `libreharness-mirror.timer`
-- `libreharness-mirror-check.service` with the same `--status-file`
-- `libreharness-mirror-check.timer`
-- `libreharness-mirror-alert.service`
+## Why not bidirectional
 
-Then enable both timers and allow the user manager to run while logged out:
+A two-way mirror diverges on squash, rebase, and merge commits, and leaves two
+competing merge gates. The rule is one canonical branch per repository:
+GitHub for public repos, Gitea for private/agent-only repos.
 
-```sh
-systemctl --user daemon-reload
-systemctl --user enable --now libreharness-mirror.timer libreharness-mirror-check.timer
-loginctl enable-linger "$USER"
-```
+## Monitoring
 
-The script refuses to rewrite a GitHub `main` that has commits not in Gitea. It
-leaves GitHub-only tags and branches alone. A tag conflict fails the run instead
-of rewriting history.
+Gitea records the last mirror update on the repository. A stale mirror is a
+Gitea-side problem; it is not fixed by pushing from the old local mirror. If a
+freshness alarm is needed, query the Gitea API and alert when the mirror is
+older than the configured interval plus a margin.
 
-## Releases
+## History
 
-Tags are mirrored. GitHub releases are a separate GitHub-side artifact; the
-mirror does not create, publish, or delete them.
+The outbound Gitea-to-GitHub mirror, its systemd units, and its lock/status
+machinery were removed when the public repos flipped to GitHub canonical. The
+archived Gitea repos retain the old history.

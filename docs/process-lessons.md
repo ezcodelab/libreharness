@@ -225,3 +225,16 @@ in a job that never checks out PR code.
 Doc updated: `.gitea/scoped_workflows/auto-merge.yml`, `bin/pr_merge.py`,
 `docs/auto-merge.md`.
 Promote-to-global: yes
+
+## 2026-11-17 - Public repos belong on the public forge
+
+Surprise: Gitea-as-SOT turned GitHub PRs into a dead end; the one-way mirror
+could not bring contributions back. Gitea's built-in Actions token also could
+not merge (405) even after write was enabled.
+Cost: a scoped-gate rollout, a manual reconciliation, and a topology flip.
+Rule: choose the canonical forge by contribution surface. Public repos: GitHub
+canonical with a read-only Gitea pull mirror. Private repos: Gitea canonical.
+Never run a bidirectional main mirror.
+Doc updated: `docs/auto-merge.md`, `docs/mirror.md`,
+`.github/workflows/auto-merge.yml`, `AGENTS.md`.
+Promote-to-global: yes
