@@ -43,6 +43,13 @@ Gitea-side problem; it is not fixed by pushing from the old local mirror. If a
 freshness alarm is needed, query the Gitea API and alert when the mirror is
 older than the configured interval plus a margin.
 
+## Retired scoped source
+
+Remove the old owner-level scoped workflow source registration in
+**User Settings -> Actions -> Scoped Workflows**. The source repository is now
+`admin/libreharness-gitea-archive`; the registration is inert and should not be
+reused.
+
 ## History
 
 The outbound Gitea-to-GitHub mirror, its systemd units, and its lock/status
