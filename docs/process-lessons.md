@@ -321,3 +321,19 @@ is unfinished work, not a handoff.
 Doc updated: `docs/autonomy.md`, `docs/auto-merge.md`, `AGENTS.md`,
 `skills/shipping/SKILL.md`, `templates/gitea-auto-merge.yml`.
 Promote-to-global: yes
+
+## 2026-11-18 - Removing a fixture does not remove it from the secret scan
+
+Surprise: deleting `bench/` removed the path from the tree but not from git
+history, so `gitleaks` still failed on the synthetic key in a deleted benchmark
+fixture. Separately, the old merge gate fetched the whole PR diff before
+checking size, and GitHub returned HTTP 406 for a 23k-line diff, so the gate
+failed for the wrong reason.
+Cost: one 188-file deletion PR and an operator merge because it edits the gate.
+Rule: check diff size before fetching a diff, keep a path allowlist for removed
+synthetic fixtures that remain in history, and replace a gate script only with
+checks that preserve protected paths, forbidden files, size, private markers,
+and exact-head behavior. A native rewrite is not a simplification if it drops a
+safety property.
+Doc updated: `docs/reference.md`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md`.
+Promote-to-global: yes

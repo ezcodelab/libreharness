@@ -108,8 +108,7 @@ at the workflow level. See [the reference](docs/reference.md#jev).
 [docs/reference.md](docs/reference.md) is the operator reference: install,
 concepts, workflow, commands, skills, agents, plugins, Jev, security, and CI.
 
-Project history is in [CHANGELOG.md](CHANGELOG.md). The process ledger is in
-[docs/process-lessons.md](docs/process-lessons.md).
+Project history is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Requirements
 
