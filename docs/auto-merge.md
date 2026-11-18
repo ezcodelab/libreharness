@@ -53,6 +53,14 @@ force pushes and branch deletion. The merge job waits for those required checks
 with `gh pr checks --watch --required` and merges with
 `gh pr merge --merge --match-head-commit`.
 
+## GitHub Actions policy
+
+GitHub's default policy blocks `pull_request_target` in public repositories from
+2026-12-02 unless an applicable Actions policy explicitly allows it. Both
+Credarr and LibreHarness have an active repository policy that allows only
+`.github/workflows/auto-merge.yml` to use `pull_request_target`. If the policy
+is removed or the workflow path changes, the gate will not run.
+
 ## Gitea mirror
 
 Gitea pulls GitHub `main` and tags and is read-only. It does not accept PRs and
