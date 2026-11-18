@@ -40,7 +40,7 @@ and runs the same flow without the operator typing `/goal`.
 ## Plan mode (multi-deliverable)
 
 1. Read the matching project page, `AGENTS.md`, `DECISIONS.md` standing rules,
-   `docs/README.md` if present, the relevant tree/tests, and up to three lessons.
+   `docs/reference.md` if present, the relevant tree/tests, and up to three lessons.
 2. If this is actually one bounded change, create a single task directly with
    `tasks.py new "<title>" --project <name> --scope "<scope>" --acceptance "<checks>"`,
    then execute it as the small-task path. Do not create a goal. Otherwise split
