@@ -97,7 +97,7 @@ jobs:
                 ;;
             esac
             case "$(basename "$path")" in
-              .env|.npmrc|.pypirc|*.key|*.p12|*.pem|*.pfx|credentials|id_ed25519|id_rsa|secrets.json|secrets.yaml|secrets.yml)
+              *.env|.npmrc|.pypirc|*.key|*.p12|*.pem|*.pfx|credentials|id_ed25519|id_rsa|secrets.json|secrets.yaml|secrets.yml)
                 echo "forbidden file: $path"
                 fail=1
                 ;;
@@ -107,7 +107,7 @@ jobs:
           gh pr diff "$PR" > /tmp/pr.diff
           home_marker="/home/$(printf 'cachyos')"
           docs_marker="Documents/$(printf 'homelab')"
-          for marker in "$home_marker" "$docs_marker" ".vault_pass" "GITEA_API_TOKEN"; do
+          for marker in "$home_marker" "$docs_marker" ".vault_pass" "GITEA_API_TOKEN" "BEGIN OPENSSH PRIVATE KEY" "BEGIN RSA PRIVATE KEY" "BEGIN PRIVATE KEY"; do
             if grep -E '^\+' /tmp/pr.diff | grep -Fq -- "$marker"; then
               echo "private marker in added line: $marker"
               fail=1

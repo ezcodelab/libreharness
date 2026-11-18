@@ -8,8 +8,9 @@ Contributions are welcome.
 ## Development setup
 
 Requirements: Linux, Git, Python 3.10 or newer, and Node 20 or newer. No Python
-package is required. `npm install` is only needed for editor types from the
-development dependency; the tests run without `node_modules`.
+package is required. `npm install` is required for the Node tests because
+`src/plugin.js` imports `@opencode/plugin`; the Python suite runs without
+`node_modules`.
 
 ```sh
 git clone https://github.com/ezcodelab/libreharness
