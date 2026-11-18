@@ -54,13 +54,14 @@ Do not edit feature code in this turn.
    a test, and docs last. Prove the check fails on the past mistake.
 9. If the project has a skill candidate, put it in the task evidence or the
    project's skill directory. Do not promote it to global in this turn. `/tune`
-   and `docs/skill-eval.md` handle promotion.
+   handles promotion.
 10. Update the queue with the evidence:
     `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> done --evidence "<command and result>"`.
 11. If the task is mergeable and a forge is configured, use the `shipping`
-    skill: open a ready PR, run `bin/pr_watch.py`, require an independent
-    verifier PASS plus green CI and no conflicts, then merge. Stop at the
-    contract's human gates. If no forge resolves, print the manual PR and merge
-    commands and stop. Never push directly to main.
+    skill: open a ready PR, wait for the required checks, require an independent
+    verifier PASS on the exact head, and merge with `gh pr merge
+    --match-head-commit`. Stop at the contract's human gates. If no forge
+    resolves, print the manual PR and merge commands and stop. Never push
+    directly to main.
 12. Show what passed, what remains unproven, the PR state, and the next action.
     Stop.

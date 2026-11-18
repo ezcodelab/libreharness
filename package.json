@@ -1,13 +1,13 @@
 {
   "name": "libreharness",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "private": false,
   "license": "MIT",
   "type": "module",
   "exports": {
     ".": "./src/plugin.js"
   },
-  "description": "A durable task queue and engineering workflow for OpenCode, as a V2 plugin and CLI.",
+  "description": "A durable task queue and engineering workflow for OpenCode, as a plugin.",
   "homepage": "https://github.com/ezcodelab/libreharness#readme",
   "repository": {
     "type": "git",
@@ -19,9 +19,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "bin": {
-    "libreharness": "bin/libreharness.js"
-  },
   "files": [
     "AGENTS.md",
     "LICENSE",
@@ -30,8 +27,6 @@
     "CHANGELOG.md",
     "SECURITY.md",
     "CONTRIBUTING.md",
-    "GOVERNANCE.md",
-    "CODE_OF_CONDUCT.md",
     "opencode.example.json",
     "src",
     "agents",
@@ -39,20 +34,21 @@
     "skills",
     "plugins",
     "bin/*.py",
-    "bin/libreharness.js",
-    "docs",
-    "harbor_agent/*.py",
-    "harbor_agent/*.md"
+    "docs/reference.md",
+    "docs/LICENSE"
   ],
-  "os": ["linux"],
+  "os": [
+    "linux"
+  ],
   "engines": {
     "node": ">=20",
     "python": ">=3.10"
   },
   "scripts": {
     "test:python": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
-    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/review-protocol.test.mjs && node tests/security-guard.test.mjs && node tests/plugin.test.mjs && node tests/installer.test.mjs",
-    "test": "npm run test:python && npm run test:node"
+    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/review-protocol.test.mjs && node tests/plugin.test.mjs",
+    "test": "npm run test:python && npm run test:node",
+    "lint:md": "npx --yes markdownlint-cli2@0.18.1 '**/*.md'"
   },
   "dependencies": {
     "@opencode/plugin": "^2.2.6"

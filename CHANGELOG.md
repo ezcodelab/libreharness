@@ -2,40 +2,39 @@
 
 # Changelog
 
-## Unreleased
+## 2.0.0 — 2026-11-18
+
+Slim the repository to the pstack-shaped core: the queue, workflow, skills,
+agents, commands, two local plugins, and Jev. Removed experiment and vendored
+assets, native-duplicated scripts, and most narrative documentation.
+
+### 💥 Breaking
+
+- Install as an OpenCode plugin only. The `npx libreharness init` installer and
+  the copied-runtime layout are removed. Add `libreharness@2.0.0` to the
+  `plugins` array and reload.
+- Remove `bench/`, `harbor_agent/`, `profiles/`, `templates/`, `scripts/`, and
+  the benchmark and experiment documentation. Benchmark evidence is no longer
+  shipped in-tree.
+- Remove the `close-reminder` and `security-guard` plugins. Protect secret files
+  with native OpenCode permissions or a dedicated guard plugin.
+- Remove the custom CI and review helpers (`check_mirror`, `check_spdx`,
+  `comment_audit`, `docs_lint`, `doctor`, `pr_policy`, `pr_watch`,
+  `scan_private`, `sync_gitea_gate`, `verify_pr.sh`). CI now uses
+  `markdownlint-cli2`, `lychee`, `gitleaks`, `shellcheck`, and `actionlint`;
+  shipping uses `gh pr checks` and `gh pr merge`.
+- Consolidate the documentation set into `README.md` and `docs/reference.md`.
+- Remove `GOVERNANCE.md` and `CODE_OF_CONDUCT.md`.
 
 ### 🚀 Features
 
+- Keep the durable Markdown queue, evidence gate, goals, lanes, review, close,
+  and Jev.
 - Add the `unslop` skill: a read-only audit of the patterns agents copy, a
   ratchet plan, and one-pattern fixes that delete the old example first.
-- Add a Gitea backend to `pr_watch`: `--forge gitea`, `GITEA_URL` /
-  `GITEA_TOKEN`, exact status contexts, `head_commit_id`, and `--auto`
-  scheduling with `merge_when_checks_succeed`.
-- Harness agents no longer ask for shell command permission on reversible
-  work. Unattended runs stop only at one-way doors, secrets or production,
-  missing decisions or credentials, or ambiguous acceptance. The independent
-  reviewer keeps its read-only edit boundary and mutating-git denies.
-- Flip Credarr and LibreHarness to GitHub canonical: a GitHub Actions
-  `pull_request_target` gate merges eligible PRs (including fork PRs) with the
-  short-lived `GITHUB_TOKEN`, and Gitea becomes a read-only pull mirror. Remove
-  the outbound Gitea mirror, the Gitea gate, and the skipped Gitea CI.
-- Add a tokenless Gitea mirror freshness check and a pre-push guard that
-  rejects the read-only Gitea remote.
-- Add a private Gitea auto-merge gate: a base-controlled
-  `pull_request_target` workflow, a repository `MERGE_TOKEN` secret, and
-  required CI plus `auto-merge / gate` checks. Gate, workflow, and `bin/`
-  changes remain manual.
-- Make autonomy and auto-merge the global default. A canonical Gitea gate
-  template and repository policy install the same merge path in every active
-  Gitea repo; a universal PR check and branch protection make it required.
-  The task tool rejects `done` with unchecked acceptance, and the global rules
-  forbid deferred or unmerged work.
-
-### 🧭 Behaviour
-
-- Remove the default eight-skill count cap. `docs_lint.py` now enforces only
-  the 120-line per-skill limit by default; `--max-skills` remains available as
-  an explicit project choice.
+- Harness agents no longer ask for shell command permission on reversible work.
+  Unattended runs stop only at one-way doors, secrets or production, missing
+  decisions or credentials, or ambiguous acceptance.
 
 ## 1.2.0 — 2026-11-16
 

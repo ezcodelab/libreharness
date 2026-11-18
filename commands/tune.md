@@ -5,8 +5,10 @@ description: Propose deletions and at most five portable AGENTS or skill patches
 Tuning turn. Use this after a work wave, not as a task finish. Do not do
 feature work, and do not edit global config yet.
 
-1. Run the docs and skill-budget check:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/docs_lint.py" . --skills-dir "${HARNESS_HOME:-$HOME/.config/opencode}/skills"`.
+1. Run the Markdown and skill-budget check:
+   `npx --yes markdownlint-cli2@0.18.1 '**/*.md'`, then confirm every
+   `skills/*/SKILL.md` is at most 120 lines:
+   `find skills -name SKILL.md -print0 | xargs -0 wc -l`.
 2. Run the `state-audit` skill over the project or the area changed since the
    last tune. Update `docs/state-machines.md`, group confirmed invalid
    transitions by root cause, and propose the highest-impact group. Do not fix
@@ -26,11 +28,11 @@ feature work, and do not edit global config yet.
    pay off. Leaner beats more rules.
 6. Propose at most five patches to `AGENTS.md`, the `engineering-loop` skill,
    the `ui-design` skill, another skill under `${HARNESS_HOME}/skills/`, or the
-   named principles in `docs/principles.md`, as a unified diff. For each, quote
-   the evidence, name the target, and say what it replaces or deletes.
+   named principles in `AGENTS.md`, as a unified diff. For each, quote the
+   evidence, name the target, and say what it replaces or deletes.
 7. Prefer folding a rule into an existing bullet over adding a new one. For a
-   skill promotion, run `docs/skill-eval.md` first and include the trigger rate,
-   pass delta, sample size, and limits. A neutral or negative result is a
-   deletion candidate, not a promotion.
+   skill promotion, run the with/without check in `CONTRIBUTING.md` first and
+   include the trigger rate, pass delta, sample size, and limits. A neutral or
+   negative result is a deletion candidate, not a promotion.
 8. Stop for approval. Nothing is promoted in this turn.
 9. After the operator approves or rejects, record the date in the metrics file.

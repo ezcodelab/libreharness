@@ -42,15 +42,8 @@ jobs:
       - name: Full checks
         run: |
           python3 -m unittest discover -s tests -p 'test_*.py' -v
-          node tests/auto-intake.test.mjs
-          node tests/goal-watch.test.mjs
-          node tests/review-protocol.test.mjs
-          node tests/security-guard.test.mjs
-          node tests/plugin.test.mjs
-          node tests/installer.test.mjs
-          python3 bin/docs_lint.py . --skills-dir skills
-          python3 bin/check_spdx.py --root .
-          python3 bin/scan_private.py --root .
+          npm run test:node
+          npx --yes markdownlint-cli2@0.18.1 '**/*.md'
       - name: Secret scan
         run: |
           set -euo pipefail

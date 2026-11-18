@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   test:
-    if: github.server_url == 'https://github.com'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -31,24 +30,43 @@ jobs:
       - name: Node dependencies
         run: npm install --no-audit --no-fund --no-package-lock
       - name: Node tests
-        run: |
-          node tests/auto-intake.test.mjs
-          node tests/goal-watch.test.mjs
-          node tests/review-protocol.test.mjs
-          node tests/security-guard.test.mjs
-          node tests/plugin.test.mjs
-          node tests/installer.test.mjs
+        run: npm run test:node
       - name: Package dry run
         run: npm pack --dry-run
-      - name: Docs lint
-        run: python3 bin/docs_lint.py . --skills-dir skills
-      - name: SPDX
-        run: python3 bin/check_spdx.py --root .
-      - name: Private-path scan
-        run: python3 bin/scan_private.py --root .
-      - name: Shellcheck
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+      - name: Markdown
+        run: npx --yes markdownlint-cli2@0.18.1 '**/*.md'
+      - name: Shell
         run: |
-          if ls bin/*.sh >/dev/null 2>&1; then shellcheck -x bin/*.sh; else echo "no shell scripts"; fi
+          if find . -name '*.sh' -not -path './node_modules/*' -print -quit | grep -q .; then
+            find . -name '*.sh' -not -path './node_modules/*' -print0 | xargs -0 shellcheck -x
+          else
+            echo "no shell scripts"
+          fi
+      - name: Workflows
+        run: docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.7 -color
+
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Link check
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --offline --include-fragments --no-progress --exclude-path node_modules --exclude-path .git "**/*.md"
+          fail: true
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Secret scan
         run: |
           set -euo pipefail
@@ -57,8 +75,3 @@ jobs:
           echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  /tmp/gitleaks.tar.gz" | sha256sum -c -
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
           /tmp/gitleaks detect --source . --config .gitleaks.toml --redact --verbose
-      - name: Link check
-        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
-        with:
-          args: --offline --no-progress --exclude-path node_modules "**/*.md"
-          fail: true

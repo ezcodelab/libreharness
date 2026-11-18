@@ -223,10 +223,10 @@ def check_model(model: str, key: str, models_url: str, timeout: int) -> int:
         return 3
     if model not in ids:
         print(
-            f"FREE JEV GONE: '{model}' is not in the Console model list.\n"
-            "Update DEFAULT_MODEL in bin/jev_review.py to jev-1.13 (paid), or\n"
-            "pass the same --model to the check and the review. Reviews will\n"
-            "fail until this changes.",
+            f"MODEL UNAVAILABLE: '{model}' is not in the Console model list.\n"
+            "Set JEV_MODEL to a model the endpoint offers, or pass the same\n"
+            "--model to the check and the review. Reviews will fail until\n"
+            "this changes.",
             file=sys.stderr,
         )
         return 4
@@ -413,10 +413,10 @@ def main() -> int:
             detail = exc.read().decode("utf-8", "replace")[:300]
             if exc.code in (400, 404) and args.model.endswith("-free"):
                 print(
-                    f"FREE JEV GONE: '{args.model}' was rejected (HTTP "
-                    f"{exc.code}). Update DEFAULT_MODEL in bin/jev_review.py to "
-                    "jev-1.13 (paid) or pass the same --model to the check and "
-                    "the review. No review was run.",
+                    f"MODEL UNAVAILABLE: '{args.model}' was rejected (HTTP "
+                    f"{exc.code}). Set JEV_MODEL to a model the endpoint offers, "
+                    "or pass the same --model to the check and the review. No "
+                    "review was run.",
                     file=sys.stderr,
                 )
                 return 4

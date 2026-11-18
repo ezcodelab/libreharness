@@ -52,8 +52,7 @@ diff.
    behind one narrow API.
 5. **Clean the prose.** Keep comments only for a non-obvious why. Delete
    narration, restatement, and workaround justifications without an external
-   reference. Keep one source of truth for rules. Use `bin/comment_audit.py`
-   when the repo provides it.
+   reference. Keep one source of truth for rules.
 6. **Test behavior.** Add a regression test for the old failure and a
    property-based test for an invariant where useful. Remove test-only setters
    and mocks that hide the real boundary.
