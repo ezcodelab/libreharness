@@ -25,6 +25,11 @@
   `pull_request_target` workflow, a repository `MERGE_TOKEN` secret, and
   required CI plus `auto-merge / gate` checks. Gate, workflow, and `bin/`
   changes remain manual.
+- Make autonomy and auto-merge the global default. A canonical Gitea gate
+  template and repository policy install the same merge path in every active
+  Gitea repo; a universal PR check and branch protection make it required.
+  The task tool rejects `done` with unchecked acceptance, and the global rules
+  forbid deferred or unmerged work.
 
 ### 🧭 Behaviour
 

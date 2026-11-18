@@ -304,3 +304,20 @@ changes. Prove the fact; a rename fixture is only the easy case.
 Doc updated: `commands/brief.md`, `agents/implementer.md`, `commands/review.md`,
 `tests/review-protocol.test.mjs`.
 Promote-to-global: yes
+
+## 2026-11-18 - One merge gate is not a global merge path
+
+Surprise: Brain had a working gate, but the other active Gitea repositories had
+no gate, one had no required check, and the task tool accepted `done` with
+unchecked acceptance. A green PR could sit open while every rule still read
+"auto-merge".
+Cost: one canonical gate template, four repository policies, three new gates,
+one universal PR check, and one task-status ratchet.
+Rule: encode the policy once, install the same base-controlled gate everywhere,
+require the universal PR check, and make `done` fail on unchecked acceptance.
+Gitea scans `.gitea/workflows` first and ignores `.github/workflows` when it
+exists, so the gate goes in the scanned directory. A reviewed green PR left open
+is unfinished work, not a handoff.
+Doc updated: `docs/autonomy.md`, `docs/auto-merge.md`, `AGENTS.md`,
+`skills/shipping/SKILL.md`, `templates/gitea-auto-merge.yml`.
+Promote-to-global: yes

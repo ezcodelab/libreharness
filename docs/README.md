@@ -32,7 +32,8 @@ No document here makes a performance claim.
 | [Ten agent-skill repositories: fit review](agent-skill-review-2026-11-17.md) | Which external agent-skill repositories fit the harness, and what to adopt, pilot, borrow, or reject |
 | [Release checklist](release.md) | Checks, signed tag, public remote, npm publish approval, and rollback |
 | [Gitea read-only mirror](mirror.md) | GitHub canonical for Credarr and LibreHarness; Gitea pulls main and tags read-only |
-| [Trusted auto-merge](auto-merge.md) | GitHub canonical; the `pull_request_target` gate, fork PRs, protected paths, and `GITHUB_TOKEN` merges |
+| [Autonomy and completion](autonomy.md) | The exit-condition contract, the auto-merge default, no-deferral, cleanup, and the forge matrix |
+| [Trusted auto-merge](auto-merge.md) | GitHub and Gitea gates, fork PRs, protected paths, repository secrets, and exact-head merges |
 
 ## Jev
 
