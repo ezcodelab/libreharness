@@ -52,7 +52,8 @@
   dependencies unless the operator accepts the risk.
 - If work changes scope or acceptance, update the task before editing code.
 - A task is `done` only with evidence: a command and result, a measured check,
-  or an explicit `[T]` with a plan.
+  or an explicit `[T]` with a plan, and every acceptance item checked. Finish
+  in-scope work; do not leave a deferred list or an unmerged green PR.
 
 ## Context and handoff
 - Load in this order: task packet and handoff; project `AGENTS.md`,
@@ -115,15 +116,21 @@ in the repository.
   and update the project's `docs/state-machines.md` before `/review`. A
   confirmed invalid transition gets a regression test before the fix.
 - Prefer independent review for nontrivial changes. If no review ran, say so.
-- Public repos (Credarr, LibreHarness): GitHub is canonical. Open GitHub PRs;
-  the GitHub Actions `auto-merge` gate merges eligible PRs. Gitea is a
-  read-only mirror: never open a Gitea PR or push to it for these repos.
-- Private Gitea repos: use AGit/`pr_watch` as before. Gate changes require an
-  operator-supplied token; do not add a local token shim or print one.
+- Public repos (Credarr, LibreHarness): GitHub is canonical. Open a ready
+  GitHub PR; the GitHub Actions `auto-merge` gate merges it when the required
+  checks pass. Gitea is a read-only mirror: never open a Gitea PR or push to it
+  for these repos.
+- Private or agent-only Gitea repos: push an AGit PR; the repository's
+  base-controlled gate schedules the merge after CI with its repository secret.
+  Do not ask for a token. Gate, workflow, auth, and deploy changes require a
+  manual operator merge in the same task.
+- Auto-merge is the default after independent review and green required checks.
+  Do not leave a reviewed, green PR open for the operator.
 - When a failure pattern appears twice, encode it as a test, lint rule, or
   instruction.
 
 ## Completion report
-- **Substantial:** Gate, Done, Evidence, Lessons, Deferred, Stopped because.
+- **Substantial:** Gate, Done, Evidence, Lessons, Unfinished (must be empty;
+  name the operator-only blocker), Stopped because.
 - **Routine nontrivial:** what changed, what was run, what remains unproven.
 - **Trivial:** one line; say "not run" when nothing was checked.
