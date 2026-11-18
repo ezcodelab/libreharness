@@ -131,6 +131,7 @@ jobs:
           protected = [
               ".github/merge-policy.json",
               ".github/workflows/",
+              ".gitea/workflows/",
           ] + string_list("protected_paths")
           forbidden = [
               ".env",
@@ -197,6 +198,23 @@ jobs:
               if len(files) < 50:
                   break
               page += 1
+
+          status, latest = call("GET", f"/pulls/{pr}")
+          if status != 200:
+              refuse(f"cannot re-read PR ({status}): {latest}")
+          if latest.get("state") != "open" or latest.get("draft"):
+              refuse("PR is no longer open and ready")
+          if ((latest.get("head") or {}).get("sha") or "").lower() != head.lower():
+              refuse("head moved during verification")
+          if not latest.get("mergeable"):
+              refuse("PR became unmergeable during verification")
+          latest_labels = {
+              item.get("name")
+              for item in (latest.get("labels") or [])
+              if isinstance(item, dict)
+          }
+          if latest_labels & blocking:
+              refuse(f"blocking label added: {sorted(latest_labels & blocking)}")
 
           status, result = call(
               "POST",
