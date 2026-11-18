@@ -120,8 +120,9 @@ in the repository.
   GitHub PR; the GitHub Actions `auto-merge` gate merges it when the required
   checks pass. Gitea is a read-only mirror: never open a Gitea PR or push to it
   for these repos.
-- Private or agent-only Gitea repos: push an AGit PR; the repository's
-  base-controlled gate schedules the merge after CI with its repository secret.
+- Gitea-canonical repos (Brain and the homelab repos): push an AGit PR; the
+  repository's base-controlled gate schedules the merge after CI with its
+  repository secret.
   Do not ask for a token. Gate, workflow, auth, and deploy changes require a
   manual operator merge in the same task.
 - Auto-merge is the default after independent review and green required checks.
