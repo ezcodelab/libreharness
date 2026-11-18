@@ -262,3 +262,17 @@ license, not by stars. Prefer a practice over a package; pilot a tool only with
 predeclared metrics.
 Doc updated: `docs/agent-skill-review-2026-11-17.md`, `docs/README.md`.
 Promote-to-global: yes
+
+## 2026-11-17 - Subagents must not stall on routine permissions
+
+Surprise: the devils-advocate was read-only, but `edit * deny` plus a missing
+webfetch rule turned /tmp review artifacts and web references into approval
+prompts. The build roles also lacked native glob, grep, skill, and todowrite
+rules.
+Cost: one permission audit of four agents and a plugin test extension.
+Rule: give every subagent explicit V2 permissions for the tools its role needs.
+Keep repository edit deny on the review scouts, allow /tmp artifacts plus
+webfetch and websearch, and test the rule shape. A missing rule defaults to
+`ask`, not `allow`.
+Doc updated: `agents/*.md`, `docs/plugins.md`, `tests/plugin.test.mjs`.
+Promote-to-global: yes
