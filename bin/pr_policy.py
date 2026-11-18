@@ -296,18 +296,18 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.forge == "github":
-        token_name = "GITHUB_TOKEN"
-        api_name = "GITHUB_API_URL"
+        auth_var = "GITHUB_TOKEN"
+        api_var = "GITHUB_API_URL"
     else:
-        token_name = "GITEA_TOKEN"
-        api_name = "GITEA_URL"
-    token = os.environ.get(token_name, "")
-    api_url = args.api or os.environ.get(api_name, "")
+        auth_var = "GITEA_TOKEN"
+        api_var = "GITEA_URL"
+    token = os.environ.get(auth_var, "")
+    api_url = args.api or os.environ.get(api_var, "")
     if not token:
-        print(f"pr_policy: {token_name} is not set", file=sys.stderr)
+        print(f"pr_policy: {auth_var} is not set", file=sys.stderr)
         return 2
     if not api_url:
-        print(f"pr_policy: {api_name} or --api is required", file=sys.stderr)
+        print(f"pr_policy: {api_var} or --api is required", file=sys.stderr)
         return 2
 
     try:
