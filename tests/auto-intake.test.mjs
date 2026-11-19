@@ -88,6 +88,10 @@ const cases = [
   ["Write a report on the phases of the moon", "feature", false, false, ["engineering-loop"]],
   ["Refactor the parser to fix the crash", "bug-fix", false, false, ["engineering-loop"]],
   ["Investigate the slow login and fix it", "bug-fix", false, false, ["engineering-loop"]],
+  ["Repair the broken login", "bug-fix", false, false, ["engineering-loop"]],
+  ["Debug the login failure", "bug-fix", false, false, ["engineering-loop"]],
+  ["Investigate the slow login", "investigation", false, false, ["engineering-loop"]],
+  ["Investigate the parser refactoring options", "investigation", false, false, ["engineering-loop"]],
 ];
 for (const [prompt, playbook, userNamed, multiStep, skills] of cases) {
   const decision = routePrompt(prompt);

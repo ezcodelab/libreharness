@@ -213,15 +213,17 @@ export function checkAsciiProse(root) {
 }
 
 function balancedQuotes(prefix) {
-  let single = 0;
-  let double = 0;
-  let backtick = 0;
-  for (const character of prefix) {
-    if (character === "'") single += 1;
-    else if (character === '"') double += 1;
-    else if (character === "`") backtick += 1;
+  let quote = null;
+  for (let index = 0; index < prefix.length; index += 1) {
+    const character = prefix[index];
+    if (quote) {
+      if (character === "\\") index += 1;
+      else if (character === quote) quote = null;
+    } else if (character === '"' || character === "'" || character === "`") {
+      quote = character;
+    }
   }
-  return single % 2 === 0 && double % 2 === 0 && backtick % 2 === 0;
+  return quote === null;
 }
 
 function commentText(line, extension, state) {
@@ -549,6 +551,11 @@ function selfTests() {
     assert.ok(
       checkCommentDiscipline(tmp).some((problem) => problem.message.includes("workaround")),
       "an inline workaround comment must fail",
+    );
+    writeFileSync(join(tmp, "src/bad.js"), 'const s = "don\'t touch"; // workaround: do not remove\n');
+    assert.ok(
+      checkCommentDiscipline(tmp).some((problem) => problem.message.includes("workaround")),
+      "an apostrophe inside a double-quoted string must not hide the comment",
     );
     writeFileSync(join(tmp, "src/bad.js"), "const x = 1;\n");
     writeFileSync(join(tmp, "src/url.js"), 'const url = "https://example.com";\n');

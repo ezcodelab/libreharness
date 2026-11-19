@@ -47,7 +47,7 @@ const REFACTOR =
 const DEFECT =
   /\b(bug|bugs|broken|break|breaks|breaking|fails?|failing|failure|error|errors|crash(?:es|ed|ing)?|regression|wrong|incorrect|fix|fixes|fixing|repair)\b/i;
 const EDIT =
-  /\b(add|adds|build|change|changes|correct|create|delete|drop|fix|implement|migrate|optimi[sz]e|profile|refactor|remove|rename|replace|rewrite|simplify|split|update|wire|write)\b/i;
+  /\b(add|adds|build|change|changes|commit|correct|create|debug|delete|drop|fix|hillclimb|implement|improve|increase|make|migrate|optimi[sz]e|profile|reduce|refactor|remove|rename|repair|replace|rewrite|simplify|speed|split|update|wire|write)\b/i;
 
 export function routePrompt(text) {
   const input = String(text ?? "");
@@ -66,11 +66,11 @@ export function routePrompt(text) {
     playbook = "autonomous-multiphase";
   } else if (defect) {
     playbook = "bug-fix";
-  } else if (HILLCLIMB.test(input)) {
+  } else if (HILLCLIMB.test(input) && EDIT.test(input)) {
     playbook = "hillclimb";
-  } else if (PERF.test(input)) {
+  } else if (PERF.test(input) && EDIT.test(input)) {
     playbook = "perf";
-  } else if (REFACTOR.test(input)) {
+  } else if (REFACTOR.test(input) && EDIT.test(input)) {
     playbook = "refactoring";
   } else if (EDIT.test(input)) {
     playbook = "feature";
