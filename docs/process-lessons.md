@@ -353,3 +353,24 @@ close the PR with the reason. Never end a turn with a reviewed PR open.
 Doc updated: `skills/shipping/SKILL.md`, `commands/close.md`,
 `docs/reference.md`.
 Promote-to-global: yes
+
+## 2026-11-19 - A skill budget with no checker is a preference
+
+Surprise: after three documentation cleanup tasks, the tree still carried 43 em
+dashes and curly quotes and a 124-line `shipping` skill, and the local config
+duplicated workflow prose the plugin also injected. The checks that would have
+caught all of it were deleted with `docs_lint.py` and never replaced.
+
+Cost: six commits, one ratchet suite, and a rewrite of the router and four
+skills.
+
+Rule: an instruction rule enters the tree with a checker in the same commit. A
+rule that only prose can enforce belongs in a skill that loads on demand, not in
+`AGENTS.md`. Keep `AGENTS.md` to commands, boundaries, principles, and a
+four-row enforcement table, and append per-rule detail to
+`skills/correct/references/rule-ledger.md`.
+
+Doc updated: `AGENTS.md`, `tests/harness-ratchets.test.mjs`,
+`skills/correct/references/rule-ledger.md`, `docs/reference.md`.
+
+Promote-to-global: yes

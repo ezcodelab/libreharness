@@ -248,15 +248,22 @@ Run `python3 "$HARNESS_HOME/bin/tasks.py" <command>`.
 
 | Skill | Use |
 |---|---|
-| `engineering-loop` | Risk-scaled engineering process |
+| `engineering-loop` | Entry point and playbook router for non-trivial work |
 | `goal` | Multi-deliverable goal planning and execution |
 | `parallel-lanes` | Two or three independent lanes |
 | `shipping` | Ready PR, CI, independent verdict, merge |
 | `state-audit` | States, invariants, transitions, regression tests |
 | `ui-design` | UI and UX work |
-| `unslop` | Remove agent-copied anti-patterns and add a ratchet |
+| `unslop` | Prose only: replies, PR bodies, docs, commit messages |
+| `no-comments` | Remove comment alibis before review |
+| `correct` | Repeated mistake classes become checks |
 | `verification` | Prove real app behavior |
 | `work-queue` | Durable tasks with scope, acceptance, and evidence |
+
+`engineering-loop` maps a request to `investigation`, `bug-fix`, `feature`,
+`refactoring`, `perf`, `hillclimb`, `autonomous-multiphase`, or `correct`. The
+checklists live in `skills/engineering-loop/references/playbooks.md`. Per-rule
+encodings live in `skills/correct/references/rule-ledger.md`.
 
 ## Agents
 
