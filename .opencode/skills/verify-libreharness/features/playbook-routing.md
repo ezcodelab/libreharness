@@ -18,7 +18,7 @@ loaded. The operator sees the route before any code changes.
 
 The smoke script covers the single-step route. The routing table itself is
 covered by `node tests/auto-intake.test.mjs`, which drives the same
-`routePrompt` export with 22 prompts, including read-only defect questions, a
+`routePrompt` export with 29 prompts, including read-only defect questions, a
 common-noun `goal`, and a refactor phrased as a fix.
 
 ## Observable end state

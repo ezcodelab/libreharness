@@ -92,6 +92,12 @@ const cases = [
   ["Debug the login failure", "bug-fix", false, false, ["engineering-loop"]],
   ["Investigate the slow login", "investigation", false, false, ["engineering-loop"]],
   ["Investigate the parser refactoring options", "investigation", false, false, ["engineering-loop"]],
+  ["Move the parser into a separate module", "refactoring", false, false, ["engineering-loop"]],
+  ["Extract the helper function", "refactoring", false, false, ["engineering-loop"]],
+  ["Inline the accessor", "refactoring", false, false, ["engineering-loop"]],
+  ["Consolidate the two parsers", "refactoring", false, false, ["engineering-loop"]],
+  ["Refactoring the parser", "refactoring", false, false, ["engineering-loop"]],
+  ["What is the bug in the parser?", "investigation", false, false, ["engineering-loop"]],
 ];
 for (const [prompt, playbook, userNamed, multiStep, skills] of cases) {
   const decision = routePrompt(prompt);

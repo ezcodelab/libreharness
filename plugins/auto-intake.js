@@ -48,6 +48,8 @@ const DEFECT =
   /\b(bug|bugs|broken|break|breaks|breaking|fails?|failing|failure|error|errors|crash(?:es|ed|ing)?|regression|wrong|incorrect|fix|fixes|fixing|repair)\b/i;
 const EDIT =
   /\b(add|adds|build|change|changes|commit|correct|create|debug|delete|drop|fix|hillclimb|implement|improve|increase|make|migrate|optimi[sz]e|profile|reduce|refactor|remove|rename|repair|replace|rewrite|simplify|speed|split|update|wire|write)\b/i;
+const LEAD_READ_ONLY =
+  /^\s*(investigate|explain|trace|describe|analy[sz]e|review|audit|find out|how|what|why|when|where|who|is|are|do|does|did)\b/i;
 
 export function routePrompt(text) {
   const input = String(text ?? "");
@@ -58,6 +60,7 @@ export function routePrompt(text) {
   const multiStep = MULTI_STEP.test(input);
 
   const defect = DEFECT.test(input) && EDIT.test(input);
+  const readOnly = LEAD_READ_ONLY.test(input) && !EDIT.test(input);
 
   let playbook;
   if (namedId) {
@@ -66,11 +69,13 @@ export function routePrompt(text) {
     playbook = "autonomous-multiphase";
   } else if (defect) {
     playbook = "bug-fix";
-  } else if (HILLCLIMB.test(input) && EDIT.test(input)) {
+  } else if (readOnly) {
+    playbook = "investigation";
+  } else if (HILLCLIMB.test(input)) {
     playbook = "hillclimb";
-  } else if (PERF.test(input) && EDIT.test(input)) {
+  } else if (PERF.test(input)) {
     playbook = "perf";
-  } else if (REFACTOR.test(input) && EDIT.test(input)) {
+  } else if (REFACTOR.test(input)) {
     playbook = "refactoring";
   } else if (EDIT.test(input)) {
     playbook = "feature";
