@@ -31,6 +31,7 @@ export const ASCII_IGNORE_GLOBS = [
   "docs/process-lessons.md",
   "src/generated/**",
   "plugins/generated/**",
+  ".opencode/node_modules/**",
 ];
 
 export const COMMENT_IGNORE_GLOBS = [
@@ -47,7 +48,7 @@ const ASCII_SCOPE_FILES = [
   "CONTRIBUTING.md",
   "docs/reference.md",
 ];
-const ASCII_SCOPE_DIRS = ["skills", "commands", "agents", "src", "plugins"];
+const ASCII_SCOPE_DIRS = ["skills", ".opencode", "commands", "agents", "src", "plugins"];
 const ASCII_EXTENSIONS = new Set([".md", ".js", ".mjs", ".py"]);
 
 const FORBIDDEN_CHARACTERS = [
@@ -286,6 +287,7 @@ export function checkRelativeLinks(root) {
     ...walk(join(root, "skills")).map((path) => rel(root, path)),
     ...walk(join(root, "commands")).map((path) => rel(root, path)),
     ...walk(join(root, "agents")).map((path) => rel(root, path)),
+    ...walk(join(root, ".opencode", "skills")).map((path) => rel(root, path)),
   ].filter((name) => name.endsWith(".md"));
   for (const name of scope) {
     const path = join(root, name);
