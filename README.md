@@ -14,7 +14,13 @@ outlives one chat:
 - A workflow that scales process to risk: trivial changes skip the queue;
   nontrivial changes get a brief, a review, and evidence.
 - Portable skills for the engineering loop, goals, parallel lanes, shipping,
-  state audits, UI design, unslop, verification, and the work queue.
+  state audits, UI design, no-comments, unslop, correct, verification, and the
+  work queue.
+- A playbook router that turns a request into one checklist: investigation, bug
+  fix, feature, refactoring, perf, hillclimb, autonomous multi-phase, or a
+  repeated-mistake sweep.
+- Structural ratchets that fail on a skill over budget, non-ASCII punctuation,
+  an unreferenced workaround comment, or an oversized always-on rule file.
 - Agents for exploration, implementation, integration, and independent
   challenge.
 - Commands for intake, briefs, lanes, takeover, review, close, handoff, design
