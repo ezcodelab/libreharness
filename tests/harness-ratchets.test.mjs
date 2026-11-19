@@ -413,6 +413,7 @@ const CHECKS = [
   checkAgentsBudget,
   checkRelativeLinks,
   checkRouterWiring,
+  checkSkillWiring,
 ];
 
 function selfTests() {

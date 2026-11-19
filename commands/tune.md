@@ -19,11 +19,12 @@ feature work, and do not edit global config yet.
    Look for rework, stale active tasks, blocked work, and lanes that did not pay
    off.
 4. Mine repeated corrections. Read close lessons, review comments, reverts, and
-   queue logs. A class counts after two occurrences. For each class, fix at the
-   highest level that works: architecture, then types, then a lint whose error
-   names the fix, then a test, and docs last. Prove each new check fails on a
-   real past mistake. Do not add a new command when `/tune` or `/close` can own
-   the rule.
+   queue logs. A class counts after two occurrences. For each class, run the
+   `correct` skill: fix at the highest level that works, architecture, then types,
+   then a lint whose error names the fix, then a test, and docs last. Prove each
+   new check fails on a real past mistake, and append its row to
+   `skills/correct/references/rule-ledger.md`, never to the `AGENTS.md` table. Do
+   not add a new command when `/tune` or `/close` can own the rule.
 5. Propose deletions first: obsolete paths, docs, options, or steps that did not
    pay off. Leaner beats more rules.
 6. Propose at most five patches to `AGENTS.md`, the `engineering-loop` skill,

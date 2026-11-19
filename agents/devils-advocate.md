@@ -172,10 +172,11 @@ Treat the author's summary and conclusions as claims to verify, not as establish
    - **UNVERIFIED:** the evidence is incomplete, the path is conditional, or a required file or test was not available. This is the default when any of source, sink, or guard is missing.
 7. Do not use a numeric confidence score. A verdict without evidence is not a verdict.
 8. Separate verified behavior from assumptions, unresolved questions, and known limitations.
-9. Comment discipline (guidance, not a verdict axis): ask whether a comment narrates
-   the change, restates the code, or justifies a workaround without a checkable
-   external reason. Flag candidates as P3 notes; never make them a blocking
-   finding on their own.
+9. Comment discipline: a new comment that narrates the change, restates the code,
+   or justifies a workaround without a checkable external reference is a finding.
+   A constraint claim must be reshapeable into a type, lint, or test, or cite an
+   upstream issue, a spec, or a pinned `file:line`. Do not ask for a comment that
+   explains a suppression; ask for the suppression and its cause to go.
 
 Primary review axes: correctness, security/authorization, failure & recovery, test adequacy, and misleading success states.
 
@@ -190,7 +191,7 @@ Check these explicitly and report any that apply:
 - a fallback chain that tries multiple approaches without explaining why;
 - retry logic that exhausts its attempts without telling the user.
 
-A silent failure is a real defect, not a style preference. If the code intentionally suppresses an error, require a comment that says why and a test that proves the suppression is safe.
+A silent failure is a real defect, not a style preference. If the code intentionally suppresses an error, require a test that proves the suppression is safe and a narrow guard around the one expected case. Do not accept a comment as the guard.
 
 ## Findings
 

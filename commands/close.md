@@ -49,9 +49,11 @@ Do not edit feature code in this turn.
    - Doc updated
    - `Promote-to-global` when portable
    If nothing surprised you, write "Surprise: none" rather than inventing one.
-   If the lesson is a repeated correction, apply it at the highest level that
-   works: architecture, then types, then a lint whose error names the fix, then
-   a test, and docs last. Prove the check fails on the past mistake.
+   If the lesson is a repeated correction, use the `correct` skill: fix it at the
+   highest level that works, architecture, then types, then a lint whose error
+   names the fix, then a test, and docs last. Prove the check fails on the past
+   mistake. Append the rule to `skills/correct/references/rule-ledger.md` and never
+   to the `AGENTS.md` table.
 9. If the project has a skill candidate, put it in the task evidence or the
    project's skill directory. Do not promote it to global in this turn. `/tune`
    handles promotion.
