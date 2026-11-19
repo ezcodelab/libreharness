@@ -414,6 +414,7 @@ const CHECKS = [
   checkRelativeLinks,
   checkRouterWiring,
   checkSkillWiring,
+  checkIntakeWiring,
 ];
 
 function selfTests() {
