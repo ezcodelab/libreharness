@@ -37,7 +37,7 @@ export const PLAYBOOK_IDS = [
 
 const NAMED_PLAYBOOK = /\b(?:the\s+)?([a-z][a-z-]+)\s+playbook\b/i;
 const MULTI_STEP =
-  /\b(goal|multi-step|multi-phase|multiphase|phases|unattended|autorun|going to bed|run until done|until done|overnight)\b/i;
+  /\b(multi-step|multi-phase|multiphase|multi-deliverable|unattended|autorun|going to bed|run until done|until done|overnight)\b/i;
 const HILLCLIMB =
   /\b(hillclimb|hill-climb|throughput|lines\/sec|target metric|commit only (?:measured )?wins)\b/i;
 const PERF =
@@ -57,19 +57,21 @@ export function routePrompt(text) {
     : null;
   const multiStep = MULTI_STEP.test(input);
 
+  const defect = DEFECT.test(input) && EDIT.test(input);
+
   let playbook;
   if (namedId) {
     playbook = namedId;
   } else if (multiStep) {
     playbook = "autonomous-multiphase";
+  } else if (defect) {
+    playbook = "bug-fix";
   } else if (HILLCLIMB.test(input)) {
     playbook = "hillclimb";
   } else if (PERF.test(input)) {
     playbook = "perf";
   } else if (REFACTOR.test(input)) {
     playbook = "refactoring";
-  } else if (DEFECT.test(input)) {
-    playbook = "bug-fix";
   } else if (EDIT.test(input)) {
     playbook = "feature";
   } else {

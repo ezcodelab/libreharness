@@ -224,16 +224,43 @@ function balancedQuotes(prefix) {
   return single % 2 === 0 && double % 2 === 0 && backtick % 2 === 0;
 }
 
-function commentText(line, extension) {
-  if (extension !== ".py") {
-    const index = line.indexOf("//");
-    if (index < 0 || (index > 0 && !/\s/.test(line[index - 1]))) return null;
-    return balancedQuotes(line.slice(0, index)) ? line.slice(index) : null;
+function commentText(line, extension, state) {
+  const chunks = [];
+  let rest = line;
+
+  if (state.block) {
+    const end = rest.indexOf("*/");
+    if (end < 0) return [rest];
+    chunks.push(rest.slice(0, end));
+    rest = rest.slice(end + 2);
+    state.block = false;
   }
-  const index = line.indexOf("#");
-  if (index < 0) return null;
-  if (!balancedQuotes(line.slice(0, index))) return null;
-  return line.slice(index);
+
+  if (extension !== ".py") {
+    let start = rest.indexOf("/*");
+    while (start >= 0 && balancedQuotes(rest.slice(0, start))) {
+      const end = rest.indexOf("*/", start + 2);
+      if (end < 0) {
+        chunks.push(rest.slice(start));
+        state.block = true;
+        return chunks;
+      }
+      chunks.push(rest.slice(start, end + 2));
+      rest = rest.slice(end + 2);
+      start = rest.indexOf("/*");
+    }
+  }
+
+  if (extension === ".py") {
+    const index = rest.indexOf("#");
+    if (index >= 0 && balancedQuotes(rest.slice(0, index))) chunks.push(rest.slice(index));
+  } else {
+    const index = rest.indexOf("//");
+    if (index >= 0 && (index === 0 || /\s/.test(rest[index - 1])) && balancedQuotes(rest.slice(0, index))) {
+      chunks.push(rest.slice(index));
+    }
+  }
+  return chunks.length > 0 ? chunks : null;
 }
 
 export function checkCommentDiscipline(root) {
@@ -245,19 +272,21 @@ export function checkCommentDiscipline(root) {
       const relPath = rel(root, path);
       if (ignored(relPath, COMMENT_IGNORE_GLOBS)) continue;
       const lines = readFileSync(path, "utf8").split("\n");
+      const state = { block: false };
       lines.forEach((line, index) => {
-        const comment = commentText(line, extension);
-        if (comment === null) return;
-        const trimmed = comment.trim();
-        if (trimmed.startsWith("#!") || /SPDX-License-Identifier/.test(trimmed)) return;
+        const chunks = commentText(line, extension, state);
+        if (chunks === null) return;
         if (COMMENT_ALLOW.test(line) || COMMENT_REFERENCE.test(line)) return;
-        for (const [pattern, label] of FORBIDDEN_COMMENTS) {
-          if (!pattern.test(trimmed)) continue;
+        for (const chunk of chunks) {
+          const trimmed = chunk.trim();
+          if (trimmed.startsWith("#!") || /SPDX-License-Identifier/.test(trimmed)) continue;
+          const hit = FORBIDDEN_COMMENTS.find(([pattern]) => pattern.test(trimmed));
+          if (!hit) continue;
           push(
             problems,
             "comment-discipline",
             relPath,
-            `${label}; encode the constraint in a type, lint, or test, or add an external reference. See skills/no-comments/SKILL.md`,
+            `${hit[1]}; encode the constraint in a type, lint, or test, or add an external reference. See skills/no-comments/SKILL.md`,
             index + 1,
           );
           break;
@@ -345,6 +374,11 @@ export function checkRouterWiring(root) {
   if (!has(router, "references/playbooks.md")) {
     push(problems, "router-wiring", "skills/engineering-loop/SKILL.md", "must link references/playbooks.md");
   }
+  for (const name of PLAYBOOKS) {
+    if (!has(router, `\`${name}\``)) {
+      push(problems, "router-wiring", "skills/engineering-loop/SKILL.md", `router table is missing \`${name}\``);
+    }
+  }
   if (!existsSync(playbooks)) {
     push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", "missing playbook reference");
   } else {
@@ -419,12 +453,23 @@ export function checkSkillWiring(root) {
 }
 
 export function checkIntakeWiring(root) {
-  const path = join(root, "plugins/auto-intake.js");
-  if (!existsSync(path)) return [{ rule: "intake-wiring", file: "plugins/auto-intake.js", message: "missing file" }];
-  if (!readFileSync(path, "utf8").includes("export function routePrompt")) {
-    return [{ rule: "intake-wiring", file: "plugins/auto-intake.js", message: "missing export function routePrompt" }];
+  const file = "plugins/auto-intake.js";
+  const path = join(root, file);
+  if (!existsSync(path)) return [{ rule: "intake-wiring", file, message: "missing file" }];
+  const text = readFileSync(path, "utf8");
+  const problems = [];
+  if (!text.includes("export function routePrompt")) {
+    push(problems, "intake-wiring", file, "missing export function routePrompt");
   }
-  return [];
+  const list = text.match(/export const PLAYBOOK_IDS = \[([\s\S]*?)\];/);
+  const ids = list ? [...list[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]) : [];
+  for (const id of PLAYBOOKS) {
+    if (!ids.includes(id)) push(problems, "intake-wiring", file, `PLAYBOOK_IDS is missing ${id}`);
+  }
+  for (const id of ids) {
+    if (!PLAYBOOKS.includes(id)) push(problems, "intake-wiring", file, `PLAYBOOK_IDS has unregistered id ${id}`);
+  }
+  return problems;
 }
 
 export function checkWorkflowWiring(root) {
@@ -510,6 +555,17 @@ function selfTests() {
     assert.deepEqual(checkCommentDiscipline(tmp), [], "a URL inside a string is not a comment");
     writeFileSync(join(tmp, "src/ok.py"), "value = 'a # b'  # SPDX-License-Identifier: MIT\n");
     assert.deepEqual(checkCommentDiscipline(tmp), [], "a hash inside a string is not a comment");
+    writeFileSync(join(tmp, "src/bad.js"), "const x = 1;\n/* workaround: do not remove */\n");
+    assert.ok(
+      checkCommentDiscipline(tmp).some((problem) => problem.line === 2),
+      "a single-line block comment must be scanned",
+    );
+    writeFileSync(join(tmp, "src/bad.js"), "/*\n * workaround: do not remove\n */\nconst x = 1;\n");
+    assert.ok(
+      checkCommentDiscipline(tmp).some((problem) => problem.line === 2),
+      "a multi-line block comment must be scanned",
+    );
+    writeFileSync(join(tmp, "src/bad.js"), "const x = 1;\n");
 
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n");
     assert.deepEqual(checkAgentsBudget(tmp), [], "a small enforced AGENTS.md must pass");
@@ -531,7 +587,7 @@ function selfTests() {
     mkdirSync(join(tmp, "skills/engineering-loop/references"), { recursive: true });
     writeFileSync(
       join(tmp, "skills/engineering-loop/SKILL.md"),
-      "# Router\n\n## Playbook router\n\nSee references/playbooks.md.\n\n## Fallback\n\nUse feature.\n",
+      `# Router\n\n## Playbook router\n\n${PLAYBOOKS.map((name) => `| \`${name}\` | use |`).join("\n")}\n\nSee references/playbooks.md.\n\n## Fallback\n\nUse feature.\n`,
     );
     writeFileSync(
       join(tmp, "skills/engineering-loop/references/playbooks.md"),
@@ -548,7 +604,7 @@ function selfTests() {
     writeFileSync(join(tmp, "commands/review.md"), "review\n");
     writeFileSync(join(tmp, "agents/devils-advocate.md"), "review\n");
     mkdirSync(join(tmp, "plugins"), { recursive: true });
-    writeFileSync(join(tmp, "plugins/auto-intake.js"), "export function routePrompt(text) { return text; }\n");
+    writeFileSync(join(tmp, "plugins/auto-intake.js"), `export const PLAYBOOK_IDS = ${JSON.stringify(PLAYBOOKS)};\nexport function routePrompt(text) { return text; }\n`);
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n");
     assert.deepEqual(checkWorkflowWiring(tmp), [], "complete wiring must pass");
 
@@ -558,6 +614,12 @@ function selfTests() {
       "a hollow playbook section must fail",
     );
 
+    writeFileSync(join(tmp, "plugins/auto-intake.js"), 'export const PLAYBOOK_IDS = ["bug-fix"];\nexport function routePrompt() {}\n');
+    assert.ok(
+      checkIntakeWiring(tmp).some((problem) => problem.message.includes("PLAYBOOK_IDS is missing")),
+      "a playbook id list that drifts from the eight sections must fail",
+    );
+    writeFileSync(join(tmp, "plugins/auto-intake.js"), `export const PLAYBOOK_IDS = ${JSON.stringify(PLAYBOOKS)};\nexport function routePrompt(text) { return text; }\n`);
     writeFileSync(join(tmp, "commands/review.md"), "Report these as P3 notes.\n");
     assert.ok(
       checkWorkflowWiring(tmp).some((problem) => problem.message.includes("P3 notes")),
