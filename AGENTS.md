@@ -1,137 +1,97 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Agent rules
 
-## Absolute constraints
+This repository ships one OpenCode plugin. Procedure lives in `skills/`; this
+file is the always-on contract: the commands that must run, the boundaries that
+must hold, and the checks that make the rest real.
 
-- Never commit, log, print, or embed secrets, tokens, API keys, production
-  credentials, or PII.
-- Never mutate production systems, live data, shared infrastructure, or billing
-  accounts without explicit human approval in the current turn.
-- Never force-push, rewrite shared git history, or push directly to `main` or
-  `master`.
-- Prefer the smallest complete change. Do not expand scope or improve unrelated
-  code.
-- When a task names the files or acceptance set to change, do not edit outside
-  it. Report a related issue outside that set; the task owner decides.
-- Do not claim a test, build, lint, or check passed unless you ran it and saw
-  the result.
-- If requirements are ambiguous or a decision is hard to reverse, ask before
-  acting.
+## Commands
 
-## Task scale
+```sh
+python3 -m compileall -q bin tests
+python3 -m unittest discover -s tests -p 'test_*.py' -v
+python3 -m unittest tests.test_tasks -v          # one Python test file
+node tests/auto-intake.test.mjs                  # one Node test file
+npm run test:node
+npm test
+node --check src/plugin.js
+npm pack --dry-run
+npx --yes markdownlint-cli2@0.18.1 '**/*.md'
+lychee --offline --include-fragments --exclude-path node_modules '**/*.md'
+gitleaks detect --source . --config .gitleaks.toml
+```
 
-- **Trivial** (typo, one-liner, pure copy): make the change, quick check, done.
-- **Nontrivial** (external API, secrets or auth, schema or data model,
-  multi-file design, security tradeoff, or production behavior): load the
-  `engineering-loop` skill and follow it.
-- Read this file, `docs/reference.md`, and the project's
-  `docs/process-lessons.md` when present before significant changes. Keep facts,
-  assumptions, and open verification distinct.
-- A completed task appends one dated entry to the project's
-  `docs/process-lessons.md`: Surprise, Cost, Rule, Doc updated, and
-  `Promote-to-global` when portable. "None" is a valid Surprise.
-- Do not stop for command permission on reversible work. Proceed and report.
-  Stop only for a one-way door, secrets or production, a missing decision or
-  credential, or ambiguous acceptance. A verified PR push and merge through the
-  shipping gate is the normal path.
+`npm install` is required once for the Node tests, because `src/plugin.js`
+imports `@opencode/plugin`. The Python suite needs no third-party package.
 
-## Work intake and ownership
+## Boundaries
 
-- The durable unit is a task under `$HARNESS_STATE/work/tasks`. A nontrivial
-  request enters the queue automatically; run the goal and work-queue flow
-  directly. `/goal` is an escape hatch, not a required user step.
-- For a multi-deliverable outcome, plan first, then create and execute the
-  validated plan. `go --unattended` enables the per-goal watcher. A goal is done
-  only when every child is final and its acceptance is checked.
-- Read the task packet before coding: scope, out of scope, acceptance,
-  dependencies, context, evidence, handoff.
-- One task, one owner, one reviewable diff. Do not claim a task with open
-  dependencies unless the operator accepts the risk.
-- If work changes scope or acceptance, update the task before editing code.
-- A task is `done` only with evidence: a command and result, a measured check,
-  or an explicit `[T]` with a plan, and every acceptance item checked. Finish
-  in-scope work; do not leave a deferred list or an unmerged green PR.
-
-## Context and handoff
-
-- Load in this order: task packet and handoff; this file, `docs/reference.md`,
-  and the project's `docs/process-lessons.md` when present; the named source and
-  tests; at most three matching lessons and one matching skill.
-- Do not read the whole state directory, the whole lesson ledger, a full
-  transcript, or unrelated projects. Prefer indexes and `rg`.
-- At a phase boundary, before a model switch, or around 60% context, run
-  `/handoff`. Do not carry a finished phase's tool output forward.
-- Keep transient task state in the task file; durable project rules in the repo;
-  cross-project rules in the state directory.
-- No secrets, token values, or production data in a task, handoff, lesson, or
-  log.
-
-## Parallel work
-
-- Parallelize only independent slices with disjoint files or a fixed interface,
-  a testable acceptance, and review capacity. Cap at two or three lanes.
-- Write the ownership map first: lane, task, files or interfaces,
-  branch/worktree, dependencies, merge order.
-- Shared files get one owner. Lanes do not edit another lane's files or push.
-- One integrator merges in the declared order, resolves conflicts, and reruns
-  the full check. A green lane is not a green integration.
+- Linux, Node 20 or newer, Python 3.10 or newer. Standard library and Node
+  built-ins only; a new dependency needs an operator decision.
+- `src/plugin.js` registers commands, agents, and skills from `commands/`,
+  `agents/`, and `skills/`. `plugins/` holds the hook modules.
+- `HARNESS_HOME` is the package root. `HARNESS_STATE` is mutable local state,
+  defaulting to `~/.local/state/libreharness` with mode 700.
+- Never commit, log, print, or embed secrets, tokens, keys, or PII.
+- Never mutate production systems, live data, or shared infrastructure without
+  explicit approval in the current turn.
+- Never push to `main` or force-push shared history. GitHub is canonical for this
+  repository; Gitea is a read-only mirror.
+- Do not weaken, delete, or bypass a test, gate, permission, or safety check to
+  make a change pass.
+- Protected paths need an operator merge: `.github/workflows/`, `.gitleaks.toml`,
+  `AGENTS.md`, `SECURITY.md`, `package.json`, `bin/tasks.py`, `bin/jev_*.py`.
+- Trivial edits (typo, one line, pure copy) skip the workflow. Everything else
+  enters through `skills/engineering-loop/SKILL.md`.
+- A user-visible change updates `CHANGELOG.md`.
 
 ## Named principles
 
-Use these names to steer a decision. When one applies, name the principle and
-the decision it changed.
+Name the principle and the decision it changed. These words steer.
 
-- **Attack the premise.** When two fixes that share a premise fail the same
-  gate, write the premise down and test it before a third fix.
-- **Prove it works.** Check the real artifact, not a proxy, a self-report, or
-  "it compiles."
-- **Sequence verifiable units.** End each small unit in a check before starting
-  the next; keep one task to one reviewable diff.
-- **Explain the number.** Name the limiter and rule out errors, skipped work,
-  untuned sides, and noise before reporting a measurement.
-- **Guard the context window.** Route bulk reading to subagents, keep summaries
-  in the main thread, and hand off before context is exhausted.
-- **Separate before serializing shared state.** Give parallel work disjoint
-  files or worktrees; add coordination only for a real invariant.
-- **Subtract before you add.** Delete dead weight and speculative abstractions
-  before building the smallest complete change.
-- **Encode lessons in structure.** After the same correction twice, fix it with
-  architecture, types, lint, or a test; docs last.
+- **Laziness protocol.** Delete before you add. Ship the smallest complete change.
+- **Foundational thinking.** Choose the data shape before writing the logic.
+- **Model the domain.** One structure beats scattered conditionals and flags.
+- **Boundary discipline.** Parse and validate at the edge; trust internal types.
+- **Type system discipline.** Make illegal states unrepresentable.
+- **Subtract before you add.** Remove dead weight, then build on the smaller base.
+- **Fix root causes.** Trace to the first wrong state. A guard is a fix only when
+  that state is legitimate.
+- **Prove it works.** Check the real artifact, not a proxy or "it compiles".
+- **Sequence verifiable units.** One checkable unit per commit.
+- **Test behavior, not implementation.**
+- **Explain the number.** Name the limiter before you report a measurement.
+- **Encode lessons in structure.** After the same correction twice, fix it with a
+  type, lint, test, or script. Docs last.
+- **Guard the context window.** Route bulk reads to subagents; keep summaries.
+- **Never block on the human** for reversible work. Pause only at irreversible
+  actions and genuine ambiguity.
 
-## Decision authority
+## Skills
 
-- **Two-way doors** (easy to reverse): decide and act.
-- **One-way doors** (data models, migrations, auth boundaries, public API
-  contracts, infrastructure, CI/CD, tenancy, major dependencies, publication):
-  stop, explain why it is one-way, list at least two alternatives with
-  tradeoffs, and ask before committing.
+Load on demand. The router picks the playbook; this table is the map.
 
-## Verification and review
+| Skill | Use |
+|---|---|
+| `engineering-loop` | Entry point for any non-trivial change |
+| `goal`, `work-queue` | Multi-deliverable or durable work |
+| `no-comments` | Before review: remove comment alibis |
+| `unslop` | Prose: replies, PR bodies, docs, commit messages |
+| `correct` | Repeated mistake classes become checks |
+| `verification` | Prove behavior on the real artifact |
+| `state-audit` | Queues, retries, locks, lifecycle paths |
+| `shipping` | Ready PR, CI, independent verdict, merge |
+| `parallel-lanes`, `ui-design` | Parallel slices, interface work |
 
-- Define done as runnable checks. Run them and report actual results.
-- Run `/review` before declaring nontrivial work complete. The merged tree gets
-  the final review.
-- Stateful changes: when a change adds or alters a state machine, retry, lock,
-  concurrency, session, queue, or lifecycle path, run the `state-audit` skill
-  and update `docs/state-machines.md` before `/review`. A confirmed invalid
-  transition gets a regression test before the fix.
-- Prefer independent review for nontrivial changes. If no review ran, say so.
-- Public repos (Credarr, LibreHarness): GitHub is canonical. Open a ready
-  GitHub PR; the GitHub Actions `auto-merge` gate merges it when the required
-  checks pass. Gitea is a read-only mirror: never open a Gitea PR or push to it
-  for these repos.
-- Gitea-canonical repos (Brain and the homelab repos): push an AGit PR; the
-  repository gate schedules the merge after CI with its repository secret. Do
-  not ask for a token. Gate, workflow, auth, and deploy changes require a
-  manual operator merge in the same task.
-- Auto-merge is the default after independent review and green required checks.
-  Do not leave a reviewed, green PR open for the operator.
-- When a failure pattern appears twice, encode it as a test, lint rule, or
-  instruction.
+## Rule enforcement
 
-## Completion report
+| Rule | Check |
+|---|---|
+| Secrets and private markers stay out of the tree | `gitleaks detect --source . --config .gitleaks.toml` |
+| Tasks close only with a claim, checked acceptance, and real evidence | `python3 -m unittest tests.test_tasks -v` |
+| Skill budget, ASCII prose, comment discipline, and this file's size hold | `node tests/harness-ratchets.test.mjs` |
+| Review protocol, blast radius, and state audits stay wired | `node tests/review-protocol.test.mjs` |
 
-- **Substantial:** Gate, Done, Evidence, Lessons, Unfinished (must be empty;
-  name the operator-only blocker), Stopped because.
-- **Routine nontrivial:** what changed, what was run, what remains unproven.
-- **Trivial:** one line; say "not run" when nothing was checked.
+Per-rule history and new encodings live in
+`skills/correct/references/rule-ledger.md`. `/close` and `/tune` append there and
+never add rows to this table.

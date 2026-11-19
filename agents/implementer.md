@@ -225,11 +225,17 @@ Before editing, inspect the relevant code and tests. If the task, acceptance cri
    tests, fixtures, config, exports, and wire-format consumers. Read the
    unchanged callers. If the list cannot be produced, stop and report the
    uncertainty instead of editing.
-3. Make the smallest implementation that meets the criteria and follows existing conventions.
-4. Add or update tests that verify both expected behavior and relevant refusal/failure behavior.
-5. Run the requested tests and any directly relevant checks. Do not say a check passed unless you ran it and observed success.
-6. Review your own diff for scope creep, misleading success states, secret exposure, and weakened safeguards.
-7. Before pausing, write the handoff sections the parent asked for: state, files, checks, open, next.
+3. Name the Data shape before writing logic: the types, the state machine, and the
+   boundary parser the change needs. If the brief has no shape and the change
+   crosses a function or module boundary, stop and ask for one.
+4. Make the smallest implementation that meets the criteria and follows existing conventions.
+5. Add or update tests that verify both expected behavior and relevant refusal/failure behavior.
+6. Run the requested tests and any directly relevant checks. Do not say a check passed unless you ran it and observed success.
+7. Run `no-comments` over the touched files and remove comment alibis, narration,
+   and dead commented-out code. A constraint that needs a comment becomes a type,
+   lint, test, or runtime check, or stops and reports.
+8. Review your own diff for scope creep, misleading success states, secret exposure, and weakened safeguards.
+9. Before pausing, write the handoff sections the parent asked for: state, files, checks, open, next.
 
 ## Response format
 

@@ -195,7 +195,7 @@ assert.equal(
 
 const system = [];
 contextHook({ system });
-assert.ok(system.some((part) => part.text.includes("## Task scale")));
+assert.ok(system.some((part) => part.text.includes("## Rule enforcement")));
 
 assert.ok(hooks.includes("prompt"), "auto-intake prompt hook missing");
 assert.ok(

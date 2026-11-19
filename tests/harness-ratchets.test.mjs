@@ -307,83 +307,113 @@ export function checkRelativeLinks(root) {
   return problems;
 }
 
-export function checkWorkflowWiring(root) {
+export function checkRouterWiring(root) {
   const problems = [];
   const router = join(root, "skills/engineering-loop/SKILL.md");
   const playbooks = join(root, "skills/engineering-loop/references/playbooks.md");
-  const brief = join(root, "commands/brief.md");
-  const implementer = join(root, "agents/implementer.md");
-  const review = join(root, "commands/review.md");
-  const devil = join(root, "agents/devils-advocate.md");
-  const autoIntake = join(root, "plugins/auto-intake.js");
 
   for (const heading of ["## Playbook router", "## Fallback"]) {
-    if (!hasHeading(router, heading)) push(problems, "workflow-wiring", "skills/engineering-loop/SKILL.md", `missing ${heading}`);
+    if (!hasHeading(router, heading)) push(problems, "router-wiring", "skills/engineering-loop/SKILL.md", `missing ${heading}`);
   }
   if (!has(router, "references/playbooks.md")) {
-    push(problems, "workflow-wiring", "skills/engineering-loop/SKILL.md", "must link references/playbooks.md");
+    push(problems, "router-wiring", "skills/engineering-loop/SKILL.md", "must link references/playbooks.md");
   }
   if (!existsSync(playbooks)) {
-    push(problems, "workflow-wiring", "skills/engineering-loop/references/playbooks.md", "missing playbook reference");
+    push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", "missing playbook reference");
   } else {
     const text = readFileSync(playbooks, "utf8");
     if (countLines(text) > MAX_PLAYBOOKS_FILE_LINES) {
-      push(problems, "workflow-wiring", "skills/engineering-loop/references/playbooks.md", `${countLines(text)} lines exceeds ${MAX_PLAYBOOKS_FILE_LINES}`);
+      push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `${countLines(text)} lines exceeds ${MAX_PLAYBOOKS_FILE_LINES}`);
     }
     for (const name of PLAYBOOKS) {
       const body = section(text, `## ${name}`);
       if (body === null) {
-        push(problems, "workflow-wiring", "skills/engineering-loop/references/playbooks.md", `missing playbook section ${name}`);
+        push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `missing playbook section ${name}`);
         continue;
       }
       const lines = body.split("\n").filter((line) => line.trim() !== "");
       const steps = lines.filter((line) => /^\s*(?:\d+\.|-)\s+\S/.test(line));
       if (lines.length > MAX_PLAYBOOK_LINES) {
-        push(problems, "workflow-wiring", "skills/engineering-loop/references/playbooks.md", `${name} has ${lines.length} lines, cap is ${MAX_PLAYBOOK_LINES}`);
+        push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `${name} has ${lines.length} lines, cap is ${MAX_PLAYBOOK_LINES}`);
       }
       if (steps.length < MIN_PLAYBOOK_STEPS) {
-        push(problems, "workflow-wiring", "skills/engineering-loop/references/playbooks.md", `${name} has ${steps.length} steps, needs at least ${MIN_PLAYBOOK_STEPS}`);
+        push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `${name} has ${steps.length} steps, needs at least ${MIN_PLAYBOOK_STEPS}`);
       }
     }
   }
 
-  const requirements = [
-    [join(root, "skills/no-comments/SKILL.md"), ["## Keep exceptions", "MUST KILL"]],
-    [join(root, "skills/correct/SKILL.md"), ["## Inverted pyramid", "references/rule-ledger.md"]],
-    [join(root, "skills/unslop/SKILL.md"), ["## Prose rules"]],
-    [brief, ["**Playbook**", "**Data shape**"]],
-    [implementer, ["Data shape", "no-comments"]],
-    [autoIntake, ["export function routePrompt"]],
-  ];
-  for (const [path, needles] of requirements) {
+  for (const [path, needles] of [
+    [join(root, "commands/brief.md"), ["**Playbook**", "**Data shape**"]],
+    [join(root, "agents/implementer.md"), ["Data shape", "no-comments"]],
+  ]) {
     const name = rel(root, path);
     if (!existsSync(path)) {
-      push(problems, "workflow-wiring", name, "missing file");
+      push(problems, "router-wiring", name, "missing file");
       continue;
     }
     const text = readFileSync(path, "utf8");
     for (const needle of needles) {
-      if (!text.includes(needle)) push(problems, "workflow-wiring", name, `missing ${needle}`);
-    }
-  }
-
-  if (hasHeading(join(root, "skills/unslop/SKILL.md"), "## Audit") || hasHeading(join(root, "skills/unslop/SKILL.md"), "## Fix")) {
-    push(problems, "workflow-wiring", "skills/unslop/SKILL.md", "prose-only skill must not carry a codebase audit mode");
-  }
-  for (const [path, forbidden] of [
-    [review, "P3 notes"],
-    [devil, "require a comment that says why"],
-  ]) {
-    if (has(path, forbidden)) {
-      push(problems, "workflow-wiring", rel(root, path), `remove "${forbidden}": comment workarounds are blocking findings`);
+      if (!text.includes(needle)) push(problems, "router-wiring", name, `missing ${needle}`);
     }
   }
   return problems;
 }
 
+export function checkSkillWiring(root) {
+  const problems = [];
+  for (const [path, needles] of [
+    [join(root, "skills/no-comments/SKILL.md"), ["## Keep exceptions", "MUST KILL"]],
+    [join(root, "skills/correct/SKILL.md"), ["## Inverted pyramid", "references/rule-ledger.md"]],
+    [join(root, "skills/unslop/SKILL.md"), ["## Prose rules"]],
+  ]) {
+    const name = rel(root, path);
+    if (!existsSync(path)) {
+      push(problems, "skill-wiring", name, "missing file");
+      continue;
+    }
+    const text = readFileSync(path, "utf8");
+    for (const needle of needles) {
+      if (!text.includes(needle)) push(problems, "skill-wiring", name, `missing ${needle}`);
+    }
+  }
+  const unslop = join(root, "skills/unslop/SKILL.md");
+  if (hasHeading(unslop, "## Audit") || hasHeading(unslop, "## Fix")) {
+    push(problems, "skill-wiring", "skills/unslop/SKILL.md", "prose-only skill must not carry a codebase audit mode");
+  }
+  for (const [path, forbidden] of [
+    [join(root, "commands/review.md"), "P3 notes"],
+    [join(root, "agents/devils-advocate.md"), "require a comment that says why"],
+  ]) {
+    if (has(path, forbidden)) {
+      push(problems, "skill-wiring", rel(root, path), `remove "${forbidden}": comment workarounds are blocking findings`);
+    }
+  }
+  return problems;
+}
+
+export function checkIntakeWiring(root) {
+  const path = join(root, "plugins/auto-intake.js");
+  if (!existsSync(path)) return [{ rule: "intake-wiring", file: "plugins/auto-intake.js", message: "missing file" }];
+  if (!readFileSync(path, "utf8").includes("export function routePrompt")) {
+    return [{ rule: "intake-wiring", file: "plugins/auto-intake.js", message: "missing export function routePrompt" }];
+  }
+  return [];
+}
+
+export function checkWorkflowWiring(root) {
+  return [...checkRouterWiring(root), ...checkSkillWiring(root), ...checkIntakeWiring(root)];
+}
+
 // The scan grows with the refactor so every commit stays green. A check is added
 // here in the same commit that makes it pass.
-const CHECKS = [checkSkillBudgets, checkAsciiProse, checkCommentDiscipline];
+const CHECKS = [
+  checkSkillBudgets,
+  checkAsciiProse,
+  checkCommentDiscipline,
+  checkAgentsBudget,
+  checkRelativeLinks,
+  checkRouterWiring,
+];
 
 function selfTests() {
   const tmp = mkdtempSync(join(tmpdir(), "harness-ratchets-"));
