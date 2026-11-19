@@ -212,6 +212,30 @@ export function checkAsciiProse(root) {
   return problems;
 }
 
+function balancedQuotes(prefix) {
+  let single = 0;
+  let double = 0;
+  let backtick = 0;
+  for (const character of prefix) {
+    if (character === "'") single += 1;
+    else if (character === '"') double += 1;
+    else if (character === "`") backtick += 1;
+  }
+  return single % 2 === 0 && double % 2 === 0 && backtick % 2 === 0;
+}
+
+function commentText(line, extension) {
+  if (extension !== ".py") {
+    const index = line.indexOf("//");
+    if (index < 0 || (index > 0 && !/\s/.test(line[index - 1]))) return null;
+    return balancedQuotes(line.slice(0, index)) ? line.slice(index) : null;
+  }
+  const index = line.indexOf("#");
+  if (index < 0) return null;
+  if (!balancedQuotes(line.slice(0, index))) return null;
+  return line.slice(index);
+}
+
 export function checkCommentDiscipline(root) {
   const problems = [];
   for (const name of ["src", "plugins", "bin"]) {
@@ -222,9 +246,10 @@ export function checkCommentDiscipline(root) {
       if (ignored(relPath, COMMENT_IGNORE_GLOBS)) continue;
       const lines = readFileSync(path, "utf8").split("\n");
       lines.forEach((line, index) => {
-        const trimmed = line.trim();
-        const isComment = extension === ".py" ? trimmed.startsWith("#") : trimmed.startsWith("//");
-        if (!isComment || trimmed.startsWith("#!") || /SPDX-License-Identifier/.test(trimmed)) return;
+        const comment = commentText(line, extension);
+        if (comment === null) return;
+        const trimmed = comment.trim();
+        if (trimmed.startsWith("#!") || /SPDX-License-Identifier/.test(trimmed)) return;
         if (COMMENT_ALLOW.test(line) || COMMENT_REFERENCE.test(line)) return;
         for (const [pattern, label] of FORBIDDEN_COMMENTS) {
           if (!pattern.test(trimmed)) continue;
@@ -475,6 +500,16 @@ function selfTests() {
       checkCommentDiscipline(tmp).some((problem) => problem.line === 2),
       "an allow marker must be evaluated per line, not per file",
     );
+    writeFileSync(join(tmp, "src/bad.js"), "const x = 1; // workaround for the retry loop\n");
+    assert.ok(
+      checkCommentDiscipline(tmp).some((problem) => problem.message.includes("workaround")),
+      "an inline workaround comment must fail",
+    );
+    writeFileSync(join(tmp, "src/bad.js"), "const x = 1;\n");
+    writeFileSync(join(tmp, "src/url.js"), 'const url = "https://example.com";\n');
+    assert.deepEqual(checkCommentDiscipline(tmp), [], "a URL inside a string is not a comment");
+    writeFileSync(join(tmp, "src/ok.py"), "value = 'a # b'  # SPDX-License-Identifier: MIT\n");
+    assert.deepEqual(checkCommentDiscipline(tmp), [], "a hash inside a string is not a comment");
 
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n");
     assert.deepEqual(checkAgentsBudget(tmp), [], "a small enforced AGENTS.md must pass");
