@@ -19,7 +19,7 @@ Use the work-queue and engineering-loop skills.
    - **Task** and one-sentence scope
    - **Out of scope**
    - **Acceptance** as observable checks
-   - **Reach** — callers, importers, tests, fixtures, config, exports, and
+   - **Reach**: callers, importers, tests, fixtures, config, exports, and
      wire-format consumers the change must touch or preserve
    - **Invariants** and trust boundaries
    - **Risks / unknowns**

@@ -24,8 +24,8 @@ code slice.
 
 Bad: two authors in `rotate.py`/`executor.py`; concurrent edits to
 `AGENTS.md`, `DECISIONS.md`, `process-lessons.md`, global config, or the state;
-a refactor that moves the interface another lane is using; “one agent per
-file” without a merge order.
+a refactor that moves the interface another lane is using; "one agent per
+file" without a merge order.
 
 ## Plan before launching
 
@@ -33,7 +33,7 @@ Write an ownership map in the task or a short lane plan:
 
 | Lane | Task | Owns (files/interfaces) | Branch/worktree | Depends on | Merge order |
 |---|---|---|---|---|---|
-| A | ... | ... | `feature/a` | — | 1 |
+| A | ... | ... | `feature/a` | none | 1 |
 | B | ... | ... | `feature/b` | A's contract | 2 |
 
 One lane owns the integration point. Shared files get one owner or are written
@@ -66,7 +66,7 @@ Stop and serialize when:
 - the same file needs edits from two lanes;
 - merges conflict twice on the same area;
 - review latency exceeds the time saved;
-- a lane's evidence is missing or only “tests pass” without output.
+- a lane's evidence is missing or only "tests pass" without output.
 
 Record the reason in the task log; do not silently keep both lanes running.
 

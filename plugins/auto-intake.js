@@ -84,7 +84,7 @@ function createTask(text, directory) {
       "--scope",
       "Auto-captured prompt; confirm scope and acceptance before claiming.",
       "--acceptance",
-      "- [ ] TBD — confirm before claiming.",
+      "- [ ] TBD: confirm before claiming.",
       "--",
       title,
     ],

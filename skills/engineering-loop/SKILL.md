@@ -1,6 +1,6 @@
 ---
 name: engineering-loop
-description: Risk-scaled process for nontrivial work — external APIs, secrets or auth, schema and data changes, security tradeoffs, multi-file design, or when "done" means production behavior. Read the repo state, gate only what applies, pick one path, prove the claim, and keep lessons only when they pay off.
+description: Risk-scaled process for nontrivial work: external APIs, secrets or auth, schema and data changes, security tradeoffs, multi-file design, or when "done" means production behavior. Read the repo state, gate only what applies, pick one path, prove the claim, and keep lessons only when they pay off.
 ---
 <!-- SPDX-License-Identifier: MIT -->
 
@@ -23,14 +23,14 @@ evidence, definition of done, past lessons).
 ## 1. Brain
 
 Read the project `AGENTS.md`, `DECISIONS.md` / REFUSES, the coverage doc for
-anything you touch, and recent lessons — not the whole diary. Prefer these
+anything you touch, and recent lessons, not the whole diary. Prefer these
 files over chat memory. Load only the context the task needs.
 
 At a pause, a phase boundary, a model switch, or around 60% context: run
 `/handoff` and write State / Decisions / Files / Checks / Open / Next / Context
 (under 40 lines, no secrets). On resume, `/takeover`: read the packet, handoff,
 project rules, and the named files; run the named check before trusting a
-“done” claim.
+"done" claim.
 
 ## 2. Gates (only the ones that apply)
 
@@ -60,7 +60,7 @@ critique before execution.
 
 ## 4. Implement
 
-One vertical slice that proves the hard part — not every variant at once. Stay
+One vertical slice that proves the hard part, not every variant at once. Stay
 inside the task scope. If the interface or acceptance changes, update the task
 before editing.
 
@@ -94,17 +94,16 @@ completed task. Use `/close`: it integrates, reaps, runs the final review and
 Jev triage, appends one entry, updates the task, and may stage a project skill
 under the project's `skills/` directory. If there is no queue task or diff and
 the operator stated a preference, append it directly to the project ledger. If
-nothing surprised you, say that in one line — do not invent a discovery.
+nothing surprised you, say that in one line. Do not invent a discovery.
 
 When a gate fails or an approach is rejected, also add or harden a REFUSE or a
 checklist item where it persists (repo decisions, or the gate/coverage doc), so
 the next agent does not re-explore it. A lesson without a rule change is just a
 diary entry.
 
-Tag `Promote-to-global` on the Rule line when the lesson is portable — process,
-or a personal workflow/design preference — not product or stack dogma.
-Promotion happens in a tuning turn, with the operator's approval — not by
-editing global config mid-task.
+Tag `Promote-to-global` on the Rule line when the lesson is portable: process, or a personal workflow/design
+preference, not product or stack dogma. Promotion happens in a tuning turn, with
+the operator's approval, not by editing global config mid-task.
 
 ## 9. Tuning (operator-triggered, or after a major wave)
 

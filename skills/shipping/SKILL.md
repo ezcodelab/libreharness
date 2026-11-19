@@ -19,8 +19,7 @@ exists. The goal is one verified PR through the forge, not a direct push.
 3. If no forge path resolves, stop with the exact command and the missing
    capability. Do not claim the work merged.
 
-Never install a CLI silently, put a token in argv or output, require both
-forges, push to `main`, or force-push a shared branch.
+Never install a CLI silently, put a token in argv or output, require both forges, push to `main`, or force-push a shared branch.
 
 ## Auto-merge is the default
 
@@ -28,12 +27,10 @@ Once the required checks and the independent verdict pass, merge in the same
 task. Do not ask the operator to merge a green, reviewed PR or leave it open as
 "ready for review"; an unmerged reviewed patch is unfinished work. The exception
 is a gate, CI, auth, deploy, or release change: it still gets the verdict, then
-stops at merge-ready because the gate cannot certify its own weakening.
-
-A gate-only failure is one decision, not an indefinite open PR. Ask the operator
-once in the same turn with the exact `--admin --match-head-commit` command. If
-authorized, merge that head now. If declined, close the PR with the reason.
-Never end a task with a reviewed PR open.
+stops at merge-ready because the gate cannot certify its own weakening. A
+gate-only failure is one decision, not an open PR: ask once in the same turn with
+the exact `--admin --match-head-commit` command, merge if authorized, and
+otherwise close it with the reason.
 
 ## Required gates
 
@@ -98,15 +95,14 @@ gh pr merge <number> --squash --match-head-commit "$HEAD" --delete-branch
 If the verifier's SHA and `$HEAD` differ, stop and re-verify. If a required
 check is missing, pending, skipped, or failed, stop.
 
-For a Gitea-canonical repo, push the AGit PR and let the repository gate merge
-it. Do not poll with a token.
+For a Gitea-canonical repo, push the AGit PR and let the repository gate merge it, with no token polling.
 
 ## 5. After the merge
 
 Re-read the PR and confirm it is merged, not merely queued. Delete only the
 branch you created, after its worktree is gone. Update the task with the PR URL
-and merge commit. If the merge is queued or blocked, report that state; do not
-say it landed.
+and merge commit. A queued or blocked merge is reported as that state, not as
+landed.
 
 ## Stop conditions
 
@@ -118,7 +114,7 @@ Stop and report instead of merging when:
 - the PR has conflicts, is a draft, or is not mergeable;
 - evidence is missing or the diff contains a secret;
 - the change touches a human-only gate: secrets, production, release, auth, data
-  migration, branch protection, CI, or an operator decision. Stop at merge-ready,
-  name the exact merge, and do not leave a silent open PR.
+  migration, branch protection, CI, or an operator decision. Stop at merge-ready
+  and name the exact merge.
 
 Do not bypass branch protection, disable a check, or merge on a stale verdict.

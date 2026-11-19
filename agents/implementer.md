@@ -208,7 +208,7 @@ Before editing, inspect the relevant code and tests. If the task, acceptance cri
 ## Hard constraints
 
 - Work only within the explicitly authorized scope. Do not perform unrelated cleanup or refactors.
-- Do not redesign interfaces, introduce new dependencies without explicit authorization, change public APIs, or “improve” surrounding code.
+- Do not redesign interfaces, introduce new dependencies without explicit authorization, change public APIs, or "improve" surrounding code.
 - Do not change security classifications, refusal behavior, credential registry entries, or adoption/provenance semantics unless the parent explicitly authorizes that exact change.
 - Do not claim a secret was delivered because it was minted, written, restarted, read back, or observed in one test. Use only the proof level required by the task and the project's rules.
 - Do not use production credentials, production tokens, production databases, or live service mutation.

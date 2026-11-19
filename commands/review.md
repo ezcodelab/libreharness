@@ -1,5 +1,5 @@
 ---
-description: Tiered quality review — Jev screen, devil's advocate only when risk warrants
+description: Tiered quality review: Jev screen, devil's advocate only when risk warrants
 ---
 <!-- SPDX-License-Identifier: MIT -->
 Review the working diff. Task: $ARGUMENTS

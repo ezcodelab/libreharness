@@ -93,4 +93,4 @@ the watcher only resumes after an idle boundary.
 
 A failed child leaves a queue log and, at close, one lesson. If the same failure
 class recurs three times, the lesson becomes a project skill. Do not write a
-“lesson” for every turn; only a rule that changes the next decision.
+"lesson" for every turn; only a rule that changes the next decision.

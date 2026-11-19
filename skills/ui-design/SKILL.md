@@ -1,6 +1,6 @@
 ---
 name: ui-design
-description: Use for any UI or UX work — layouts, components, styling, visual review, or interface copy, including new screens, redesigns, and "does this look right" checks. Encodes the operator's portable design language; the project's tokens, components and design docs take precedence.
+description: Use for any UI or UX work: layouts, components, styling, visual review, or interface copy, including new screens, redesigns, and "does this look right" checks. Encodes the operator's portable design language; the project's tokens, components and design docs take precedence.
 ---
 <!-- SPDX-License-Identifier: MIT -->
 
@@ -16,7 +16,7 @@ tokens, components and design doc first; they win where they are more specific.
 2. **Structure over labels.** If a label is needed to explain the layout, the
    layout is wrong. A label names a control or a value; it does not teach the
    screen. Accessibility labels, destructive-action confirmations, ambiguous
-   icons and table headers are not explanations — keep them.
+   icons and table headers are not explanations. Keep them.
 3. **One design language.** One spacing scale, one type scale, one radius and
    border vocabulary, one button hierarchy, one icon set. Use the project's
    tokens and components; never invent a per-page color, font, shadow or
@@ -39,7 +39,7 @@ tokens, components and design doc first; they win where they are more specific.
 
 - Does an existing component or token already do this? If yes, use it.
 - Can the element be removed instead of restyled? If yes, remove it.
-- Is this a new pattern or a variant of an existing one? Prefer the variant —
+- Is this a new pattern or a variant of an existing one? Prefer the variant.
   and a new component joins the system or does not ship.
 - What are the empty, loading, error and long-content cases?
 - Write a compact design plan before code: 4 to 6 named colors, the typefaces
