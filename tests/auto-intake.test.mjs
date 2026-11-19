@@ -100,6 +100,7 @@ const cases = [
   ["What is the bug in the parser?", "investigation", false, false, ["engineering-loop"]],
   ["Investigate the parser and extract the helper", "refactoring", false, false, ["engineering-loop"]],
   ["Investigate the parser and move the code", "refactoring", false, false, ["engineering-loop"]],
+  ["Investigate the parser to extract the helper", "refactoring", false, false, ["engineering-loop"]],
 ];
 for (const [prompt, playbook, userNamed, multiStep, skills] of cases) {
   const decision = routePrompt(prompt);

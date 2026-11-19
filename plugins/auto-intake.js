@@ -47,11 +47,9 @@ const REFACTOR =
 const DEFECT =
   /\b(bug|bugs|broken|break|breaks|breaking|fails?|failing|failure|error|errors|crash(?:es|ed|ing)?|regression|wrong|incorrect|fix|fixes|fixing|repair)\b/i;
 const EDIT =
-  /\b(add|adds|build|change|changes|commit|correct|create|debug|delete|drop|fix|hillclimb|implement|improve|increase|make|migrate|optimi[sz]e|profile|reduce|refactor|remove|rename|repair|replace|rewrite|simplify|speed|split|update|wire|write)\b/i;
+  /\b(add|adds|build|change|changes|commit|consolidate|correct|create|debug|delete|drop|extract|fix|hillclimb|implement|improve|increase|inline|make|migrate|move|optimi[sz]e|profile|reduce|refactor|remove|rename|repair|replace|rewrite|simplify|speed|split|update|wire|write)\b/i;
 const LEAD_READ_ONLY =
   /^\s*(investigate|explain|trace|describe|analy[sz]e|review|audit|find out|how|what|why|when|where|who|is|are|do|does|did)\b/i;
-const IMPERATIVE_EDIT =
-  /\b(and|then|also)\s+(add|build|change|commit|consolidate|create|delete|drop|extract|fix|implement|improve|inline|make|move|optimi[sz]e|profile|reduce|remove|rename|repair|replace|rewrite|simplify|split|update|wire|write)\b/i;
 
 export function routePrompt(text) {
   const input = String(text ?? "");
@@ -62,8 +60,7 @@ export function routePrompt(text) {
   const multiStep = MULTI_STEP.test(input);
 
   const defect = DEFECT.test(input) && EDIT.test(input);
-  const readOnly =
-    LEAD_READ_ONLY.test(input) && !EDIT.test(input) && !IMPERATIVE_EDIT.test(input);
+  const readOnly = LEAD_READ_ONLY.test(input) && !EDIT.test(input);
 
   let playbook;
   if (namedId) {
