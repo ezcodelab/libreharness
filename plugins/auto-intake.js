@@ -23,6 +23,95 @@ const CONTINUE =
   /^\s*(continue|go on|keep going|yes|ok|okay|proceed|retry|again|done)\b/i;
 const DELEGATION =
   /^\s*(you are|act as|role:|read-only|independent|focused|re-?review|implement one explicitly|task may be complete)/i;
+
+export const PLAYBOOK_IDS = [
+  "investigation",
+  "bug-fix",
+  "feature",
+  "refactoring",
+  "perf",
+  "hillclimb",
+  "autonomous-multiphase",
+  "correct",
+];
+
+const NAMED_PLAYBOOK = /\b(?:the\s+)?([a-z][a-z-]+)\s+playbook\b/i;
+const MULTI_STEP =
+  /\b(multi-step|multi-phase|multiphase|multi-deliverable|unattended|autorun|going to bed|run until done|until done|overnight)\b/i;
+const HILLCLIMB =
+  /\b(hillclimb|hill-climb|throughput|lines\/sec|target metric|commit only (?:measured )?wins)\b/i;
+const PERF =
+  /\b(slow|slower|latency|latencies|profile|profiling|p9\d|speed (?:it|this) up|takes? \d+(?:\.\d+)?\s*(?:ms|s|seconds?|milliseconds?))\b/i;
+const REFACTOR =
+  /\b(refactor|refactoring|simplify|extract|split|move|rename|inline|consolidate)\b/i;
+const DEFECT =
+  /\b(bug|bugs|broken|break|breaks|breaking|fails?|failing|failure|error|errors|crash(?:es|ed|ing)?|regression|wrong|incorrect|fix|fixes|fixing|repair)\b/i;
+const EDIT =
+  /\b(add|adds|build|change|changes|commit|consolidate|correct|create|debug|delete|drop|extract|fix|hillclimb|implement|improve|increase|inline|make|migrate|move|optimi[sz]e|profile|reduce|refactor|remove|rename|repair|replace|rewrite|simplify|speed|split|update|wire|write)\b/i;
+const LEAD_READ_ONLY =
+  /^\s*(investigate|explain|trace|describe|analy[sz]e|review|audit|find out|how|what|why|when|where|who|is|are|do|does|did)\b/i;
+
+export function routePrompt(text) {
+  const input = String(text ?? "");
+  const named = input.match(NAMED_PLAYBOOK);
+  const namedId = named && PLAYBOOK_IDS.includes(named[1].toLowerCase())
+    ? named[1].toLowerCase()
+    : null;
+  const multiStep = MULTI_STEP.test(input);
+
+  const defect = DEFECT.test(input) && EDIT.test(input);
+  const readOnly = LEAD_READ_ONLY.test(input) && !EDIT.test(input);
+
+  let playbook;
+  if (namedId) {
+    playbook = namedId;
+  } else if (multiStep) {
+    playbook = "autonomous-multiphase";
+  } else if (defect) {
+    playbook = "bug-fix";
+  } else if (readOnly) {
+    playbook = "investigation";
+  } else if (HILLCLIMB.test(input)) {
+    playbook = "hillclimb";
+  } else if (PERF.test(input)) {
+    playbook = "perf";
+  } else if (REFACTOR.test(input)) {
+    playbook = "refactoring";
+  } else if (EDIT.test(input)) {
+    playbook = "feature";
+  } else {
+    playbook = "investigation";
+  }
+
+  if (playbook === "autonomous-multiphase") {
+    return {
+      playbook,
+      userNamed: namedId !== null,
+      multiStep: true,
+      skills: ["engineering-loop", "goal"],
+    };
+  }
+  return {
+    playbook,
+    userNamed: namedId !== null,
+    multiStep,
+    skills: multiStep ? ["engineering-loop", "goal"] : ["engineering-loop"],
+  };
+}
+
+function queueNotice(id, decision) {
+  const entry = decision.skills.includes("goal")
+    ? "Route through engineering-loop with the goal skill for this multi-step run"
+    : "Route through engineering-loop";
+  return (
+    `[queue] Task ${id} was created for this request. ${entry} ` +
+    `(playbook: ${decision.playbook}). Run brief first to confirm scope, data ` +
+    `shape, and acceptance, then implement, verify, review, close, and ship. ` +
+    `Honor a playbook the user named. Stop only at the contract's human gates. ` +
+    `Do not ask the operator to retype a command.`
+  );
+}
+
 // Keep this list at least as strict as bin/jev_review.py SECRET_PATTERNS.
 const SECRET =
   /(AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|sk[_-](live|test)?[_-]?[A-Za-z0-9]{10,}|xox[baprs]-[A-Za-z0-9-]{10,}|Bearer\s+eyJ[A-Za-z0-9._-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|password|token|access[_-]?key)\s*[:=]\s*(?:"[^"]{8,}"|'[^']{8,}'|\S{8,}))/i;
@@ -84,7 +173,7 @@ function createTask(text, directory) {
       "--scope",
       "Auto-captured prompt; confirm scope and acceptance before claiming.",
       "--acceptance",
-      "- [ ] TBD — confirm before claiming.",
+      "- [ ] TBD: confirm before claiming.",
       "--",
       title,
     ],
@@ -128,12 +217,7 @@ export default {
       try {
         const id = createTask(text, ctx.location?.directory);
         seen.set(sessionID, id);
-        event.prompt.text =
-          text +
-          `\n\n[queue] Task ${id} was created for this request. ` +
-          `Continue with the goal skill now: brief, implement, verify, review, ` +
-          `close, and ship. Stop only at the contract's human gates. Do not ask ` +
-          `the operator to retype a command.`;
+        event.prompt.text = text + `\n\n${queueNotice(id, routePrompt(text))}`;
       } catch {
         // Never block a prompt because the queue helper is unavailable.
       }

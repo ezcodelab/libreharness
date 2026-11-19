@@ -28,7 +28,7 @@ copyFileSync(
 process.env.AUTO_INTAKE_ROOT = root;
 process.env.AUTO_INTAKE_TASKS = join(root, "bin", "tasks.py");
 process.env.AUTO_INTAKE = "on";
-const { default: plugin } = await import(
+const { default: plugin, routePrompt } = await import(
   new URL(`../plugins/auto-intake.js?test=${process.pid}`, import.meta.url)
 );
 
@@ -46,12 +46,17 @@ if (!first.prompt.text.includes("[queue] Task ")) {
   throw new Error("task note was not injected");
 }
 if (
-  !first.prompt.text.includes("goal skill") ||
+  !first.prompt.text.includes("engineering-loop") ||
+  !first.prompt.text.includes("playbook: bug-fix") ||
+  !first.prompt.text.includes("brief") ||
   !first.prompt.text.includes("ship") ||
   !first.prompt.text.includes("human gates") ||
   first.prompt.text.includes("/intake")
 ) {
-  throw new Error("queue notice does not route through shipping to the human gates");
+  throw new Error("queue notice does not route through the loop to the human gates");
+}
+if (first.prompt.text.includes("goal")) {
+  throw new Error("single-step route preloaded the goal skill");
 }
 const id = first.prompt.text.match(/Task ([^\s]+)/)?.[1];
 if (!id) throw new Error("task id missing");
@@ -61,6 +66,53 @@ if (!task.includes("example-project")) throw new Error("project not inferred");
 if (task.includes("use /goal")) throw new Error("task scope still requires /goal");
 if (!task.includes("confirm scope and acceptance")) {
   throw new Error("task scope does not state the acceptance confirmation");
+}
+
+
+const cases = [
+  ["How does auto-intake route prompts?", "investigation", false, false, ["engineering-loop"]],
+  ["Investigate why the cache entry survives logout, do not edit code", "investigation", false, false, ["engineering-loop"]],
+  ["Fix the login redirect bug", "bug-fix", false, false, ["engineering-loop"]],
+  ["Correct the login redirect bug", "bug-fix", false, false, ["engineering-loop"]],
+  ["Explain why cache expires and fix the refresh bug", "bug-fix", false, false, ["engineering-loop"]],
+  ["Explain how lock contention works and add a retry flag", "feature", false, false, ["engineering-loop"]],
+  ["Refactor the parser into pure functions without changing behavior", "refactoring", false, false, ["engineering-loop"]],
+  ["Board generation takes 2 seconds on 100 tasks, profile and speed it up", "perf", false, false, ["engineering-loop"]],
+  ["Hillclimb parser throughput toward 50k lines/sec, commit only measured wins", "hillclimb", false, false, ["engineering-loop"]],
+  ["Going to bed, run a multi-phase migration until done", "autonomous-multiphase", false, true, ["engineering-loop", "goal"]],
+  ["Use the refactoring playbook to simplify the parser", "refactoring", true, false, ["engineering-loop"]],
+  ["Run the correct playbook on repeated mistakes", "correct", true, false, ["engineering-loop"]],
+  ["Use the banana playbook to fix login", "bug-fix", false, false, ["engineering-loop"]],
+  ["Investigate why the login redirect fails", "investigation", false, false, ["engineering-loop"]],
+  ["Fix the login bug; the goal is to make it fast", "bug-fix", false, false, ["engineering-loop"]],
+  ["Write a report on the phases of the moon", "feature", false, false, ["engineering-loop"]],
+  ["Refactor the parser to fix the crash", "bug-fix", false, false, ["engineering-loop"]],
+  ["Investigate the slow login and fix it", "bug-fix", false, false, ["engineering-loop"]],
+  ["Repair the broken login", "bug-fix", false, false, ["engineering-loop"]],
+  ["Debug the login failure", "bug-fix", false, false, ["engineering-loop"]],
+  ["Investigate the slow login", "investigation", false, false, ["engineering-loop"]],
+  ["Investigate the parser refactoring options", "investigation", false, false, ["engineering-loop"]],
+  ["Move the parser into a separate module", "refactoring", false, false, ["engineering-loop"]],
+  ["Extract the helper function", "refactoring", false, false, ["engineering-loop"]],
+  ["Inline the accessor", "refactoring", false, false, ["engineering-loop"]],
+  ["Consolidate the two parsers", "refactoring", false, false, ["engineering-loop"]],
+  ["Refactoring the parser", "refactoring", false, false, ["engineering-loop"]],
+  ["What is the bug in the parser?", "investigation", false, false, ["engineering-loop"]],
+  ["Investigate the parser and extract the helper", "refactoring", false, false, ["engineering-loop"]],
+  ["Investigate the parser and move the code", "refactoring", false, false, ["engineering-loop"]],
+  ["Investigate the parser to extract the helper", "refactoring", false, false, ["engineering-loop"]],
+];
+for (const [prompt, playbook, userNamed, multiStep, skills] of cases) {
+  const decision = routePrompt(prompt);
+  const want = { playbook, userNamed, multiStep, skills };
+  for (const [key, value] of Object.entries(want)) {
+    if (JSON.stringify(decision[key]) !== JSON.stringify(value)) {
+      throw new Error(`${prompt}: ${key}=${JSON.stringify(decision[key])}, want ${JSON.stringify(value)}`);
+    }
+  }
+}
+if (routePrompt("Going to bed, run a multi-phase migration until done").skills.includes("goal") !== true) {
+  throw new Error("multi-step route did not load the goal skill");
 }
 
 const second = { sessionID: "s1", prompt: { text: "Add another endpoint" } };

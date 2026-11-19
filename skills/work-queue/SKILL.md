@@ -58,12 +58,12 @@ active task.
 The task file holds:
 
 - **Scope** and **Out of scope**;
-- **Acceptance** — observable checks, not a wish;
-- **Context** — links to the project index, decisions, and lessons;
-- **Plan** — the chosen path and interfaces;
-- **Evidence** — checks actually run, with results, or `[T]` with a plan;
-- **Handoff** — the state a fresh agent needs;
-- **Log** — append-only state changes.
+- **Acceptance**: observable checks, not a wish;
+- **Context**: links to the project index, decisions, and lessons;
+- **Plan**: the chosen path and interfaces;
+- **Evidence**: checks actually run, with results, or `[T]` with a plan;
+- **Handoff**: the state a fresh agent needs;
+- **Log**: append-only state changes.
 
 `work/BOARD.md` is generated; never edit it. The task files are the source of
 truth.

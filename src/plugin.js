@@ -130,7 +130,7 @@ const plugin = Plugin.define({
     const instructions = readFileSync(join(ROOT, "AGENTS.md"), "utf8");
     await ctx.session.hook("context", (event) => {
       const present = event.system.some(
-        (part) => part.type === "text" && part.text.includes("## Task scale"),
+        (part) => part.type === "text" && part.text.includes("## Rule enforcement"),
       );
       if (!present) event.system.push({ type: "text", text: instructions });
     });

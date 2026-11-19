@@ -1,5 +1,5 @@
 ---
-description: Manual task entry — execute a small task, or plan/review/run a multi-step goal
+description: Manual task entry: execute a small task, or plan/review/run a multi-step goal
 ---
 <!-- SPDX-License-Identifier: MIT -->
 Request: $ARGUMENTS
@@ -44,10 +44,10 @@ and runs the same flow without the operator typing `/goal`.
 2. If this is actually one bounded change, create a single task directly with
    `tasks.py new "<title>" --project <name> --scope "<scope>" --acceptance "<checks>"`,
    then execute it as the small-task path. Do not create a goal. Otherwise split
-   by deliverable/review boundary into 2–6 children. A one-way door is a
+   by deliverable/review boundary into 2 to 6 children. A one-way door is a
    decision-memo child (`owns: []`), not an implementation.
 3. Each child gets scope, observable acceptance, dependencies, `owns` paths, and
-   a lane. Lanes: 2–3, disjoint owns, one owner per shared file. If two children
+   a lane. Lanes: 2 to 3, disjoint owns, one owner per shared file. If two children
    need the same path, combine or serialize.
 4. Write `/tmp/opencode/goal-plan.json`:
 

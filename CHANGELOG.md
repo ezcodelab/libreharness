@@ -2,6 +2,46 @@
 
 # Changelog
 
+## 2.1.0 - 2026-11-19
+
+Route non-trivial work through one playbook router and make the harness's own
+instructions enforceable. Each change is one green commit.
+
+### 🚀 Features
+
+- `engineering-loop` is now the single entry point. It matches a request to one of
+  eight playbooks (`investigation`, `bug-fix`, `feature`, `refactoring`, `perf`,
+  `hillclimb`, `autonomous-multiphase`, `correct`), copies the checklist from
+  `skills/engineering-loop/references/playbooks.md` into the todo list, and falls
+  back to `feature` or `investigation` with a stated reason.
+- Add `no-comments`: remove narration, commented-out code, dead markers, and
+  workaround justifications, then reshape each claimed constraint into a type,
+  lint, test, or runtime check. An unreferenced workaround comment now blocks
+  review.
+- Add `correct`: mine repeated mistakes and fix each at the highest level that
+  works, with a failing check on the real past mistake. Rows go to
+  `skills/correct/references/rule-ledger.md`.
+- `plugins/auto-intake.js` exports `routePrompt(text)` and states the selected
+  playbook in the intake notice. It loads `goal` only for multi-step or
+  unattended prompts, and free text never selects `correct`.
+- Add a project-local `verify-libreharness` skill that drives `plugin.setup`, the
+  intake hook, and the queue close-out against a disposable state directory, then
+  reports what remains unverified.
+- `unslop` is now prose-only: replies, PR bodies, commit messages, and docs. Code
+  cleanup moved to `engineering-loop` and `correct`.
+
+### 🛡 Enforcement
+
+- Add `tests/harness-ratchets.test.mjs`, wired into `npm test`. It fails on a
+  `SKILL.md` over 120 lines, an em dash or curly quote in scoped instruction
+  files, an unreferenced workaround comment, an oversized `AGENTS.md` or
+  enforcement table, a broken relative link, a hollow playbook section, and a
+  missing router, brief, implementer, review, or intake contract.
+- `AGENTS.md` drops to a commands, boundaries, principles, and four-row
+  enforcement table. Task routing leaves the always-on file.
+- The plugin's context deduplication key moves from `## Task scale` to
+  `## Rule enforcement`, so the local config can stay machine-local.
+
 ## 2.0.0 — 2026-11-18
 
 Slim the repository to the pstack-shaped core: the queue, workflow, skills,

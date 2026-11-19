@@ -1,5 +1,5 @@
 ---
-description: Tiered quality review — Jev screen, devil's advocate only when risk warrants
+description: Tiered quality review: Jev screen, devil's advocate only when risk warrants
 ---
 <!-- SPDX-License-Identifier: MIT -->
 Review the working diff. Task: $ARGUMENTS
@@ -24,12 +24,14 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
      (the merge target, not the lane's own tip);
    - if all are empty, ask what to review. Never review an unrelated leftover
      change from another lane.
-3. Comment discipline (non-blocking): read the changed files for narration,
-   stale comments, and workaround justifications that lack an external
-   reference. Report those as P3 notes for low-risk diffs; they are not a gate.
-   Ask for a fix when a new workaround or `do not remove/change` comment has no
-   external reference. An inline `comment-discipline: allow <reason>` accepts a
-   deliberate case.
+3. Comment discipline (blocking): read the changed files for narration, stale
+   comments, commented-out code, and workaround justifications without an
+   external reference. A new unreferenced `workaround`, `do not remove/change`,
+   `TODO`/`FIXME`, or correctness lint or type suppression is a send-back. The fix
+   is the smallest root-cause reshape, or a type, lint, test, or runtime check,
+   not a shorter comment. An inline `comment-discipline: allow <reason>` or a
+   linked issue accepts a deliberate case. Run `node tests/harness-ratchets.test.mjs`
+   when the repo has it.
 4. Preflight the configured model:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/jev_review.py" --check`
    - exit 4 → **stop**. Say: "The configured Jev model is gone. Set `JEV_MODEL`
@@ -68,8 +70,9 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
    turn. A missing document is a warning for a stateless diff and a send-back
    for a lifecycle, retry, concurrency, or recovery change.
 9. Verdict:
-   - Only a **CONFIRMED** devils P0/P1 blocks. A P2/P3 confirmed finding is a
-     fix or an explicit accepted risk, not an automatic send-back.
+   - Only a **CONFIRMED** devils P0/P1 blocks, and so does a comment-discipline
+     finding from step 3. A P2/P3 confirmed finding is a fix or an explicit
+     accepted risk, not an automatic send-back.
    - **UNVERIFIED** is a warning, not a defect. Ask for the missing source,
      sink, guard, or test evidence; do not present it as confirmed.
    - **REFUTED** is dropped from the blocking list. Mention it only to show

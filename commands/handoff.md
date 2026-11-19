@@ -11,7 +11,7 @@ Use the handoff section in `engineering-loop`; the format is below. Do not edit 
    - **State:** done / in progress / blocked by ...
    - **Decisions:** the choice and why; link the decision record
    - **Files:** paths changed, and the one or two that matter most
-   - **Checks:** command, result, timestamp; “not run” is valid
+   - **Checks:** command, result, timestamp; "not run" is valid
    - **Open:** unresolved questions, risks, and what would change the plan
    - **Next:** one bounded next action, with the command or file
    - **Context:** links to the task, index section, lesson, and review
