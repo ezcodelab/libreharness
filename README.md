@@ -78,9 +78,9 @@ Full install, state layout, configuration, and upgrade notes are in
 Describe the outcome in OpenCode. Auto-intake creates the task, and the agent
 runs brief, implement, verify, review, close, and ship. You do not need to type
 a slash command. The harness opens a ready pull request, waits for CI, requires
-an independent verdict, and merges only the verified patch. It stops at
-human-only gates such as secrets, production, releases, force-pushes, and CI
-changes.
+an independent verdict, and merges only the verified patch. No path is
+protected. It still stops at irreversible actions such as a production deploy,
+data deletion, a live secret rotation, or a force-push.
 
 Slash commands remain escape hatches when you want to intervene directly:
 

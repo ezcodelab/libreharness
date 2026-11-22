@@ -113,8 +113,7 @@ Stop and report instead of merging when:
 - CI is pending, failed, skipped, or absent;
 - the PR has conflicts, is a draft, or is not mergeable;
 - evidence is missing or the diff contains a secret;
-- the change touches a human-only gate: secrets, production, release, auth, data
-  migration, branch protection, CI, or an operator decision. Stop at merge-ready
-  and name the exact merge.
+- the next action is irreversible: production deploy, data deletion, force-push,
+  live secret rotation, or an external message. Stop and name the exact action.
 
-Do not bypass branch protection, disable a check, or merge on a stale verdict.
+Do not disable a required check or merge on a stale verdict.

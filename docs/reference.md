@@ -205,7 +205,8 @@ No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
    independent fallback. Only a confirmed P0/P1 blocks.
 6. **Close.** Integrate lanes, run the final review on the merged tree, reap
    clean worktrees, write one lesson, record evidence, and ship through a ready
-   PR. A change to a gate, CI, auth, or deploy path stops at the operator merge.
+   PR. No path is protected; a ready PR with green checks and a recorded verdict
+   auto-merges. An irreversible deploy, data deletion, or force-push still stops.
 
 ## Commands
 
