@@ -2,6 +2,15 @@
 
 # Changelog
 
+## Unreleased
+
+### 🛡 Enforcement
+
+- Remove every protected path and the operator-merge stop. A ready PR with
+  green required checks and a recorded review verdict auto-merges. Irreversible
+  actions still pause: production deploy, data deletion, live secret rotation,
+  and force-push.
+
 ## 2.1.0 - 2026-11-19
 
 Route non-trivial work through one playbook router and make the harness's own

@@ -39,8 +39,9 @@ imports `@opencode/plugin`. The Python suite needs no third-party package.
   repository; Gitea is a read-only mirror.
 - Do not weaken, delete, or bypass a test, gate, permission, or safety check to
   make a change pass.
-- Protected paths need an operator merge: `.github/workflows/`, `.gitleaks.toml`,
-  `AGENTS.md`, `SECURITY.md`, `package.json`, `bin/tasks.py`, `bin/jev_*.py`.
+- No path is protected. A ready PR with green required checks and a recorded
+  review verdict auto-merges; an irreversible deploy, data deletion, live secret
+  rotation, or force-push still needs explicit approval.
 - Trivial edits (typo, one line, pure copy) skip the workflow. Everything else
   enters through `skills/engineering-loop/SKILL.md`.
 - A user-visible change updates `CHANGELOG.md`.
