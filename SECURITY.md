@@ -42,34 +42,13 @@ There is no bug bounty, payment, or guaranteed credit. A maintainer will
 acknowledge a valid report when possible and will credit the reporter if the
 reporter agrees.
 
-## Jev key guidance
-
-Jev is optional. The queue, commands, skills, plugins, and tests work without a
-key.
-
-- Prefer `JEV_API_KEY` in the environment for a short session, or
-  `JEV_KEY_FILE` pointing at a mode 600 file.
-- The reference client accepts `--key-file`, then `JEV_API_KEY`,
-  `OPENCODE_API_KEY`, `TYPESAFE_API_KEY`, `JEV_KEY_FILE`, and the default
-  `~/.config/opencode/jev.key`, in that order. Use one source, not several.
-- Never commit a key, put it in a task, paste it into a prompt, or send it to a
-  custom endpoint you do not trust.
-- The client sends the key only to the configured endpoint. It does not print
-  the key. It does print errors from the service, so read an error before
-  sharing it.
-- Use HTTPS. The reference client does not reject a plain HTTP endpoint, so
-  the choice is yours.
-- Rotate a key immediately if it appears in a diff, a log, a session export, or
-  a public issue. Removing the line is not enough; assume it is compromised.
-
 ## Secret handling in the harness
 
 - `auto-intake` refuses to store a prompt that matches its secret patterns and
   redacts secret-shaped and PII-shaped text in titles.
-- The Jev review client refuses a diff or task that matches a secret-shaped
-  pattern unless `--allow-secret-shaped` is passed. That flag is for a
-  deliberate, reviewed exception, not a convenience. The plan client rejects a
-  secret-shaped plan state. Triage does not apply the guard to its close state.
+- The out-of-band review client refuses a diff or task that matches a
+  secret-shaped pattern unless `--allow-secret-shaped` is passed. That flag is
+  for a deliberate, reviewed exception, not a convenience.
 - The queue does not encrypt task files. Use filesystem permissions and full
   disk encryption if the state contains sensitive work.
 - State should be mode 700 and key files mode 600. The queue uses the process
@@ -81,7 +60,7 @@ key.
   the provider you choose.
 - A malicious repository, prompt injection, or tool output that convinces an
   agent to run a command. Review commands and permissions.
-- Third-party plugins, custom Jev adapters, and external MCP servers.
+- Third-party plugins, custom review adapters, and external MCP servers.
 - macOS and Windows are not supported; Linux is the only supported platform.
 - A leaked key that was already committed before this policy existed. Rotate
   it and treat the exposure as real.

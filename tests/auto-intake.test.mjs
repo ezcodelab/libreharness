@@ -336,7 +336,7 @@ if (quotedSecret.prompt.text.includes("[queue] Task ")) {
 const closeNudge = {
   sessionID: "s8",
   prompt: {
-    text: "Task may be complete. Run /close when you are done: final /review if needed, Jev triage, one project lesson.",
+    text: "Task may be complete. Run /close when you are done: final /review if needed, review artifact, evidence.",
   },
 };
 hook(closeNudge);

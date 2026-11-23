@@ -515,7 +515,7 @@ export function checkPolicyWiring(root) {
       if (path.endsWith("SKILL.md")) files.push(path);
     }
   }
-  for (const name of ["README.md", "docs/reference.md"]) {
+  for (const name of ["README.md", "docs/reference.md", "SECURITY.md", "CONTRIBUTING.md"]) {
     const path = join(root, name);
     if (existsSync(path)) files.push(path);
   }

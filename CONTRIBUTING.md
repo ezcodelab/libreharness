@@ -51,7 +51,7 @@ for shell files, and `actionlint` for workflows. The Markdown rule set is in
 fail a pull request.
 
 The Python suite uses temporary state roots. The Node tests use temporary
-directories and mocks. No test makes a live model call or needs a Jev key.
+directories and mocks. No test makes a live model call or needs a key.
 
 If you add a Python test, use `unittest`. If you add a Node test, use the
 existing `assert` style. Keep state in a temporary directory and clean it up.
@@ -83,9 +83,9 @@ Never commit a key, token, password, private key, session export, or `.env` file
 Do not paste one into an issue, a task, a handoff, a lesson, a test fixture, or a
 log. Use a placeholder and describe the shape instead.
 
-`auto-intake` and the Jev client have secret-shaped input guards. Those guards
-are a last line of defense, not permission to include a secret. If you believe a
-secret was committed, stop, rotate it, and report it through the process in
+`auto-intake` has a secret-shaped input guard. That guard is a last line of
+defense, not permission to include a secret. If you believe a secret was
+committed, stop, rotate it, and report it through the process in
 [SECURITY.md](SECURITY.md).
 
 ## Developer Certificate of Origin
@@ -128,8 +128,8 @@ Review comments use these labels:
 - **UNVERIFIED:** a warning that needs more evidence, not a blocking finding.
 
 A confirmed high-severity finding blocks. A lower-severity finding is a fix or
-an explicit accepted risk. Jev's opinion is advisory; it does not replace the
-reviewer's decision.
+an explicit accepted risk. The review artifact records observed checks; it does
+not replace the reviewer's decision.
 
 ## Adding a skill
 
