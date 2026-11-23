@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, rmSync, statSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,7 +12,6 @@ const skills = [];
 const prompts = [];
 const hooks = [];
 const subscriptions = [];
-let contextHook;
 const agentIds = ["explore", "implementer", "integrator", "devils-advocate"];
 const baseAgents = new Map(
   agentIds.map((id) => [
@@ -57,7 +56,6 @@ const ctx = {
   session: {
     hook: (name, callback) => {
       hooks.push(name);
-      if (name === "context") contextHook = callback;
     },
     prompt: async (prompt) => prompts.push(prompt),
   },
@@ -122,6 +120,12 @@ assert.deepEqual(explore.model, {
   providerID: "commandcode",
   id: "deepseek-v4-flash",
 });
+
+const engineeringLoop = skills.find((skill) => skill.id === "engineering-loop");
+assert.ok(engineeringLoop, "engineering-loop must load through ctx.skill.transform");
+assert.equal(engineeringLoop.name, "engineering-loop");
+assert.ok(engineeringLoop.content.length > 0, "engineering-loop body is empty");
+assert.ok(existsSync(engineeringLoop.path), "engineering-loop path is missing");
 
 for (const id of ["state-audit", "verification", "engineering-loop"]) {
   assert.ok(skills.some((skill) => skill.id === id), `missing skill ${id}`);
@@ -193,9 +197,10 @@ assert.equal(
   "setup must tighten an existing state directory to mode 700",
 );
 
-const system = [];
-contextHook({ system });
-assert.ok(system.some((part) => part.text.includes("## Rule enforcement")));
+assert.ok(
+  !hooks.includes("context"),
+  "native instruction discovery owns AGENTS.md; the plugin must not register a context hook",
+);
 
 assert.ok(hooks.includes("prompt"), "auto-intake prompt hook missing");
 assert.ok(

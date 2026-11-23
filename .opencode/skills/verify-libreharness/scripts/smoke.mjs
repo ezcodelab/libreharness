@@ -98,9 +98,9 @@ try {
   cleanup = await plugin.setup(ctx);
   check(typeof cleanup === "function", "plugin.setup did not return a cleanup function");
   check((statSync(state).mode & 0o777) === 0o700, "state directory is not mode 0700");
-  check(hooks.includes("context"), "context hook is not registered");
   check(hooks.includes("prompt"), "prompt hook is not registered");
-  verified.push("plugin.setup", "state mode 0700", "context and prompt hooks");
+  check(!hooks.includes("context"), "the plugin must not inject instructions");
+  verified.push("plugin.setup", "state mode 0700", "native instruction ownership");
 
   const event = {
     sessionID: "smoke",

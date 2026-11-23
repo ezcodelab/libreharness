@@ -127,14 +127,6 @@ const plugin = Plugin.define({
     // mkdir's mode only applies to a new directory; fix an existing one too.
     chmodSync(state, 0o700);
 
-    const instructions = readFileSync(join(ROOT, "AGENTS.md"), "utf8");
-    await ctx.session.hook("context", (event) => {
-      const present = event.system.some(
-        (part) => part.type === "text" && part.text.includes("## Rule enforcement"),
-      );
-      if (!present) event.system.push({ type: "text", text: instructions });
-    });
-
     const commands = commandFiles();
     await ctx.command.transform((editor) => {
       for (const command of commands) {
