@@ -201,8 +201,10 @@ No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
 3. **Implement.** Keep one reviewable diff. Update the task before a scope
    change. Use the smallest complete change.
 4. **Prove.** Run the acceptance checks and record the command and result.
-5. **Review.** Run `/review`. Jev is advisory; `devils-advocate` is the
-   independent fallback. Only a confirmed P0/P1 blocks.
+5. **Review.** Prefer empirical and deterministic checks. Run `/review` as a
+   focused second opinion. `devils-advocate` reviews against the goals and
+   invariants, not its own preferences. Only a confirmed P0/P1 blocks. One
+   abstract pass per change; run the acceptance check on the real artifact.
 6. **Close.** Integrate lanes, run the final review on the merged tree, reap
    clean worktrees, write one lesson, record evidence, and ship through a ready
    PR. No path is protected; a ready PR with green checks and a recorded verdict

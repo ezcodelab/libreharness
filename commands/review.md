@@ -7,6 +7,9 @@ Review the working diff. Task: $ARGUMENTS
 This is a check, not a finish step. `/close` runs the final review and, for a
 goal, integrates reviewed lanes before closing.
 
+Empirical and deterministic checks come first. A review is a second opinion,
+not a substitute for running the artifact or the reproduction.
+
 Use the engineering-loop and work-queue skills. Do not edit code in this turn.
 
 1. If `$ARGUMENTS` is a task id (or unique prefix), read the task packet and
@@ -50,8 +53,10 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
    - the operator said "strict", "release", or "full review";
    - Jev was unavailable (exit 3).
    Otherwise skip it and say: "Jev passed; devils-advocate skipped (low risk)."
-   When it runs, give it the task acceptance, the diff, the test evidence, and
-   the flagged axes. Require one verdict per finding:
+   When it runs, give it the task acceptance, the diff, the test evidence, the
+   flagged axes, and the goals. Tell it to review against the acceptance and
+   invariants, not its own preferences, and to stop when the previous findings
+   are fixed and no new confirmed P0/P1 exists. Require one verdict per finding:
    **CONFIRMED**, **REFUTED**, or **UNVERIFIED**, with the source, sink or
    failure point, and guard cited as `file:line`. Ask for the six
    silent-failure checks. It reviews; it does not fix.
@@ -73,6 +78,11 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
    - Only a **CONFIRMED** devils P0/P1 blocks, and so does a comment-discipline
      finding from step 3. A P2/P3 confirmed finding is a fix or an explicit
      accepted risk, not an automatic send-back.
+   - The author evaluates each finding against the goals and evidence. Do not
+     accept feedback sycophantically or just because a reviewer raised it.
+     Reject a nitpick, YAGNI, or out-of-scope suggestion with a one-line reason;
+     accept a real P2/P3 as a recorded residual when the fix costs more than the
+     risk.
    - **UNVERIFIED** is a warning, not a defect. Ask for the missing source,
      sink, guard, or test evidence; do not present it as confirmed.
    - **REFUTED** is dropped from the blocking list. Mention it only to show
@@ -86,6 +96,14 @@ Use the engineering-loop and work-queue skills. Do not edit code in this turn.
      not a confirmed defect, and still ask for a rerun after the fix.
    - Jev exit 0 and no confirmed blocking finding → report what passed,
      residual risks, and what remains unproven.
+
+   **One abstract pass.** Run at most one abstract devils-advocate pass per
+   change. If it finds a confirmed blocker, fix it and prove the fix with the
+   acceptance check or a deterministic test. Do not start another abstract pass
+   unless a new empirical failure or a new unmet acceptance item appears. If the
+   same blocker survives one fix, stop and escalate; another abstract round will
+   not settle it. A green reviewer is not proof: run the acceptance check on the
+   real artifact before the close.
 10. If a task id was used, update the queue (not code):
    - pass: `tasks.py status <id> review --note "Jev pass; devils: <none|findings>"`;
    - send back: `tasks.py log <id> "review send-back: <one line>"`, leave it

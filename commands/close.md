@@ -27,7 +27,11 @@ Do not edit feature code in this turn.
    - run the full project check on the merged tree.
    Do not create a separate integration task or command; this is part of close.
 4. Run the final `/review` on the merged diff, or on the single task's diff.
-   Record the verdict. A send-back stops the close.
+   Record the verdict. A send-back stops the close. If the one abstract pass is
+   done, do not start another; fix empirical failures and rerun the acceptance
+   check. Escalate a blocker that survives one fix. After the verdict, run the
+   acceptance check on the real artifact. A green reviewer is not proof the
+   artifact works.
 5. If a single task still has a worktree and is `active`, move it to `review`
    now (`tasks.py status <id> review --note "final review passed"`) so the
    reaper can evaluate it. Goal children are already final.
