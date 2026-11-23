@@ -928,12 +928,272 @@ def append_metric(root: Path, task: dict) -> None:
         )
 
 
+REVIEW_VERDICTS = ("PASS", "UNVERIFIED")
+SHA40 = re.compile(r"^[0-9a-f]{40}$")
+
+
+def review_path(root: Path, task_id: str) -> Path:
+    return root / "work/reviews" / f"{task_id}.json"
+
+
+def plan_verify(task: dict) -> str:
+    for line in task["sections"].get("Plan", "").splitlines():
+        match = re.match(r"^Verify:\s*(.+?)\s*$", line)
+        if match:
+            return match.group(1)
+    raise SystemExit(
+        f"review: {task['meta'].get('id')} needs a 'Verify:' line in its Plan"
+    )
+
+
+def command_argv(command: str) -> list[str]:
+    try:
+        argv = shlex.split(command)
+    except ValueError as exc:
+        raise SystemExit(f"review: cannot parse command {command!r}: {exc}")
+    if not argv:
+        raise SystemExit("review: empty command")
+    return argv
+
+
+def allowed_command(argv: list[str]) -> bool:
+    program = argv[0]
+    if program == "npm":
+        if argv[1:] == ["test"]:
+            return True
+        return (
+            len(argv) >= 3
+            and argv[1] == "run"
+            and (argv[2].startswith("test:") or argv[2].startswith("lint:"))
+        )
+    if program == "node":
+        if len(argv) != 2:
+            return False
+        return (
+            (argv[1].startswith("tests/") and argv[1].endswith(".test.mjs"))
+            or argv[1] == ".opencode/skills/verify-libreharness/scripts/smoke.mjs"
+        )
+    if program == "python3":
+        return len(argv) >= 3 and argv[1] == "-m" and argv[2] == "unittest"
+    if program == "pytest":
+        return True
+    if program == "ruff":
+        return len(argv) >= 2 and argv[1] == "check"
+    if program == "make":
+        return argv[1:] == ["check"]
+    if program == "cargo":
+        return argv[1:] == ["test"]
+    if program == "go":
+        return argv[1:] == ["test", "./..."]
+    if program == "npx":
+        return (
+            len(argv) >= 3
+            and argv[1] == "--no-install"
+            and argv[2] == "markdownlint-cli2"
+        )
+    return False
+
+
+def inside(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def validate_command(argv: list[str], repo: Path) -> list[str]:
+    repo = repo.resolve()
+    if not allowed_command(argv):
+        raise SystemExit(
+            "review: command is not on the project-verification allowlist: "
+            + " ".join(argv)
+        )
+    for argument in argv[1:]:
+        if argument.startswith("-") or "/" not in argument:
+            continue
+        raw = Path(argument)
+        if any(character in argument for character in "*?["):
+            prefix = argument.split("*")[0].split("?")[0].split("[")[0]
+            raw = Path(prefix or ".")
+        resolved = raw.resolve() if raw.is_absolute() else (repo / raw).resolve()
+        if not inside(resolved, repo):
+            raise SystemExit(
+                f"review: path outside the repository: {argument}"
+            )
+    return argv
+
+
+def git_head(repo: Path) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"],
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise SystemExit(f"review: not a git repository: {repo}")
+    head = result.stdout.strip()
+    if not SHA40.match(head):
+        raise SystemExit(f"review: cannot resolve HEAD in {repo}")
+    return head
+
+
+def validate_review(root: Path, task_id: str, repo: Path) -> int:
+    path = review_path(root, task_id)
+    problems: list[str] = []
+    data = None
+    if not path.is_file():
+        problems.append(f"missing review artifact: {path}")
+    else:
+        try:
+            data = json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"malformed review artifact {path}: {exc}")
+    if data is not None:
+        if not isinstance(data, dict):
+            problems.append("review artifact must be a JSON object")
+            data = None
+    if data is not None:
+        if data.get("task") != task_id:
+            problems.append(
+                f"artifact task {data.get('task')!r} does not match {task_id!r}"
+            )
+        head = data.get("head")
+        if not isinstance(head, str) or not SHA40.match(head):
+            problems.append("artifact head must be a full 40-character git sha")
+        elif head != git_head(repo):
+            problems.append(
+                f"artifact head {head} is stale; current HEAD is {git_head(repo)}"
+            )
+        verdict = data.get("verdict")
+        if verdict not in REVIEW_VERDICTS:
+            problems.append(f"unknown verdict {verdict!r}")
+        checks = data.get("checks")
+        if not isinstance(checks, list):
+            problems.append("artifact checks must be a list")
+            checks = []
+        seen_verify = 0
+        verify = ""
+        try:
+            task = find_task(root, task_id)
+            verify = plan_verify(task)
+        except SystemExit as exc:
+            problems.append(str(exc))
+        for item in checks:
+            if not isinstance(item, dict):
+                problems.append("each check must be an object")
+                continue
+            command = item.get("command")
+            exit_code = item.get("exit")
+            if not isinstance(command, str) or not command.strip():
+                problems.append("each check needs a command")
+                continue
+            if isinstance(exit_code, bool) or not isinstance(exit_code, int):
+                problems.append(f"{command}: exit must be an integer")
+                continue
+            if exit_code != 0:
+                problems.append(f"{command}: observed exit {exit_code}")
+            if verify and command == verify:
+                seen_verify += 1
+        if verdict == "PASS":
+            if not checks:
+                problems.append("PASS needs at least one observed check")
+            if verify and seen_verify != 1:
+                problems.append(
+                    f"PASS needs the task Verify command exactly once: {verify}"
+                )
+        elif verdict == "UNVERIFIED":
+            problems.append("verdict is UNVERIFIED; close and shipping are blocked")
+    if problems:
+        print(f"review: UNVERIFIED: {task_id}")
+        for problem in problems:
+            print(f"- {problem}")
+        return 1
+    print(f"review: PASS {task_id} at {data['head']}")
+    return 0
+
+
+def review_task(
+    root: Path,
+    key: str,
+    *,
+    repo: Path,
+    runs: list[str] | None = None,
+    unverify: bool = False,
+) -> int:
+    repo = repo.resolve()
+    if not (repo / ".git").exists() and not (repo / ".git").is_file():
+        raise SystemExit(f"review: not a git repository: {repo}")
+    task = find_task(root, key)
+    task_id = task["meta"]["id"]
+    if unverify:
+        head = git_head(repo)
+        checks: list[dict] = []
+        path = review_path(root, task_id)
+        try:
+            previous = json.loads(path.read_text())
+            if isinstance(previous, dict) and isinstance(previous.get("checks"), list):
+                checks = previous["checks"]
+        except (OSError, json.JSONDecodeError):
+            pass
+        atomic_write(
+            path,
+            json.dumps(
+                {
+                    "task": task_id,
+                    "head": head,
+                    "verdict": "UNVERIFIED",
+                    "checks": checks,
+                },
+                indent=2,
+            )
+            + "\n",
+        )
+        return validate_review(root, task_id, repo)
+    runs = list(runs or [])
+    if not runs:
+        return validate_review(root, task_id, repo)
+    verify = plan_verify(task)
+    validated: list[tuple[str, list[str]]] = []
+    for command in runs:
+        argv = command_argv(command)
+        validate_command(argv, repo)
+        validated.append((command.strip(), argv))
+    if not any(command == verify for command, _ in validated):
+        raise SystemExit(
+            "review: the task Verify command must be one of --run: " + verify
+        )
+    head_before = git_head(repo)
+    checks = []
+    for command, argv in validated:
+        result = subprocess.run(argv, cwd=repo)
+        checks.append({"command": command, "exit": result.returncode})
+        print(f"review: {command} -> exit {result.returncode}")
+    head_after = git_head(repo)
+    passed = head_before == head_after and all(
+        item["exit"] == 0 for item in checks
+    )
+    atomic_write(
+        review_path(root, task_id),
+        json.dumps(
+            {
+                "task": task_id,
+                "head": head_after,
+                "verdict": "PASS" if passed else "UNVERIFIED",
+                "checks": checks,
+            },
+            indent=2,
+        )
+        + "\n",
+    )
+    return validate_review(root, task_id, repo)
+
+
 def priority_of(task: dict) -> int:
     try:
         return int(task["meta"].get("priority", "2") or 2)
     except ValueError:
         return 2
-
 
 def write_board(root: Path) -> None:
     path = root / "work/BOARD.md"
@@ -1726,6 +1986,12 @@ def main() -> int:
     status.add_argument("--note", default="")
     status.add_argument("--evidence", default="")
 
+    review = sub.add_parser("review")
+    review.add_argument("task")
+    review.add_argument("--repo", default=".")
+    review.add_argument("--run", action="append", default=[])
+    review.add_argument("--unverify", action="store_true")
+
     handoff = sub.add_parser("handoff")
     handoff.add_argument("task")
     handoff.add_argument("--file", help="file to read; default stdin")
@@ -1893,6 +2159,14 @@ def main() -> int:
         )
         print(f"{task['meta']['id']}: {args.status}")
         return 0
+    if args.command == "review":
+        return review_task(
+            root,
+            args.task,
+            repo=Path(args.repo),
+            runs=args.run,
+            unverify=args.unverify,
+        )
     if args.command == "handoff":
         text = args.text
         if not text:

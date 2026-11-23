@@ -290,10 +290,30 @@ def verdict(data: dict) -> tuple[bool, list[str]]:
     return not problems, problems
 
 
-def print_report(data: dict, passed: bool, problems: list[str], as_json: bool) -> None:
+def print_report(
+    data: dict,
+    passed: bool,
+    problems: list[str],
+    as_json: bool,
+    *,
+    diff_truncated: bool = False,
+    task_truncated: bool = False,
+) -> None:
     answers = data.get("answers", {})
+    truncated = diff_truncated or task_truncated
     if as_json:
-        print(json.dumps({"passed": passed, "problems": problems, "answers": answers}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "passed": passed,
+                    "problems": problems,
+                    "diff_truncated": diff_truncated,
+                    "task_truncated": task_truncated,
+                    "answers": answers,
+                },
+                indent=2,
+            )
+        )
         return
     print("Jev advisory review\n")
     print(f"{'axis':<16}{'score':>7}")
@@ -306,7 +326,11 @@ def print_report(data: dict, passed: bool, problems: list[str], as_json: bool) -
         shown = f"{float(value):.2f}" if value is not None else "?"
         print(f"{name:<16}{shown:>7}")
     print()
-    if passed:
+    if truncated:
+        print("VERDICT: UNVERIFIED (truncated input).")
+        for problem in problems:
+            print(f"- {problem}")
+    elif passed:
         print("VERDICT: pass (advisory).")
     else:
         print("VERDICT: send back.")
@@ -376,9 +400,11 @@ def main() -> int:
         return 3
 
     truncated = len(diff) > args.max_chars
+    diff_truncated = truncated
     if truncated:
         diff = diff[: args.max_chars] + "\n\n[... diff truncated ...]"
-    if len(args.task) > args.max_chars:
+    task_truncated = len(args.task) > args.max_chars
+    if task_truncated:
         args.task = args.task[: args.max_chars] + "\n\n[... task truncated ...]"
 
     if not args.allow_secret_shaped:
@@ -439,7 +465,28 @@ def main() -> int:
         print(json.dumps(data, indent=2)[:1000], file=sys.stderr)
         return 3
 
-    print_report(data, passed, problems, args.json)
+    if diff_truncated:
+        problems.insert(
+            0,
+            f"diff truncated at --max-chars {args.max_chars}; "
+            "the verdict cannot pass on partial input",
+        )
+    if task_truncated:
+        problems.insert(
+            0,
+            f"task truncated at --max-chars {args.max_chars}; "
+            "the verdict cannot pass on partial input",
+        )
+    passed = passed and not diff_truncated and not task_truncated
+
+    print_report(
+        data,
+        passed,
+        problems,
+        args.json,
+        diff_truncated=diff_truncated,
+        task_truncated=task_truncated,
+    )
     return 0 if passed else 2
 
 
