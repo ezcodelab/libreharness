@@ -42,10 +42,13 @@ One journey, in order:
 1. Send a single-step prompt through the registered `prompt` hook.
 2. Read the created task id from the intake notice.
 3. Replace the inbox acceptance placeholder with a checked, observable criterion.
-4. Run `tasks.py claim`, then `tasks.py status ... review`.
-5. Run `tasks.py validate` and assert exit 0.
-6. Run `tasks.py status ... done --evidence` and assert the closed state.
-7. Assert `work/BOARD.md` and `metrics/workflow-log.csv` exist.
+4. Write `Data shape` and `Verify: node tests/harness-ratchets.test.mjs` into the
+   task Plan.
+5. Run `tasks.py claim`, then `tasks.py review --run` to record the artifact.
+6. Run `tasks.py status ... review` so the review gate revalidates the artifact.
+7. Run `tasks.py validate` and assert exit 0.
+8. Run `tasks.py status ... done --evidence` and assert the closed state.
+9. Assert `work/BOARD.md` and `metrics/workflow-log.csv` exist.
 
 ## Evidence
 
@@ -57,14 +60,19 @@ The script writes `/tmp/opencode/verify-libreharness/latest.json` with exactly:
   "stateDir": "/tmp/verify-libreharness-xxxx",
   "stateRemoved": true,
   "taskId": "2026...",
-  "verified": ["plugin.setup", "intake hook", "queue claim/review/done"],
-  "unverified": ["OpenCode TUI transport", "remote Jev endpoint", "GitHub Actions gate"]
+  "head": "<40-character git sha>",
+  "verdict": "PASS",
+  "checks": [{ "command": "node tests/harness-ratchets.test.mjs", "exit": 0 }],
+  "verified": ["plugin.setup", "intake hook", "review artifact", "queue claim/review/done"],
+  "unverified": ["OpenCode TUI transport", "GitHub Actions gate"]
 }
 ```
 
-`verdict` is `PASS` only when every step above ran and passed. The `unverified`
-list is required and names what this path cannot reach. Never mark a remote
-surface verified from here.
+`verdict` is `PASS` only when every step above ran and passed, and the review
+artifact's `head` equals `git rev-parse HEAD`. The artifact has a non-empty
+`checks` list containing the ratchet command with exit 0; the report carries the
+same `head`, `verdict`, and `checks`. The `unverified` list is required and names
+what this path cannot reach. Never mark a remote surface verified from here.
 
 ## Cleanup
 

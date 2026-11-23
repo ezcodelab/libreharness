@@ -278,10 +278,13 @@ for (const [label, home] of invalidCases) {
 const taskPath = join(root, "work/tasks", `${id}.md`);
 writeFileSync(
   taskPath,
-  readFileSync(taskPath, "utf8").replace(
-    /^- \[ \] TBD.*$/m,
-    "- [x] login redirect is fixed",
-  ),
+  readFileSync(taskPath, "utf8")
+    .replace(/^- \[ \] TBD.*$/m, "- [x] login redirect is fixed")
+    .replace(
+      /## Plan\n\n/,
+      '## Plan\n\nData shape: {"state":"idle|running"}\n' +
+        "Verify: python3 -m unittest tests.test_tasks -v\n\n",
+    ),
 );
 taskCli("claim", id, "--owner", "test");
 taskCli("status", id, "done", "--evidence", "unit: pass");

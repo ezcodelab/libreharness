@@ -82,6 +82,13 @@ class GoalStartTests(unittest.TestCase):
 
     def create(self, children: list[dict]) -> str:
         result = tasks.create_plan(self.root, self.plan(children))
+        for child_id in result["children"].values():
+            task = tasks.find_task(self.root, child_id)
+            task["sections"]["Plan"] = (
+                'Data shape: {"state":"idle|running"}\n'
+                "Verify: python3 -m unittest tests.test_goal_start -v\n"
+            )
+            tasks.write_task(task)
         return result["goal"]
 
     def test_creates_lanes_for_ready_children_and_defers_the_rest(self) -> None:

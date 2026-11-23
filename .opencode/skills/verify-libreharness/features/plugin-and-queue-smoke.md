@@ -36,5 +36,5 @@ The script covers the whole list above in one run and writes
 - The script must own `$HARNESS_STATE`. An ambient value is ignored.
 - `done` fails on an unchecked acceptance line, empty evidence, or a `Deferred`
   section. Fix the task, not the check.
-- This path does not exercise the OpenCode TUI, a remote Jev endpoint, or the
-  GitHub Actions gate. Those stay in `unverified` until a run covers them.
+- This path does not exercise the OpenCode TUI or the GitHub Actions gate. Those
+  stay in `unverified` until a run covers them.

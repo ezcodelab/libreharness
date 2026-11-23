@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { copyFileSync, mkdirSync, rmSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -24,6 +24,17 @@ const tasks = (...args) =>
       PYTHONDONTWRITEBYTECODE: "1",
     },
   }).trim();
+const addPlan = (taskId) => {
+  const path = join(root, "work/tasks", `${taskId}.md`);
+  writeFileSync(
+    path,
+    readFileSync(path, "utf8").replace(
+      /## Plan\n\n/,
+      '## Plan\n\nData shape: {"state":"idle"}\n' +
+        "Verify: python3 -m unittest tests.test_tasks -v\n\n",
+    ),
+  );
+};
 const goal = tasks(
   "goal",
   "Demo goal",
@@ -109,6 +120,7 @@ const closeChild = tasks(
   "--acceptance",
   "- [x] child done",
 );
+addPlan(closeChild);
 tasks("claim", closeChild, "--owner", "test");
 tasks("status", closeChild, "done", "--evidence", "node: done");
 emit({ type: "session.idle", data: { sessionID: "s1" } });

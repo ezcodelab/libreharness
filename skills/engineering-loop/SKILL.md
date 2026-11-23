@@ -64,9 +64,9 @@ State the fallback and the reason in one line. Do not invent a playbook.
    the commit message. Label evidence as measured, inferred, or guess.
 6. **Proof beats compilation.** `verification` drives the real artifact or the
    named formal check. A unit test alone does not prove user-visible behavior.
-7. **Independent review.** `/review` runs before `/close`. A change to auth,
-   secrets, data, a public API, recovery, concurrency, or a release also gets
-   `devils-advocate`.
+7. **Evidence first.** `/review` runs before `/close` and records observed
+   checks in the review artifact. A second opinion is an explicit operator
+   request, never a risk label, path guess, or default.
 8. **Encode repeats.** A failure class seen twice becomes a check whose error names
    the fix, added through `correct` and recorded in the rule ledger.
 

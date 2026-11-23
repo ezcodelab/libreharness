@@ -73,5 +73,5 @@ Record the reason in the task log; do not silently keep both lanes running.
 ## Quality rule
 
 The implementer and the reviewer are different contexts. A second author on the
-same change is not a reviewer; a fresh `devils-advocate` or Jev pass is. The
-merged tree gets the final review.
+same change is not a reviewer; a fresh `devils-advocate` pass, when the operator
+asks for one, is. The merged tree gets the final review.

@@ -10,10 +10,9 @@ and snippets are MIT; see `LICENSE`.
 
 ## Jev client origin
 
-The Jev client in `bin/jev_review.py`, `bin/jev_plan.py`, and
-`bin/jev_triage.py` is project code, not a vendor SDK. It targets a
-typed-question HTTP interface and does not include model weights, model files,
-or a hosted service.
+The Jev client in `bin/jev_review.py` is project code, not a vendor SDK. It
+targets a typed-question HTTP interface and does not include model weights,
+model files, or a hosted service.
 
 `JEV_ENDPOINT` points at an external inference service. The service, its
 availability, its terms, and its billing are separate from this repository. No

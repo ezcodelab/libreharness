@@ -26,8 +26,6 @@ outlives one chat:
 - Commands for intake, briefs, lanes, takeover, review, close, handoff, design
   review, and tuning.
 - Two local plugins: automatic task intake and a goal watcher.
-- Jev, an optional advisory reviewer that returns structured answers about a
-  diff, a plan, or a close state.
 
 The queue is stdlib Python plus Linux file locking. There is no database, no
 server, and no third-party Python package. The Node plugins use built-ins only.
@@ -42,8 +40,9 @@ harness makes three things durable:
 2. **Evidence.** A task cannot be marked done with "tests pass" or "none". It
    needs a command and result, a measured check, or a tracked `[T]` with a plan.
 3. **Review proportional to risk.** A typo does not need a committee. A change
-   to auth, secrets, data, or a public API gets a closer look. Jev is one input,
-   never the deciding gate.
+   to auth, secrets, data, or a public API gets a closer look. Deterministic
+   checks and a review artifact are the default gate; a model second opinion is
+   an explicit operator request, never the deciding gate.
 
 ## Install
 
@@ -80,10 +79,10 @@ Full install, state layout, configuration, and upgrade notes are in
 
 Describe the outcome in OpenCode. Auto-intake creates the task, and the agent
 runs brief, implement, verify, review, close, and ship. You do not need to type
-a slash command. The harness opens a ready pull request, waits for CI, requires
-an independent verdict, and merges only the verified patch. No path is
-protected. It still stops at irreversible actions such as a production deploy,
-data deletion, a live secret rotation, or a force-push.
+a slash command. The harness records observed checks and the exact HEAD, opens a
+ready pull request, waits for required CI, and merges only the reviewed head. No
+path is protected. It still stops at irreversible actions such as a production
+deploy, data deletion, a live secret rotation, or a force-push.
 
 Slash commands remain escape hatches when you want to intervene directly:
 
@@ -101,21 +100,10 @@ Slash commands remain escape hatches when you want to intervene directly:
 | Prove real app behavior | `verification` skill |
 | Clean up the workflow | `/tune` |
 
-## Jev
-
-Jev sends a task and a diff, a goal plan, or a close state to a typed-question
-endpoint. It returns scores on seven quality axes, a ship/scope/test verdict, a
-plan gap, or a close-triage lesson. The answers are structured, so they can be
-compared instead of read as a chat opinion.
-
-Jev is optional and advisory. It never merges, closes, or blocks a task by
-itself. Set `JEV_MODEL` to a model your endpoint offers; a missing key is a skip
-at the workflow level. See [the reference](docs/reference.md#jev).
-
 ## Documentation
 
 [docs/reference.md](docs/reference.md) is the operator reference: install,
-concepts, workflow, commands, skills, agents, plugins, Jev, security, and CI.
+concepts, workflow, commands, skills, agents, plugins, security, and CI.
 
 Project history is in [CHANGELOG.md](CHANGELOG.md). Contributions are welcome;
 see [CONTRIBUTING.md](CONTRIBUTING.md) and the issue and pull request templates
@@ -124,7 +112,7 @@ in `.github/`.
 ## Requirements
 
 Linux, OpenCode 2.x, Node 20 or newer, and Python 3.10 or newer. A model
-provider of your choice. Jev needs an endpoint and a key only when you use it.
+provider of your choice.
 
 ## License
 

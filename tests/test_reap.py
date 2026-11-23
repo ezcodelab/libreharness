@@ -43,9 +43,40 @@ class ReapTests(unittest.TestCase):
         )
         return result.stdout.strip()
 
+    def make_task(self, title: str, **kwargs) -> dict:
+        task = tasks.new_task(self.root, title, **kwargs)
+        task["sections"]["Plan"] = (
+            'Data shape: {"state":"idle|running"}\n'
+            "Verify: python3 -m unittest tests.test_tasks -v\n"
+        )
+        tasks.write_task(task)
+        return task
+
+    def pass_review(self, task: dict, repo: Path | None = None) -> None:
+        worktree = task["meta"].get("worktree", "")
+        target = repo or (Path(worktree) if worktree else self.repo)
+        verify = tasks.plan_verify(task)
+        path = tasks.review_path(self.root, task["meta"]["id"])
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "task": task["meta"]["id"],
+                    "head": tasks.git_head(target),
+                    "verdict": "PASS",
+                    "checks": [{"command": verify, "exit": 0}],
+                }
+            )
+        )
+
+    def review_status(self, task: dict, repo: Path | None = None) -> dict:
+        self.pass_review(task, repo)
+        return tasks.set_status(
+            self.root, task["meta"]["id"], "review", repo=repo
+        )
+
     def lane(self, title: str, *, parent: str = "", owns: str = "") -> dict:
-        task = tasks.new_task(
-            self.root,
+        task = self.make_task(
             title,
             parent=parent,
             owns=owns,
@@ -67,7 +98,7 @@ class ReapTests(unittest.TestCase):
         task = self.lane("Clean work")
         self.commit(Path(task["meta"]["worktree"]), "work.txt")
         self.merge(task["meta"]["branch"])
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         self.assertEqual(tasks.reap(self.root, task["meta"]["id"]), 0)
         self.assertFalse(Path(task["meta"]["worktree"]).exists())
         self.assertEqual(
@@ -84,7 +115,7 @@ class ReapTests(unittest.TestCase):
         self.git("switch", "-c", "integration")
         self.merge(task["meta"]["branch"])
         self.git("switch", "main")
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         self.assertEqual(tasks.reap(self.root, task["meta"]["id"]), 0)
         self.assertFalse(Path(task["meta"]["worktree"]).exists())
         self.assertEqual(self.git("branch", "--list", task["meta"]["branch"]), "")
@@ -93,7 +124,7 @@ class ReapTests(unittest.TestCase):
         task = self.lane("Branch failure")
         self.commit(Path(task["meta"]["worktree"]), "branch.txt")
         self.merge(task["meta"]["branch"])
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         real_git = tasks.run_git
 
         def flaky_git(args, cwd):
@@ -113,7 +144,7 @@ class ReapTests(unittest.TestCase):
         self.git("commit", "-q", "-m", "ignore")
         task = self.lane("Ignored work")
         (Path(task["meta"]["worktree"]) / "ignored.txt").write_text("local")
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         self.assertEqual(tasks.reap(self.root, task["meta"]["id"]), 1)
         self.assertTrue(Path(task["meta"]["worktree"]).exists())
 
@@ -123,7 +154,7 @@ class ReapTests(unittest.TestCase):
         self.git("commit", "-q", "-m", "tracked")
         task = self.lane("Tracked work")
         (Path(task["meta"]["worktree"]) / "tracked.txt").write_text("changed\n")
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         self.assertEqual(tasks.reap(self.root, task["meta"]["id"]), 1)
         self.assertTrue(Path(task["meta"]["worktree"]).exists())
 
@@ -133,7 +164,7 @@ class ReapTests(unittest.TestCase):
         self.commit(worktree, "first.txt")
         self.merge(task["meta"]["branch"])
         self.commit(worktree, "second.txt")
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         self.assertEqual(tasks.reap(self.root, task["meta"]["id"]), 1)
         self.assertTrue(worktree.exists())
 
@@ -141,7 +172,7 @@ class ReapTests(unittest.TestCase):
         task = self.lane("Dirty work")
         worktree = Path(task["meta"]["worktree"])
         (worktree / "dirty.txt").write_text("uncommitted")
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         self.assertEqual(tasks.reap(self.root, task["meta"]["id"]), 1)
         self.assertTrue(worktree.exists())
         self.assertIn(task["meta"]["branch"], self.git("branch"))
@@ -149,7 +180,7 @@ class ReapTests(unittest.TestCase):
     def test_retains_unmerged_lane(self) -> None:
         task = self.lane("Unmerged work")
         self.commit(Path(task["meta"]["worktree"]), "unmerged.txt")
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         self.assertEqual(tasks.reap(self.root, task["meta"]["id"]), 1)
         self.assertTrue(Path(task["meta"]["worktree"]).exists())
         self.assertIn(task["meta"]["branch"], self.git("branch"))
@@ -160,7 +191,7 @@ class ReapTests(unittest.TestCase):
         self.assertTrue(Path(task["meta"]["worktree"]).exists())
 
     def test_retains_missing_and_no_worktree_as_skips(self) -> None:
-        task = tasks.new_task(self.root, "No lane")
+        task = self.make_task("No lane")
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
         self.assertEqual(tasks.reap(self.root, task["meta"]["id"]), 0)
 
@@ -171,8 +202,8 @@ class ReapTests(unittest.TestCase):
         self.commit(Path(clean["meta"]["worktree"]), "clean.txt")
         self.merge(clean["meta"]["branch"])
         (Path(dirty["meta"]["worktree"]) / "dirty.txt").write_text("uncommitted")
-        tasks.set_status(self.root, clean["meta"]["id"], "review")
-        tasks.set_status(self.root, dirty["meta"]["id"], "review")
+        self.review_status(clean)
+        self.review_status(dirty)
         self.assertEqual(tasks.reap(self.root, goal["meta"]["id"]), 1)
         self.assertFalse(Path(clean["meta"]["worktree"]).exists())
         self.assertTrue(Path(dirty["meta"]["worktree"]).exists())
@@ -181,7 +212,7 @@ class ReapTests(unittest.TestCase):
         task = self.lane("Dry work")
         self.commit(Path(task["meta"]["worktree"]), "dry.txt")
         self.merge(task["meta"]["branch"])
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         self.assertEqual(tasks.reap(self.root, task["meta"]["id"], dry_run=True), 0)
         self.assertTrue(Path(task["meta"]["worktree"]).exists())
         self.assertIn(task["meta"]["branch"], self.git("branch"))
@@ -190,7 +221,7 @@ class ReapTests(unittest.TestCase):
         task = self.lane("CLI work")
         self.commit(Path(task["meta"]["worktree"]), "cli.txt")
         self.merge(task["meta"]["branch"])
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.review_status(task)
         out = io.StringIO()
         argv = [
             "tasks.py",

@@ -40,7 +40,7 @@ imports `@opencode/plugin`. The Python suite needs no third-party package.
 - Do not weaken, delete, or bypass a test, gate, permission, or safety check to
   make a change pass.
 - No path is protected. A ready PR with green required checks and a recorded
-  review verdict auto-merges; an irreversible deploy, data deletion, live secret
+  review artifact auto-merges; an irreversible deploy, data deletion, live secret
   rotation, or force-push still needs explicit approval.
 - Trivial edits (typo, one line, pure copy) skip the workflow. Everything else
   enters through `skills/engineering-loop/SKILL.md`.
@@ -81,7 +81,7 @@ Load on demand. The router picks the playbook; this table is the map.
 | `correct` | Repeated mistake classes become checks |
 | `verification` | Prove behavior on the real artifact |
 | `state-audit` | Queues, retries, locks, lifecycle paths |
-| `shipping` | Ready PR, CI, independent verdict, merge |
+| `shipping` | Ready PR, review artifact, exact-head CI, merge |
 | `parallel-lanes`, `ui-design` | Parallel slices, interface work |
 
 ## Rule enforcement
@@ -91,7 +91,7 @@ Load on demand. The router picks the playbook; this table is the map.
 | Secrets and private markers stay out of the tree | `gitleaks detect --source . --config .gitleaks.toml` |
 | Tasks close only with a claim, checked acceptance, and real evidence | `python3 -m unittest tests.test_tasks -v` |
 | Skill budget, ASCII prose, comment discipline, and this file's size hold | `node tests/harness-ratchets.test.mjs` |
-| Review protocol, blast radius, and state audits stay wired | `node tests/review-protocol.test.mjs` |
+| Review artifacts, policy paths, and state audits stay wired | `node tests/harness-ratchets.test.mjs` |
 
 Per-rule history and new encodings live in
 `skills/correct/references/rule-ledger.md`. `/close` and `/tune` append there and

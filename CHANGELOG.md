@@ -4,6 +4,21 @@
 
 ## Unreleased
 
+### Review and shipping
+
+- `/review` records observed exits and the exact HEAD in
+  `$HARNESS_STATE/work/reviews/<task-id>.json` through `tasks.py review --run`.
+  Close, the review status transition, and shipping reject a missing, stale,
+  failed, mismatched, or UNVERIFIED artifact.
+- A task cannot be claimed without a structured `Data shape` line and one
+  allowlisted `Verify` command in its Plan.
+- Remove the routine model review. A second opinion is an explicit operator
+  request and can only downgrade the artifact with `--unverify`.
+- Remove the `jev_plan` and `jev_triage` clients, the nightly model check, and
+  agent-facing Jev references. `bin/jev_review.py` remains out-of-band only.
+- Remove `tests/review-protocol.test.mjs`; the harness ratchet now rejects
+  agent-facing Jev and stale review-policy phrases by path.
+
 ### Instructions
 
 - Native OpenCode instruction discovery now owns global and project `AGENTS.md`.

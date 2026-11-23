@@ -44,7 +44,7 @@
   },
   "scripts": {
     "test:python": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
-    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/review-protocol.test.mjs && node tests/plugin.test.mjs && node tests/harness-ratchets.test.mjs",
+    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/plugin.test.mjs && node tests/harness-ratchets.test.mjs",
     "test": "npm run test:python && npm run test:node",
     "lint:md": "npx --yes markdownlint-cli2@0.18.1 '**/*.md'"
   },
