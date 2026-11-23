@@ -29,10 +29,6 @@ flag. Each child has one scope, testable acceptance, dependencies, and a review
 boundary. If a child cannot be reviewed in one sitting, split it. The reviewed
 lane map is used by `goal-start`; the operator does not create lanes by hand.
 
-Run a plan critique before execution when the goal is large or risky: Jev's
-plan mode checks completeness, testability, missing dependencies, and risk.
-It is advisory; fix the plan, not the score.
-
 ## Run
 
 After creating or resuming a goal, run `tasks.py goal-start <goal> --repo

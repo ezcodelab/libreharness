@@ -1,5 +1,5 @@
 ---
-description: Finish a task or goal: integrate lanes, final review, reap worktrees, lesson, evidence
+description: Finish a task or goal: validate the review artifact, integrate lanes, reap worktrees, evidence
 ---
 <!-- SPDX-License-Identifier: MIT -->
 Close: $ARGUMENTS
@@ -17,7 +17,8 @@ Do not edit feature code in this turn.
 3. If the task has lanes (a goal with child lanes, or a single task with a
    worktree), integrate:
    - read the child packets, or the single task packet, and refuse anything
-     that is not `review`/`done`, has no Evidence, or has a failing review;
+     that is not `review`/`done`, has no Evidence, or has a failing review
+     artifact;
    - build the merge map from branch, base, owns, and merge order; stop if two
      children claim the same file or interface;
    - merge in the declared order into one integration branch; for a single
@@ -26,52 +27,37 @@ Do not edit feature code in this turn.
    - stop on a conflict and leave the tree resumable;
    - run the full project check on the merged tree.
    Do not create a separate integration task or command; this is part of close.
-4. Run the final `/review` on the merged diff, or on the single task's diff.
-   Record the verdict. A send-back stops the close. If the one abstract pass is
-   done, do not start another; fix empirical failures and rerun the acceptance
-   check. Escalate a blocker that survives one fix. After the verdict, run the
-   acceptance check on the real artifact. A green reviewer is not proof the
-   artifact works.
-5. If a single task still has a worktree and is `active`, move it to `review`
-   now (`tasks.py status <id> review --note "final review passed"`) so the
-   reaper can evaluate it. Goal children are already final.
-6. Reap clean lanes:
+4. First gate: validate the review artifact on the tree that will land:
+   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" review <id> --repo "$PWD"`.
+   A missing, stale, failed, mismatched, or UNVERIFIED artifact stops the close.
+   Integration or any new commit makes the artifact stale; record a new PASS
+   with the task's Verify command before continuing.
+5. Run the final `/review` on the merged diff, or on the single task's diff.
+   A send-back stops the close. Fix empirical failures and rerun the acceptance
+   check; there is no second abstract pass.
+6. If a single task still has a worktree and is `active`, move it to `review`
+   now (`tasks.py status <id> review --note "final review passed" --repo "$PWD"`)
+   so the reaper can evaluate it. The status gate revalidates the artifact.
+   Goal children are already final.
+7. Reap clean lanes:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" reap <id>`
    It removes only clean worktrees, with no ignored files, whose branch is merged
    into another branch.
    If it exits non-zero, stop and leave the task or goal open; report every
    retained lane (active, dirty, or unmerged) and the exact next action.
-7. If Jev is configured, run the advisory close triage:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/jev_triage.py" --state /tmp/opencode/close-state-<id>.txt --json`
-   - exit 4: say the configured model is gone; do not silently switch to paid.
-   - exit 3: note "Jev unavailable" and use your own judgment.
-   - Jev never blocks the close by itself.
-8. Append exactly one dated entry to the project's `docs/process-lessons.md`:
-   - Surprise
-   - Cost
-   - Rule
-   - Doc updated
-   - `Promote-to-global` when portable
-   If nothing surprised you, write "Surprise: none" rather than inventing one.
-   If the lesson is a repeated correction, use the `correct` skill: fix it at the
-   highest level that works, architecture, then types, then a lint whose error
-   names the fix, then a test, and docs last. Prove the check fails on the past
-   mistake. Append the rule to `skills/correct/references/rule-ledger.md` and never
-   to the `AGENTS.md` table.
-9. If the project has a skill candidate, put it in the task evidence or the
-   project's skill directory. Do not promote it to global in this turn. `/tune`
-   handles promotion.
-10. Update the queue with the evidence:
-    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> done --evidence "<command and result>"`.
-11. If the task is mergeable and a forge is configured, use the `shipping`
-    skill: open a ready PR, wait for the required checks, require an independent
-    verifier PASS on the exact head, and merge with
-    `gh pr merge --match-head-commit`. Stop at the contract's human gates. If
-    the only failing required check is the gate on a gate or CI change, ask the
-    operator once in the same turn; if authorized, merge the exact head with
-    `gh pr merge --admin --match-head-commit <sha> --delete-branch`; if
-    declined, close the PR with the reason. Never leave a red PR open. If no
+8. If the work repeated a correction, use the `correct` skill: fix it at the
+   highest level that works, prove the check fails on the past mistake, and
+   append the rule to `skills/correct/references/rule-ledger.md`. Do not invent a
+   lesson when nothing surprised you.
+9. Update the queue with evidence that names the unit fail and pass commands,
+   the smoke JSON path when one exists, and the review artifact path:
+   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> done --evidence "<commands and results>"`.
+10. If the task is mergeable and a forge is configured, use the `shipping`
+    skill: validate the review artifact on the branch head, open a ready PR,
+    wait for the required checks on the exact head, require a mergeable PR and
+    the repository's human gates, and merge with
+    `gh pr merge --match-head-commit`. Stop at the contract's human gates. If no
     forge resolves, print the manual PR and merge commands and stop. Never push
     directly to main.
-12. Show what passed, what remains unproven, the PR state, and the next action.
+11. Show what passed, what remains unproven, the PR state, and the next action.
     Stop.

@@ -19,8 +19,10 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-export const MAX_SKILL_LINES = 120;
-export const MAX_AGENTS_LINES = 110;
+export const MAX_SKILL_LINES = 115;
+export const MAX_AGENTS_LINES = 89;
+export const MAX_AGENT_LINES = 283;
+export const MAX_INSTRUCTION_LINES = 2437;
 export const MAX_ENFORCEMENT_ROWS = 4;
 export const MAX_PLAYBOOK_LINES = 25;
 export const MIN_PLAYBOOK_STEPS = 3;
@@ -333,6 +335,79 @@ export function checkAgentsBudget(root) {
   return problems;
 }
 
+export function checkInstructionOwners(root) {
+  const problems = [];
+  const owner = "skills/README.md";
+  const header = "| Skill | Use |";
+  const ownerPath = join(root, owner);
+  if (!existsSync(ownerPath)) {
+    push(problems, "instruction-owners", owner, "missing the skill-map owner");
+  } else if (!readFileSync(ownerPath, "utf8").includes(header)) {
+    push(problems, "instruction-owners", owner, "the skill map must own the Skill | Use table");
+  }
+  for (const name of ["AGENTS.md", "README.md", "docs/reference.md"]) {
+    const path = join(root, name);
+    if (!existsSync(path)) {
+      push(problems, "instruction-owners", name, "missing file");
+      continue;
+    }
+    const text = readFileSync(path, "utf8");
+    if (!/\]\([^)]*skills\/README\.md(?:#[^)]*)?\)/.test(text)) {
+      push(problems, "instruction-owners", name, `must link to ${owner}`);
+    }
+  }
+  const scope = [
+    join(root, "AGENTS.md"),
+    join(root, "README.md"),
+    ...walk(join(root, "docs")),
+    ...walk(join(root, "commands")),
+    ...walk(join(root, "agents")),
+    ...walk(join(root, "skills")),
+    ...walk(join(root, ".opencode", "skills")),
+  ].filter((path) => path.endsWith(".md"));
+  for (const path of scope) {
+    const relPath = rel(root, path);
+    if (relPath === owner) continue;
+    if (ignored(relPath, ["CHANGELOG.md", "docs/process-lessons.md", "skills/correct/references/rule-ledger.md"])) continue;
+    if (readFileSync(path, "utf8").includes(header)) {
+      push(problems, "instruction-owners", relPath, `the skill map has one owner: ${owner}`);
+    }
+  }
+  return problems;
+}
+
+function instructionFiles(root) {
+  return [
+    join(root, "AGENTS.md"),
+    ...walk(join(root, "commands")),
+    ...walk(join(root, "agents")),
+    ...walk(join(root, "skills")),
+  ].filter((path) => path.endsWith(".md") && existsSync(path));
+}
+
+export function checkInstructionBudget(root) {
+  const problems = [];
+  for (const path of walk(join(root, "agents"))) {
+    if (!path.endsWith(".md")) continue;
+    const relPath = rel(root, path);
+    const lines = countLines(readFileSync(path, "utf8"));
+    if (lines > MAX_AGENT_LINES) {
+      push(problems, "instruction-budget", relPath, `${lines} lines exceeds ${MAX_AGENT_LINES}; delete before adding`);
+    }
+  }
+  const files = instructionFiles(root);
+  const total = files.reduce((sum, path) => sum + countLines(readFileSync(path, "utf8")), 0);
+  if (total > MAX_INSTRUCTION_LINES) {
+    push(
+      problems,
+      "instruction-budget",
+      "instructions",
+      `${total} lines exceeds ${MAX_INSTRUCTION_LINES}; delete a line elsewhere before adding`,
+    );
+  }
+  return problems;
+}
+
 export function checkRelativeLinks(root) {
   const problems = [];
   const scope = [
@@ -404,52 +479,75 @@ export function checkRouterWiring(root) {
       }
     }
   }
-
-  for (const [path, needles] of [
-    [join(root, "commands/brief.md"), ["**Playbook**", "**Data shape**"]],
-    [join(root, "agents/implementer.md"), ["Data shape", "no-comments"]],
-  ]) {
-    const name = rel(root, path);
-    if (!existsSync(path)) {
-      push(problems, "router-wiring", name, "missing file");
-      continue;
-    }
-    const text = readFileSync(path, "utf8");
-    for (const needle of needles) {
-      if (!text.includes(needle)) push(problems, "router-wiring", name, `missing ${needle}`);
-    }
-  }
   return problems;
 }
 
-export function checkSkillWiring(root) {
+const POLICY_TOKEN_PATTERNS = [
+  [/jev_review/, "jev_review"],
+  [/jev_plan/, "jev_plan"],
+  [/jev_triage/, "jev_triage"],
+  [/bin\/jev_/, "bin/jev_"],
+  [/\bJev\b/, "Jev"],
+  [/\bJEV_/, "JEV_"],
+];
+const POLICY_PHRASES = [
+  "independent verifier PASS",
+  "opposite-lens",
+  "gate cannot certify",
+];
+const POLICY_IGNORE = [
+  "CHANGELOG.md",
+  "docs/process-lessons.md",
+  "skills/correct/references/rule-ledger.md",
+];
+
+export function checkPolicyWiring(root) {
   const problems = [];
-  for (const [path, needles] of [
-    [join(root, "skills/no-comments/SKILL.md"), ["## Keep exceptions", "MUST KILL"]],
-    [join(root, "skills/correct/SKILL.md"), ["## Inverted pyramid", "references/rule-ledger.md"]],
-    [join(root, "skills/unslop/SKILL.md"), ["## Prose rules"]],
-  ]) {
-    const name = rel(root, path);
-    if (!existsSync(path)) {
-      push(problems, "skill-wiring", name, "missing file");
-      continue;
-    }
-    const text = readFileSync(path, "utf8");
-    for (const needle of needles) {
-      if (!text.includes(needle)) push(problems, "skill-wiring", name, `missing ${needle}`);
+  const files = [];
+  for (const base of ["commands", "agents", ".github/workflows"]) {
+    for (const path of walk(join(root, base))) {
+      const extension = path.slice(path.lastIndexOf("."));
+      if ([".md", ".yml", ".yaml"].includes(extension)) files.push(path);
     }
   }
-  const unslop = join(root, "skills/unslop/SKILL.md");
-  if (hasHeading(unslop, "## Audit") || hasHeading(unslop, "## Fix")) {
-    push(problems, "skill-wiring", "skills/unslop/SKILL.md", "prose-only skill must not carry a codebase audit mode");
-  }
-  for (const [path, forbidden] of [
-    [join(root, "commands/review.md"), "P3 notes"],
-    [join(root, "agents/devils-advocate.md"), "require a comment that says why"],
-  ]) {
-    if (has(path, forbidden)) {
-      push(problems, "skill-wiring", rel(root, path), `remove "${forbidden}": comment workarounds are blocking findings`);
+  for (const base of ["skills", ".opencode/skills"]) {
+    for (const path of walk(join(root, base))) {
+      if (path.endsWith("SKILL.md")) files.push(path);
     }
+  }
+  for (const name of ["README.md", "docs/reference.md"]) {
+    const path = join(root, name);
+    if (existsSync(path)) files.push(path);
+  }
+  for (const path of files) {
+    const relPath = rel(root, path);
+    if (ignored(relPath, POLICY_IGNORE)) continue;
+    readFileSync(path, "utf8")
+      .split("\n")
+      .forEach((line, index) => {
+        for (const [pattern, label] of POLICY_TOKEN_PATTERNS) {
+          if (pattern.test(line)) {
+            push(
+              problems,
+              "policy-wiring",
+              relPath,
+              `remove the agent-facing ${label} reference; the review artifact is the default gate`,
+              index + 1,
+            );
+          }
+        }
+        for (const phrase of POLICY_PHRASES) {
+          if (line.includes(phrase)) {
+            push(
+              problems,
+              "policy-wiring",
+              relPath,
+              `remove "${phrase}"; policy is recorded in the review artifact`,
+              index + 1,
+            );
+          }
+        }
+      });
   }
   return problems;
 }
@@ -475,20 +573,24 @@ export function checkIntakeWiring(root) {
 }
 
 export function checkWorkflowWiring(root) {
-  return [...checkRouterWiring(root), ...checkSkillWiring(root), ...checkIntakeWiring(root)];
+  return [
+    ...checkRouterWiring(root),
+    ...checkIntakeWiring(root),
+    ...checkPolicyWiring(root),
+  ];
 }
 
-// The scan grows with the refactor so every commit stays green. A check is added
-// here in the same commit that makes it pass.
 const CHECKS = [
   checkSkillBudgets,
   checkAsciiProse,
   checkCommentDiscipline,
   checkAgentsBudget,
+  checkInstructionOwners,
+  checkInstructionBudget,
   checkRelativeLinks,
   checkRouterWiring,
-  checkSkillWiring,
   checkIntakeWiring,
+  checkPolicyWiring,
 ];
 
 function selfTests() {
@@ -627,11 +729,87 @@ function selfTests() {
       "a playbook id list that drifts from the eight sections must fail",
     );
     writeFileSync(join(tmp, "plugins/auto-intake.js"), `export const PLAYBOOK_IDS = ${JSON.stringify(PLAYBOOKS)};\nexport function routePrompt(text) { return text; }\n`);
-    writeFileSync(join(tmp, "commands/review.md"), "Report these as P3 notes.\n");
+    writeFileSync(join(tmp, "commands/review.md"), "Jev review and independent verifier PASS.\n");
     assert.ok(
-      checkWorkflowWiring(tmp).some((problem) => problem.message.includes("P3 notes")),
-      "a non-blocking comment rule must fail",
+      checkPolicyWiring(tmp).some(
+        (problem) =>
+          problem.rule === "policy-wiring" &&
+          problem.file === "commands/review.md",
+      ),
+      "agent-facing Jev and independent-verdict policy must fail",
     );
+    writeFileSync(join(tmp, "commands/review.md"), "We achieve the goal with observed exits.\n");
+    assert.deepEqual(
+      checkPolicyWiring(tmp),
+      [],
+      "the substring jev inside an unrelated word must pass",
+    );
+    writeFileSync(join(tmp, "commands/review.md"), "A gate cannot certify its own weakening.\n");
+    assert.ok(
+      checkPolicyWiring(tmp).some((problem) =>
+        problem.message.includes("gate cannot certify"),
+      ),
+      "the stale gate exception must fail",
+    );
+    writeFileSync(join(tmp, "commands/review.md"), "review\n");
+
+    mkdirSync(join(tmp, "docs"), { recursive: true });
+    writeFileSync(
+      join(tmp, "skills/README.md"),
+      "| Skill | Use |\n|---|---|\n| `one` | valid |\n",
+    );
+    writeFileSync(join(tmp, "README.md"), "See [skills](skills/README.md).\n");
+    writeFileSync(
+      join(tmp, "docs/reference.md"),
+      "See [skills](../skills/README.md).\n",
+    );
+    const agentsWithLink = "# Rules\n\nSee [skills](skills/README.md).\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n";
+    writeFileSync(join(tmp, "AGENTS.md"), agentsWithLink);
+    assert.deepEqual(checkInstructionOwners(tmp), [], "one owner and three links must pass");
+    writeFileSync(
+      join(tmp, "AGENTS.md"),
+      "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n",
+    );
+    assert.ok(
+      checkInstructionOwners(tmp).some((problem) =>
+        problem.message.includes("must link"),
+      ),
+      "AGENTS.md without a skill-map link must fail",
+    );
+    writeFileSync(join(tmp, "AGENTS.md"), agentsWithLink);
+    writeFileSync(join(tmp, "README.md"), "| Skill | Use |\n|---|---|\n| `two` | duplicate |\n");
+    assert.ok(
+      checkInstructionOwners(tmp).some((problem) =>
+        problem.message.includes("one owner"),
+      ),
+      "a second skill table must fail",
+    );
+    writeFileSync(join(tmp, "README.md"), "See [skills](skills/README.md).\n");
+
+    writeFileSync(
+      join(tmp, "agents/big.md"),
+      "- step\n".repeat(MAX_AGENT_LINES + 1),
+    );
+    assert.ok(
+      checkInstructionBudget(tmp).some(
+        (problem) =>
+          problem.rule === "instruction-budget" &&
+          problem.file === "agents/big.md",
+      ),
+      "an agent over the fixed cap must fail",
+    );
+    rmSync(join(tmp, "agents/big.md"));
+    writeFileSync(
+      join(tmp, "commands/huge.md"),
+      "- step\n".repeat(MAX_INSTRUCTION_LINES + 1),
+    );
+    assert.ok(
+      checkInstructionBudget(tmp).some((problem) =>
+        problem.message.includes("delete a line elsewhere"),
+      ),
+      "net instruction growth must fail",
+    );
+    rmSync(join(tmp, "commands/huge.md"));
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }

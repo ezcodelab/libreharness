@@ -50,17 +50,18 @@ acceptance is verified.
 ## Lifecycle
 
 `inbox → ready → active → review → done`, with `blocked` and `abandoned` as
-exits. `review` means the review passed and the task is awaiting integration or
-close; record the verdict in the Log. A task is claimable only when `ready` and
-every dependency is `done` or `abandoned`. One owner and one branch/worktree per
-active task.
+exits. `review` means the review artifact is PASS and the task is awaiting
+integration or close; the status gate revalidates the artifact. A task is
+claimable only when `ready` and every dependency is `done` or `abandoned`. One
+owner and one branch/worktree per active task.
 
 The task file holds:
 
 - **Scope** and **Out of scope**;
 - **Acceptance**: observable checks, not a wish;
 - **Context**: links to the project index, decisions, and lessons;
-- **Plan**: the chosen path and interfaces;
+- **Plan**: the chosen path, one `Data shape` line, one `Verify` command, and
+  interfaces;
 - **Evidence**: checks actually run, with results, or `[T]` with a plan;
 - **Handoff**: the state a fresh agent needs;
 - **Log**: append-only state changes.

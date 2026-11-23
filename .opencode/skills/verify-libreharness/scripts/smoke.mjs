@@ -24,12 +24,13 @@ const REPORT = join(REPORT_DIR, "latest.json");
 const verified = [];
 const unverified = [
   "OpenCode TUI transport",
-  "remote Jev endpoint responses",
   "GitHub Actions auto-merge gate",
 ];
 
 let state = "";
 let taskId = "";
+let head = "";
+let checks = [];
 let failure = "";
 
 function queue(args) {
@@ -58,6 +59,9 @@ function writeReport(verdict) {
         stateDir: state,
         stateRemoved: state !== "" && !existsSync(state),
         taskId,
+        head,
+        verdict,
+        checks,
         verified,
         unverified,
         ...(failure ? { failure } : {}),
@@ -118,13 +122,51 @@ try {
   check(task.includes("status: inbox"), "task is not inbox");
   const accepted = task.replace(
     /^- \[ \] TBD.*$/m,
-    "- [x] tasks.py validate exits 0",
+    "- [x] review artifact records a PASS at HEAD",
   );
   check(accepted !== task, "acceptance placeholder missing");
-  writeFileSync(taskPath, accepted);
+  const planned = accepted.replace(
+    /## Plan\n\n/,
+    `## Plan\n\nData shape: {"task":"string","status":"string"}\n` +
+      "Verify: node tests/harness-ratchets.test.mjs\n\n",
+  );
+  check(planned !== accepted, "task Plan section missing");
+  writeFileSync(taskPath, planned);
 
-  queue(["claim", taskId, "--owner", "smoke"]);
-  queue(["status", taskId, "review"]);
+  head = execFileSync("git", ["-C", ROOT, "rev-parse", "HEAD"], {
+    encoding: "utf8",
+  }).trim();
+
+  queue(["claim", taskId, "--owner", "smoke", "--repo", ROOT]);
+  queue([
+    "review",
+    taskId,
+    "--repo",
+    ROOT,
+    "--run",
+    "node tests/harness-ratchets.test.mjs",
+  ]);
+  const artifactPath = join(state, "work/reviews", `${taskId}.json`);
+  check(existsSync(artifactPath), "review artifact was not written");
+  const artifact = JSON.parse(readFileSync(artifactPath, "utf8"));
+  check(artifact.head === head, "review artifact head does not match git HEAD");
+  check(artifact.verdict === "PASS", "review artifact is not PASS");
+  check(
+    Array.isArray(artifact.checks) && artifact.checks.length > 0,
+    "review artifact has no observed checks",
+  );
+  checks = artifact.checks;
+  check(
+    artifact.checks.some(
+      (item) =>
+        item.command === "node tests/harness-ratchets.test.mjs" &&
+        item.exit === 0,
+    ),
+    "review artifact is missing the required ratchet check",
+  );
+  verified.push("review artifact at HEAD with observed checks");
+
+  queue(["status", taskId, "review", "--repo", ROOT]);
   queue(["validate"]);
   verified.push("queue claim, review, validate");
 
@@ -133,7 +175,7 @@ try {
     taskId,
     "done",
     "--evidence",
-    "python3 bin/tasks.py validate: exit 0",
+    `review artifact ${artifactPath} PASS at ${head}; tasks.py validate exit 0`,
   ]);
   check(
     readFileSync(taskPath, "utf8").includes("status: done"),

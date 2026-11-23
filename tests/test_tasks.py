@@ -20,13 +20,49 @@ class QueueTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name) / "state"
         (self.root / "work/tasks").mkdir(parents=True)
+        self.repo = Path(self.tmp.name) / "repo"
+        self.repo.mkdir()
+        subprocess.run(["git", "init", "-q", "-b", "main", str(self.repo)], check=True)
+        subprocess.run(["git", "-C", str(self.repo), "config", "user.email", "test@example.com"], check=True)
+        subprocess.run(["git", "-C", str(self.repo), "config", "user.name", "Test"], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.repo), "config", "commit.gpgsign", "false"],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.repo), "commit", "-q", "--allow-empty", "-m", "base"],
+            check=True,
+        )
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
+    def make_task(self, title: str, *, tags: str = "", **kwargs) -> dict:
+        task = tasks.new_task(self.root, title, tags=tags, **kwargs)
+        task["sections"]["Plan"] = (
+            'Data shape: {"state":"idle|running"}\n'
+            "Verify: python3 -m unittest tests.test_tasks -v\n"
+        )
+        tasks.write_task(task)
+        return task
+
+    def pass_review(self, task: dict, repo: Path | None = None) -> None:
+        verify = tasks.plan_verify(task)
+        path = tasks.review_path(self.root, task["meta"]["id"])
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "task": task["meta"]["id"],
+                    "head": tasks.git_head(repo or self.repo),
+                    "verdict": "PASS",
+                    "checks": [{"command": verify, "exit": 0}],
+                }
+            )
+        )
+
     def test_create_claim_review_done(self) -> None:
-        task = tasks.new_task(
-            self.root,
+        task = self.make_task(
             "Fix the widget",
             project="demo",
             scope="Only the widget.",
@@ -35,7 +71,8 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(task["meta"]["status"], "ready")
         claimed = tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
         self.assertEqual(claimed["meta"]["status"], "active")
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.pass_review(task)
+        tasks.set_status(self.root, task["meta"]["id"], "review", repo=self.repo)
         done = tasks.set_status(
             self.root,
             task["meta"]["id"],
@@ -52,8 +89,8 @@ class QueueTests(unittest.TestCase):
         self.assertIn(task["meta"]["id"], board)
 
     def test_done_requires_claim_and_real_evidence(self) -> None:
-        task = tasks.new_task(
-            self.root, "Needs proof", acceptance="- [x] proof exists"
+        task = self.make_task(
+            "Needs proof", acceptance="- [x] proof exists"
         )
         with self.assertRaises(SystemExit):
             tasks.set_status(self.root, task["meta"]["id"], "done")
@@ -68,8 +105,8 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(done["meta"]["status"], "done")
 
     def test_done_rejects_unchecked_acceptance(self) -> None:
-        task = tasks.new_task(
-            self.root, "Unfinished", acceptance="- [ ] widget works\n- [x] docs"
+        task = self.make_task(
+            "Unfinished", acceptance="- [ ] widget works\n- [x] docs"
         )
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
         with self.assertRaises(SystemExit) as caught:
@@ -82,7 +119,7 @@ class QueueTests(unittest.TestCase):
         self.assertIn("widget works", str(caught.exception))
 
     def test_done_rejects_tbd_acceptance(self) -> None:
-        task = tasks.new_task(self.root, "Placeholder", acceptance="- TBD")
+        task = self.make_task("Placeholder", acceptance="- TBD")
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
         with self.assertRaises(SystemExit) as caught:
             tasks.set_status(
@@ -94,8 +131,8 @@ class QueueTests(unittest.TestCase):
         self.assertIn("TBD", str(caught.exception))
 
     def test_done_rejects_deferred_section(self) -> None:
-        task = tasks.new_task(
-            self.root, "Deferred", acceptance="- [x] main work"
+        task = self.make_task(
+            "Deferred", acceptance="- [x] main work"
         )
         task["sections"]["Deferred"] = "- cleanup later"
         tasks.write_task(task)
@@ -110,8 +147,8 @@ class QueueTests(unittest.TestCase):
         self.assertIn("deferred", str(caught.exception).lower())
 
     def test_claim_records_base_and_rejects_equivalent_worktree(self) -> None:
-        first = tasks.new_task(self.root, "First lane")
-        second = tasks.new_task(self.root, "Second lane")
+        first = self.make_task("First lane")
+        second = self.make_task("Second lane")
         claimed = tasks.claim_task(
             self.root,
             first["meta"]["id"],
@@ -130,8 +167,8 @@ class QueueTests(unittest.TestCase):
             )
 
     def test_metrics_not_duplicated_on_reopen(self) -> None:
-        task = tasks.new_task(
-            self.root, "Reopened", acceptance="- [x] reopened"
+        task = self.make_task(
+            "Reopened", acceptance="- [x] reopened"
         )
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
         tasks.set_status(self.root, task["meta"]["id"], "done", evidence="make check: 1 passed")
@@ -141,9 +178,8 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(len(rows), 2)  # header + one task row
 
     def test_dependencies_gate_ready(self) -> None:
-        first = tasks.new_task(self.root, "First", acceptance="- [x] first")
-        second = tasks.new_task(
-            self.root,
+        first = self.make_task("First", acceptance="- [x] first")
+        second = self.make_task(
             "Second",
             depends_on=first["meta"]["id"],
             acceptance="- [ ] second",
@@ -187,7 +223,7 @@ class QueueTests(unittest.TestCase):
             ["git", "-C", str(repo), "commit", "-q", "--allow-empty", "-m", "base"],
             check=True,
         )
-        task = tasks.new_task(self.root, "Race work", acceptance="- [ ] race")
+        task = self.make_task("Race work", acceptance="- [ ] race")
         worktree = Path(self.tmp.name) / "race-repo-race-work"
         with mock.patch.object(tasks, "claim_task", side_effect=SystemExit("lost race")):
             with self.assertRaises(SystemExit):
@@ -207,8 +243,7 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(goal["meta"]["autorun"], "true")
         with self.assertRaises(SystemExit):
             tasks.claim_task(self.root, goal["meta"]["id"], owner="lane-a")
-        child = tasks.new_task(
-            self.root,
+        child = self.make_task(
             "Demo endpoint",
             parent=goal["meta"]["id"],
             acceptance="- [x] endpoint answers",
@@ -451,27 +486,137 @@ class QueueTests(unittest.TestCase):
     def test_lane_lifecycle(self) -> None:
         if shutil.which("git") is None:
             self.skipTest("git not installed")
-        repo = Path(self.tmp.name) / "repo"
-        repo.mkdir()
-        subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
-        subprocess.run(["git", "-C", str(repo), "config", "user.email", "test@example.com"], check=True)
-        subprocess.run(["git", "-C", str(repo), "config", "user.name", "Test"], check=True)
-        subprocess.run(
-            ["git", "-C", str(repo), "config", "commit.gpgsign", "false"],
-            check=True,
-        )
-        subprocess.run(
-            ["git", "-C", str(repo), "commit", "-q", "--allow-empty", "-m", "base"],
-            check=True,
-        )
-        task = tasks.new_task(self.root, "Lane work", acceptance="- [ ] lane works")
+        repo = self.repo
+        task = self.make_task("Lane work", acceptance="- [ ] lane works")
         tasks.lane_task(self.root, task["meta"]["id"], repo=repo, owner="lane-a")
         worktree = Path(tasks.find_task(self.root, task["meta"]["id"])["meta"]["worktree"])
         self.assertTrue((worktree / ".git").exists())
-        tasks.set_status(self.root, task["meta"]["id"], "review")
+        self.pass_review(task, repo=worktree)
+        tasks.set_status(self.root, task["meta"]["id"], "review", repo=worktree)
         tasks.remove_lane(self.root, task["meta"]["id"])
         self.assertFalse(worktree.exists())
         self.assertNotIn("feature/lane-work", tasks.run_git(["branch"], repo))
+
+
+class PlanContractTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name) / "state"
+        (self.root / "work/tasks").mkdir(parents=True)
+        self.repo = Path(self.tmp.name) / "repo"
+        (self.repo / "src").mkdir(parents=True)
+        (self.repo / "src/widget.py").write_text(
+            "class Widget:\n    pass\n\n"
+            "# def CommentOnly(\n"
+        )
+        (self.repo / "src/widget.js").write_text(
+            "export function buildWidget() {}\n"
+        )
+        subprocess.run(["git", "init", "-q", "-b", "main", str(self.repo)], check=True)
+        subprocess.run(["git", "-C", str(self.repo), "config", "user.email", "test@example.com"], check=True)
+        subprocess.run(["git", "-C", str(self.repo), "config", "user.name", "Test"], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.repo), "config", "commit.gpgsign", "false"],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.repo), "commit", "-q", "--allow-empty", "-m", "base"],
+            check=True,
+        )
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def task(self, plan: str, tags: str = "") -> dict:
+        task = tasks.new_task(
+            self.root,
+            "Plan contract",
+            tags=tags,
+            acceptance="- [x] contract holds",
+        )
+        task["sections"]["Plan"] = plan
+        tasks.write_task(task)
+        return task
+
+    def claim(self, task: dict) -> dict:
+        return tasks.claim_task(
+            self.root, task["meta"]["id"], owner="lane-a", repo=self.repo
+        )
+
+    def test_claim_requires_structured_data_shape(self) -> None:
+        verify = "Verify: python3 -m unittest tests.test_tasks -v\n"
+        with self.assertRaises(SystemExit):
+            self.claim(self.task(verify))
+        with self.assertRaises(SystemExit):
+            self.claim(
+                self.task("Data shape: the widget owns a small state\n" + verify)
+            )
+        with self.assertRaises(SystemExit):
+            self.claim(self.task("Data shape: {}\n" + verify))
+
+    def test_claim_accepts_json_and_declaration_paths(self) -> None:
+        verify = "Verify: python3 -m unittest tests.test_tasks -v\n"
+        json_task = self.task('Data shape: {"state":"idle|running"}\n' + verify)
+        self.assertEqual(self.claim(json_task)["meta"]["status"], "active")
+        path_task = self.task("Data shape: path src/widget.py#Widget\n" + verify)
+        self.assertEqual(self.claim(path_task)["meta"]["status"], "active")
+        js_task = self.task("Data shape: path src/widget.js#buildWidget\n" + verify)
+        self.assertEqual(self.claim(js_task)["meta"]["status"], "active")
+
+    def test_comment_only_symbol_does_not_pass(self) -> None:
+        task = self.task(
+            "Data shape: path src/widget.py#CommentOnly\n"
+            "Verify: python3 -m unittest tests.test_tasks -v\n"
+        )
+        with self.assertRaises(SystemExit):
+            self.claim(task)
+
+    def test_none_needs_docs_or_chore_tag(self) -> None:
+        verify = "Verify: python3 -m unittest tests.test_tasks -v\n"
+        with self.assertRaises(SystemExit):
+            self.claim(self.task("Data shape: none - prose only\n" + verify))
+        docs = self.task("Data shape: none - prose only\n" + verify, tags="docs")
+        self.assertEqual(self.claim(docs)["meta"]["status"], "active")
+
+    def test_claim_rejects_unallowlisted_verify(self) -> None:
+        task = self.task(
+            'Data shape: {"state":"idle"}\n'
+            "Verify: bash -c 'echo pass'\n"
+        )
+        with self.assertRaises(SystemExit):
+            self.claim(task)
+
+    def test_review_status_gate_consumes_the_artifact(self) -> None:
+        task = self.task(
+            'Data shape: {"state":"idle"}\n'
+            "Verify: python3 -m unittest tests.test_tasks -v\n"
+        )
+        self.claim(task)
+        with self.assertRaises(SystemExit):
+            tasks.set_status(self.root, task["meta"]["id"], "review", repo=self.repo)
+        path = tasks.review_path(self.root, task["meta"]["id"])
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "task": task["meta"]["id"],
+                    "head": tasks.git_head(self.repo),
+                    "verdict": "PASS",
+                    "checks": [
+                        {
+                            "command": "python3 -m unittest tests.test_tasks -v",
+                            "exit": 0,
+                        }
+                    ],
+                }
+            )
+        )
+        self.assertEqual(
+            tasks.set_status(
+                self.root, task["meta"]["id"], "review", repo=self.repo
+            )["meta"]["status"],
+            "review",
+        )
 
 
 class ReviewArtifactTests(unittest.TestCase):

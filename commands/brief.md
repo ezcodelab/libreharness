@@ -29,4 +29,10 @@ Use the work-queue and engineering-loop skills.
    - **Definition of done** (the quality axes that matter here)
    - **Past lessons** (0 to 3, with why each applies)
    - **First action** and the exact check that proves it
-6. Stop. Do not edit code in this turn.
+6. Write two lines into the task `## Plan` before input:
+   - `Data shape:` one non-empty JSON object or array, or
+     `path <repo-relative-file>#<symbol>`, or `none - <reason>` only for a
+     `docs` or `chore` task;
+   - `Verify:` one command from the review allowlist. A product task that cannot
+     name its real check stays unverified; do not point Verify at a harness check.
+7. Stop. Do not edit code in this turn.

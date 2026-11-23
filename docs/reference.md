@@ -14,8 +14,6 @@ plugins load from the package.
 - Python 3.10 or newer.
 - A model provider of your choice.
 
-Jev is optional. The queue and the test suite work without a key.
-
 ## Install
 
 Add the package to the global `plugins` array in
@@ -65,7 +63,7 @@ the config directory.
 | Root | Meaning | Examples |
 |---|---|---|
 | `HARNESS_HOME` | Code and configuration | `bin/tasks.py`, `commands/`, `skills/`, `plugins/` |
-| `HARNESS_STATE` | Mutable local data | tasks, board, lock, metrics, optional Jev key file |
+| `HARNESS_STATE` | Mutable local data | tasks, board, lock, metrics, review artifacts |
 
 With the plugin, `HARNESS_HOME` is the package root and OpenCode configuration
 stays in `~/.config/opencode`. No runtime component writes into
@@ -75,6 +73,7 @@ stays in `~/.config/opencode`. No runtime component writes into
 $HARNESS_STATE/
 ├── work/
 │   ├── tasks/<yyyy-mm-dd>-<slug>.md
+│   ├── reviews/<task-id>.json
 │   ├── BOARD.md
 │   └── .lock
 └── metrics/workflow-log.csv
@@ -140,8 +139,12 @@ ID=$(python3 "$HARNESS_HOME/bin/tasks.py" new "Try LibreHarness" \
   --project demo \
   --scope "Create and close one task." \
   --acceptance "- board lists the task")
+# Write exactly one Data shape: line and one Verify: line into ## Plan,
+# for example with /brief, before claim.
 python3 "$HARNESS_HOME/bin/tasks.py" claim "$ID" --owner quickstart
-python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" review --note "quickstart"
+python3 "$HARNESS_HOME/bin/tasks.py" review "$ID" --repo "$PWD" \
+  --run "python3 -m unittest tests.test_tasks -v"
+python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" review --note "review passed"
 python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" done \
   --evidence "python3 $HARNESS_HOME/bin/tasks.py board: task listed"
 python3 "$HARNESS_HOME/bin/tasks.py" board
@@ -149,6 +152,34 @@ python3 "$HARNESS_HOME/bin/tasks.py" board
 
 A tracked deferral is `[T]` plus a plan and what would change it. It is not a
 pass.
+
+### Claim contract
+
+Before claim, the task `## Plan` must carry exactly one `Data shape:` line and
+one `Verify:` line.
+
+- `Data shape` is a non-empty JSON object or array on one line, or
+  `path <repo-relative-file>#<symbol>` where the file declares the symbol, or
+  `none - <reason>` only for a task tagged `docs` or `chore`.
+- `Verify` is one command from the review allowlist: `npm test`,
+  `npm run test:*`, `npm run lint:*`, `node tests/*.test.mjs`,
+  `python3 -m unittest ...`, `pytest ...`, `ruff check ...`, `make check`,
+  `cargo test`, `go test ./...`, `npx --no-install markdownlint-cli2 ...`, or the
+  project-local verification smoke script.
+
+A product task that cannot name its real check stops unverified instead of
+pointing Verify at an unrelated harness check.
+
+### Review artifact
+
+`tasks.py review <id> --repo <repo> --run "<command>"` runs allowlisted argv
+without a shell, records the observed exits and the exact HEAD in
+`work/reviews/<id>.json`, then validates the artifact. No-argument mode
+validates an existing artifact; `--unverify` downgrades it.
+
+PASS needs at least one check, every recorded exit zero, and the task's Verify
+command exactly once. A missing, malformed, stale, failed, or task-mismatched
+artifact blocks `status <id> review`, `/close`, and shipping.
 
 ### Goal
 
@@ -183,13 +214,13 @@ auto-intake task (inbox)
 goal/work-queue brief -> claim or lane -> implement
   |
   v
-deterministic checks -> verification artifact
+deterministic checks -> review artifact
   |
   v
-review -> close -> ready PR -> CI + independent verifier PASS
+review -> close -> ready PR -> CI -> merge only the reviewed head
   |
   v
-merge only the verified patch -> post-merge check
+post-merge check
 ```
 
 No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
@@ -205,14 +236,17 @@ No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
 3. **Implement.** Keep one reviewable diff. Update the task before a scope
    change. Use the smallest complete change.
 4. **Prove.** Run the acceptance checks and record the command and result.
-5. **Review.** Prefer empirical and deterministic checks. Run `/review` as a
-   focused second opinion. `devils-advocate` reviews against the goals and
-   invariants, not its own preferences. Only a confirmed P0/P1 blocks. One
-   abstract pass per change; run the acceptance check on the real artifact.
-6. **Close.** Integrate lanes, run the final review on the merged tree, reap
-   clean worktrees, write one lesson, record evidence, and ship through a ready
-   PR. No path is protected; a ready PR with green checks and a recorded verdict
-   auto-merges. An irreversible deploy, data deletion, or force-push still stops.
+5. **Review.** Run the task's Verify command and focused deterministic checks
+   through `tasks.py review --run`. Record the observed exits and HEAD, then
+   inspect comments, reach, and state impact. The default path makes no model
+   call. A second opinion is an explicit operator request and cannot create a
+   PASS. A green artifact is not proof: run the acceptance check on the real
+   artifact.
+6. **Close.** Integrate lanes, validate the review artifact on the merged tree,
+   reap clean worktrees, record evidence, and ship through a ready PR. No path is
+   protected; a ready PR with green required checks and a PASS artifact at the
+   exact head auto-merges. An irreversible deploy, data deletion, or force-push
+   still stops.
 
 ## Commands
 
@@ -223,9 +257,9 @@ No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
 | `/queue` | Inspect the board and ready work |
 | `/lane <id>` | Create a manual worktree lane |
 | `/takeover <id>` | Resume a task from its packet |
-| `/review <id>` | Tiered review of the working diff |
+| `/review <id>` | Deterministic review with a recorded artifact |
 | `/state-audit <path>` | Document and check a state machine |
-| `/close <id>` | Integrate, review, reap, lesson, evidence, ship |
+| `/close <id>` | Integrate, validate the artifact, reap, evidence, ship |
 | `/handoff` | Write a bounded handoff |
 | `/design-review` | Review UI work |
 | `/tune` | Propose deletions and process patches |
@@ -240,6 +274,7 @@ Run `python3 "$HARNESS_HOME/bin/tasks.py" <command>`.
 | `goal` | Create a goal |
 | `plan --file <json>` | Validate and create a goal plan |
 | `claim` | Claim a task, optionally with a branch and worktree |
+| `review` | Record or validate the review artifact for one task |
 | `status` | Change status, add a note or evidence |
 | `lane` | Create a worktree lane |
 | `remove-lane` | Remove a lane |
@@ -253,19 +288,7 @@ Run `python3 "$HARNESS_HOME/bin/tasks.py" <command>`.
 
 ## Skills
 
-| Skill | Use |
-|---|---|
-| `engineering-loop` | Entry point and playbook router for non-trivial work |
-| `goal` | Multi-deliverable goal planning and execution |
-| `parallel-lanes` | Two or three independent lanes |
-| `shipping` | Ready PR, CI, independent verdict, merge |
-| `state-audit` | States, invariants, transitions, regression tests |
-| `ui-design` | UI and UX work |
-| `unslop` | Prose only: replies, PR bodies, docs, commit messages |
-| `no-comments` | Remove comment alibis before review |
-| `correct` | Repeated mistake classes become checks |
-| `verification` | Prove real app behavior |
-| `work-queue` | Durable tasks with scope, acceptance, and evidence |
+The map lives in [skills/README.md](../skills/README.md).
 
 `engineering-loop` maps a request to `investigation`, `bug-fix`, `feature`,
 `refactoring`, `perf`, `hillclimb`, `autonomous-multiphase`, or `correct`. The
@@ -295,62 +318,17 @@ Two local plugins are bundled. They use Node built-ins and never call a model.
 Protect secret files in one layer rather than in every agent: install
 `envsitter-guard` or `cc-safety-net`, or add a global `read *.env ask` rule.
 
-## Jev
-
-Jev is an advisory typed-question client. It sends one request and prints one
-structured answer. It never merges, closes, or blocks work by itself.
-
-| Client | Use | Input |
-|---|---|---|
-| `bin/jev_review.py` | Typed second opinion on a diff | Task and diff |
-| `bin/jev_plan.py` | Completeness and risk check on a goal plan | Goal and children |
-| `bin/jev_triage.py` | Decide whether a close lesson is durable | Compact close state |
-
-Configuration:
-
-| Variable | Required | Meaning |
-|---|---|---|
-| `JEV_MODEL` | Yes for a live call | Model id; no hardcoded default |
-| `JEV_ENDPOINT` | No | Typed-question endpoint |
-| `JEV_API_KEY` | No | Key from the environment |
-| `JEV_KEY_FILE` | No | Path to a mode 600 key file |
-
-The key resolver checks `--key-file`, `JEV_API_KEY`, `OPENCODE_API_KEY`,
-`TYPESAFE_API_KEY`, `JEV_KEY_FILE`, then `~/.config/opencode/jev.key`. Use one
-source. A missing key is a skip at the workflow level and exit 3 from a
-standalone client.
-
-Exit codes:
-
-| Exit | Meaning |
-|---|---|
-| 0 | Pass or result produced |
-| 2 | Review send-back |
-| 3 | Configuration, API, missing key, or secret-shaped input |
-| 4 | Requested model is gone; do not silently switch to a paid model |
-
-Set the model and check availability:
-
-```sh
-export JEV_MODEL="<model-id>"
-python3 "$HARNESS_HOME/bin/jev_review.py" --check
-```
-
-A review sends the task and diff, truncated at `--max-chars` (default 30000), to
-the configured endpoint. It refuses secret-shaped input unless
-`--allow-secret-shaped` is passed for a reviewed exception. The endpoint receives
-only that material and the key.
-
 ## Security and privacy
 
-- Task files, the board, metrics, and Jev key files live under
+- Task files, the board, metrics, and review artifacts live under
   `$HARNESS_STATE`. The directory is mode 700; use disk encryption if the work is
   sensitive.
 - `auto-intake` refuses to store a prompt that matches its secret patterns and
   redacts secret-shaped and PII-shaped text in titles.
-- The Jev review and plan clients reject secret-shaped input.
+- Review checks run local commands and record their exits; the artifact contains
+  no secret material beyond what a command prints.
 - The queue does not encrypt task files.
-- Nothing here sends telemetry. Jev sends a request only when a command runs it.
+- Nothing here sends telemetry.
 
 Report a vulnerability through the private advisory form at
 <https://github.com/ezcodelab/libreharness/security/advisories/new>. Do not put a
@@ -359,19 +337,21 @@ live key in an issue.
 ## Shipping and CI
 
 Public repositories use GitHub as canonical and Gitea as a read-only mirror.
-Open a ready PR, wait for the required checks, obtain an independent verdict on
-the exact head, then merge that head:
+Validate the review artifact on the head that will land, open a ready PR, wait
+for the required checks on that exact head, satisfy any repository human gate,
+then merge that head:
 
 ```sh
+python3 "$HARNESS_HOME/bin/tasks.py" review <id> --repo "$PWD"
 HEAD=$(gh pr view <number> --json headRefOid --jq .headRefOid)
 gh pr checks <number> --watch --required --interval 20
 gh pr merge <number> --squash --match-head-commit "$HEAD" --delete-branch
 ```
 
-A change to a gate, CI, auth, deploy, or release path stops at merge-ready and
-waits for the operator. Ask once in the same turn with the exact
-`--admin --match-head-commit` command. If authorized, merge that head; if
-declined, close the PR with the reason. Never leave a reviewed PR open.
+A missing, stale, failed, or UNVERIFIED artifact, a pending or failed required
+check, a conflict, a draft, or a secret in the diff stops the merge. A repository
+human gate, such as required reviews or a ruleset, also stops it until satisfied.
+Do not replace that gate with a model verdict.
 
 Never push to `main` or force-push a shared branch.
 

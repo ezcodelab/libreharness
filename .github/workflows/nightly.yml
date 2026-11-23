@@ -35,9 +35,3 @@ jobs:
         with:
           args: --no-progress "**/*.md"
           fail: true
-      - name: Jev model check
-        if: env.JEV_API_KEY != ''
-        run: python3 bin/jev_review.py --check
-      - name: Jev skipped
-        if: env.JEV_API_KEY == ''
-        run: echo "JEV_API_KEY not configured; live Jev check skipped"

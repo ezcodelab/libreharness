@@ -186,7 +186,7 @@ function reusedNotice(id, decision) {
   );
 }
 
-// Keep this list at least as strict as bin/jev_review.py SECRET_PATTERNS.
+// This list must stay at least as strict as the review client's secret patterns.
 const SECRET =
   /(AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|sk[_-](live|test)?[_-]?[A-Za-z0-9]{10,}|xox[baprs]-[A-Za-z0-9-]{10,}|Bearer\s+eyJ[A-Za-z0-9._-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|password|token|access[_-]?key)\s*[:=]\s*(?:"[^"]{8,}"|'[^']{8,}'|\S{8,}))/i;
 const PII =
@@ -245,7 +245,7 @@ function createTask(text, directory) {
       "--status",
       "inbox",
       "--scope",
-      "Auto-captured prompt; confirm scope and acceptance before claiming.",
+      "Auto-captured prompt; confirm scope and acceptance, then add Data shape and Verify lines before claiming.",
       "--acceptance",
       "- [ ] TBD: confirm before claiming.",
       "--",

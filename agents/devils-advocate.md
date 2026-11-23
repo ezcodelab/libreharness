@@ -157,12 +157,15 @@ Abstract adversarial review is a second opinion, not a default. Empirical and
 deterministic verification come first: run the artifact, the reproduction, the
 tests, or the formal check.
 
-- Invoke this review only when that evidence cannot settle a goal/intent
-  mismatch or a high-risk failure mode.
+- Invoke this review only when the operator explicitly requests a second opinion
+  in the current turn. A risk label, a path guess, or a model judgment is not a
+  trigger.
 - Do not run it as a loop. Multiple rounds of abstract review overcook a change
   and steer the author away from the goals.
 - Do not report style, naming, YAGNI, or hypothetical future needs. Those are
   not defects.
+- If you cannot finish within the available steps, say the review is incomplete
+  and name what remains unverified. The parent records UNVERIFIED, not PASS.
 
 ## Constraints
 

@@ -746,6 +746,7 @@ def claim_task(
     branch: str = "",
     base: str = "",
     worktree: str = "",
+    repo: Path | None = None,
     force: bool = False,
 ) -> dict:
     with locked(root):
@@ -754,6 +755,8 @@ def claim_task(
             raise SystemExit(
                 f"error: {task['meta']['id']} is a goal; claim its child tasks"
             )
+        planned_repo = repo or (Path(worktree) if worktree else None) or Path.cwd()
+        validate_task_plan(task, planned_repo)
         status = task["meta"].get("status", "ready")
         if status == "active" and task["meta"].get("owner") == owner:
             print(f"already claimed by {owner}: {task['meta']['id']}")
@@ -829,12 +832,32 @@ def deferred_sections(task: dict) -> list[str]:
     ]
 
 
-def set_status(root: Path, key: str, status: str, *, note: str = "", evidence: str = "") -> dict:
+def set_status(
+    root: Path,
+    key: str,
+    status: str,
+    *,
+    note: str = "",
+    evidence: str = "",
+    repo: Path | None = None,
+) -> dict:
     if status not in STATUSES:
         raise SystemExit(f"error: unknown status {status!r}")
     with locked(root):
         task = find_task(root, key)
         was_done = task["meta"].get("status") == "done"
+        if status == "review" and task["meta"].get("status") != "review":
+            worktree = task["meta"].get("worktree", "")
+            target = (
+                repo
+                or (Path(worktree).expanduser() if worktree else None)
+                or Path.cwd()
+            )
+            if validate_review(root, task["meta"]["id"], Path(target)) != 0:
+                raise SystemExit(
+                    "error: review gate blocked; record a PASS artifact with "
+                    "tasks.py review --run"
+                )
         if status == "done" and not was_done:
             if task["meta"].get("status") not in ("active", "review"):
                 raise SystemExit(
@@ -937,22 +960,128 @@ def review_path(root: Path, task_id: str) -> Path:
 
 
 def plan_verify(task: dict) -> str:
-    for line in task["sections"].get("Plan", "").splitlines():
-        match = re.match(r"^Verify:\s*(.+?)\s*$", line)
-        if match:
-            return match.group(1)
+    values = [
+        match.group(1).strip()
+        for line in task["sections"].get("Plan", "").splitlines()
+        if (match := re.match(r"^Verify:\s*(.+?)\s*$", line))
+    ]
+    if len(values) != 1:
+        raise SystemExit(
+            f"review: {task['meta'].get('id')} needs exactly one 'Verify:' line in its Plan"
+        )
+    return values[0]
+
+
+def plan_data_shape(task: dict) -> str:
+    values = [
+        match.group(1).strip()
+        for line in task["sections"].get("Plan", "").splitlines()
+        if (match := re.match(r"^Data shape:\s*(.+?)\s*$", line))
+    ]
+    if len(values) != 1:
+        raise SystemExit(
+            f"claim: {task['meta'].get('id')} needs exactly one 'Data shape:' line in its Plan"
+        )
+    return values[0]
+
+
+DECLARATION_PATTERNS = {
+    ".py": (r"^\s*(?:async\s+)?def {symbol}\(", r"^\s*class {symbol}\b"),
+    ".js": (
+        r"^\s*export\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var)\s+{symbol}\b",
+    ),
+    ".mjs": (
+        r"^\s*export\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var)\s+{symbol}\b",
+    ),
+    ".cjs": (
+        r"^\s*export\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var)\s+{symbol}\b",
+    ),
+    ".jsx": (
+        r"^\s*export\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var)\s+{symbol}\b",
+    ),
+    ".ts": (
+        r"^\s*export\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var|type|interface)\s+{symbol}\b",
+    ),
+    ".tsx": (
+        r"^\s*export\s+(?:default\s+)?(?:async\s+)?(?:function|class|const|let|var|type|interface)\s+{symbol}\b",
+    ),
+}
+
+
+def validate_data_shape(value: str, task: dict, repo: Path) -> None:
+    task_id = task["meta"].get("id")
+    if value.startswith("{") or value.startswith("["):
+        try:
+            data = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise SystemExit(f"claim: {task_id} Data shape is not valid JSON: {exc}")
+        if not isinstance(data, (dict, list)) or not data:
+            raise SystemExit(
+                f"claim: {task_id} Data shape JSON must be a non-empty object or array"
+            )
+        return
+    if value.startswith("none"):
+        match = re.fullmatch(r"none\s*-\s*(\S.*)", value)
+        if not match:
+            raise SystemExit(
+                f"claim: {task_id} Data shape 'none' needs a concrete reason: none - <reason>"
+            )
+        tags = {
+            tag.strip()
+            for tag in task["meta"].get("tags", "").split(",")
+            if tag.strip()
+        }
+        if not tags & {"docs", "chore"}:
+            raise SystemExit(
+                f"claim: {task_id} may use 'none' only with a docs or chore tag"
+            )
+        return
+    match = re.fullmatch(r"path\s+(\S+)#([A-Za-z_$][\w$]*)", value)
+    if not match:
+        raise SystemExit(
+            f"claim: {task_id} Data shape must be JSON, 'path <file>#<symbol>', "
+            "or 'none - <reason>'"
+        )
+    relative, symbol = match.groups()
+    raw = Path(relative)
+    if raw.is_absolute() or ".." in raw.parts:
+        raise SystemExit(
+            f"claim: {task_id} Data shape path must be repo-relative: {relative}"
+        )
+    repo = repo.resolve()
+    path = (repo / raw).resolve()
+    if not inside(path, repo) or not path.is_file():
+        raise SystemExit(
+            f"claim: {task_id} Data shape path is missing inside the repository: {relative}"
+        )
+    patterns = DECLARATION_PATTERNS.get(path.suffix)
+    if not patterns:
+        raise SystemExit(
+            f"claim: {task_id} Data shape path supports Python and JavaScript/TypeScript files"
+        )
+    anchor = re.escape(symbol)
+    for line in path.read_text().splitlines():
+        for pattern in patterns:
+            if re.match(pattern.format(symbol=anchor), line):
+                return
     raise SystemExit(
-        f"review: {task['meta'].get('id')} needs a 'Verify:' line in its Plan"
+        f"claim: {task_id} Data shape symbol {symbol!r} is not declared in {relative}"
     )
 
 
-def command_argv(command: str) -> list[str]:
+def validate_task_plan(task: dict, repo: Path) -> None:
+    validate_data_shape(plan_data_shape(task), task, repo)
+    verify = plan_verify(task)
+    validate_command(command_argv(verify, "claim"), repo.resolve(), "claim")
+
+
+def command_argv(command: str, label: str = "review") -> list[str]:
     try:
         argv = shlex.split(command)
     except ValueError as exc:
-        raise SystemExit(f"review: cannot parse command {command!r}: {exc}")
+        raise SystemExit(f"{label}: cannot parse command {command!r}: {exc}")
     if not argv:
-        raise SystemExit("review: empty command")
+        raise SystemExit(f"{label}: empty command")
     return argv
 
 
@@ -1002,11 +1131,11 @@ def inside(path: Path, root: Path) -> bool:
         return False
 
 
-def validate_command(argv: list[str], repo: Path) -> list[str]:
+def validate_command(argv: list[str], repo: Path, label: str = "review") -> list[str]:
     repo = repo.resolve()
     if not allowed_command(argv):
         raise SystemExit(
-            "review: command is not on the project-verification allowlist: "
+            f"{label}: command is not on the project-verification allowlist: "
             + " ".join(argv)
         )
     for argument in argv[1:]:
@@ -1019,7 +1148,7 @@ def validate_command(argv: list[str], repo: Path) -> list[str]:
         resolved = raw.resolve() if raw.is_absolute() else (repo / raw).resolve()
         if not inside(resolved, repo):
             raise SystemExit(
-                f"review: path outside the repository: {argument}"
+                f"{label}: path outside the repository: {argument}"
             )
     return argv
 
@@ -1194,6 +1323,7 @@ def priority_of(task: dict) -> int:
         return int(task["meta"].get("priority", "2") or 2)
     except ValueError:
         return 2
+
 
 def write_board(root: Path) -> None:
     path = root / "work/BOARD.md"
@@ -1542,6 +1672,7 @@ def lane_task(
             branch=branch,
             base=base,
             worktree=str(worktree),
+            repo=repo,
         )
     except SystemExit as exc:
         # The worktree is new and clean; remove it *and its new branch* so a
@@ -1978,6 +2109,7 @@ def main() -> int:
     claim.add_argument("--branch", default="")
     claim.add_argument("--base", default="")
     claim.add_argument("--worktree", default="")
+    claim.add_argument("--repo", default="")
     claim.add_argument("--force", action="store_true")
 
     status = sub.add_parser("status")
@@ -1985,6 +2117,7 @@ def main() -> int:
     status.add_argument("status", choices=STATUSES)
     status.add_argument("--note", default="")
     status.add_argument("--evidence", default="")
+    status.add_argument("--repo", default="")
 
     review = sub.add_parser("review")
     review.add_argument("task")
@@ -2145,6 +2278,7 @@ def main() -> int:
             branch=args.branch,
             base=args.base,
             worktree=args.worktree,
+            repo=Path(args.repo) if args.repo else None,
             force=args.force,
         )
         print(f"claimed: {task['meta']['id']} by {args.owner}")
@@ -2156,6 +2290,7 @@ def main() -> int:
             args.status,
             note=args.note,
             evidence=args.evidence,
+            repo=Path(args.repo) if args.repo else None,
         )
         print(f"{task['meta']['id']}: {args.status}")
         return 0
