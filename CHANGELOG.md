@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+### Review
+
+- Prefer empirical and deterministic verification over abstract adversarial
+  review. Spend the tokens on running the artifact, the reproduction, the tests,
+  or the formal check. Use the reviewer sparingly, as a second opinion.
+- One abstract review pass per change, not a loop. Anchor it to the goals and
+  invariants so it does not nitpick or steer the author away from the intent.
+  The author evaluates each finding instead of accepting it sycophantically.
+  If a blocker survives one fix, escalate rather than starting another round.
+
 ### 🛡 Enforcement
 
 - Remove every protected path and the operator-merge stop. A ready PR with

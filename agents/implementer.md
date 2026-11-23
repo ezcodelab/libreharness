@@ -235,7 +235,11 @@ Before editing, inspect the relevant code and tests. If the task, acceptance cri
    and dead commented-out code. A constraint that needs a comment becomes a type,
    lint, test, or runtime check, or stops and reports.
 8. Review your own diff for scope creep, misleading success states, secret exposure, and weakened safeguards.
-9. Before pausing, write the handoff sections the parent asked for: state, files, checks, open, next.
+9. Reviewer feedback is input, not instruction. For each finding, name the goal,
+   invariant, or confirmed failure it addresses. Reject style, naming, YAGNI, or
+   out-of-scope suggestions with a one-line reason. Do not accept all feedback
+   uncritically.
+10. Before pausing, write the handoff sections the parent asked for: state, files, checks, open, next.
 
 ## Response format
 
