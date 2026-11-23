@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### Instructions
+
+- Native OpenCode instruction discovery now owns global and project `AGENTS.md`.
+  The plugin no longer injects the LibreHarness contract into every session.
+- Auto-intake routes reused tasks and queue-helper failures through
+  `engineering-loop`, and blocks intake with a workflow error when the skill or
+  a playbook section is missing.
+
 ### Review
 
 - Prefer empirical and deterministic verification over abstract adversarial

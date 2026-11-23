@@ -4,15 +4,24 @@
 // looks like it contains a secret. Opt out with AUTO_INTAKE=off.
 import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
-import { basename } from "node:path";
+import { basename, join } from "node:path";
 
-const HOME =
-  process.env.HARNESS_HOME ?? `${process.env.HOME}/.config/opencode`;
-const ROOT =
-  process.env.AUTO_INTAKE_ROOT ??
-  process.env.HARNESS_STATE ??
-  `${process.env.HOME}/.local/state/libreharness`;
-const TASKS = process.env.AUTO_INTAKE_TASKS ?? `${HOME}/bin/tasks.py`;
+function homeDir() {
+  return process.env.HARNESS_HOME ?? `${process.env.HOME}/.config/opencode`;
+}
+
+function stateDir() {
+  return (
+    process.env.AUTO_INTAKE_ROOT ??
+    process.env.HARNESS_STATE ??
+    `${process.env.HOME}/.local/state/libreharness`
+  );
+}
+
+function tasksCli() {
+  return process.env.AUTO_INTAKE_TASKS ?? `${homeDir()}/bin/tasks.py`;
+}
+
 const DISABLED = process.env.AUTO_INTAKE === "off";
 
 const ACTION =
@@ -34,6 +43,59 @@ export const PLAYBOOK_IDS = [
   "autonomous-multiphase",
   "correct",
 ];
+
+export const BLOCKED_NOTICE =
+  "[workflow] BLOCKED: engineering-loop is missing or invalid; no task was created";
+const HELPER_FAILURE_NOTICE =
+  "[workflow] Queue helper unavailable; no task was created. Load engineering-loop and run its playbook router before editing.";
+
+function frontmatterName(text) {
+  if (!text.startsWith("---\n")) return null;
+  const end = text.indexOf("\n---", 4);
+  if (end < 0) return null;
+  for (const line of text.slice(4, end).split(/\r?\n/)) {
+    const match = line.match(/^name:\s*(.+)$/);
+    if (match) return match[1].trim().replace(/^["']|["']$/g, "");
+  }
+  return null;
+}
+
+export function validateWorkflow(home) {
+  const errors = [];
+  const skillPath = join(home, "skills/engineering-loop/SKILL.md");
+  const referencePath = join(
+    home,
+    "skills/engineering-loop/references/playbooks.md",
+  );
+  let skill = "";
+  try {
+    skill = readFileSync(skillPath, "utf8");
+  } catch {
+    errors.push(`missing ${skillPath}`);
+  }
+  if (skill) {
+    const name = frontmatterName(skill);
+    if (name !== "engineering-loop") {
+      errors.push(
+        `skill name ${name ?? "missing"} must be engineering-loop in ${skillPath}`,
+      );
+    }
+  }
+  const playbooks = new Set();
+  let reference = "";
+  try {
+    reference = readFileSync(referencePath, "utf8");
+  } catch {
+    errors.push(`missing ${referencePath}`);
+  }
+  for (const match of reference.matchAll(/^##\s+([a-z][a-z-]+)\s*$/gm)) {
+    playbooks.add(match[1]);
+  }
+  for (const id of PLAYBOOK_IDS) {
+    if (!playbooks.has(id)) errors.push(`missing playbook section ${id}`);
+  }
+  return { ok: errors.length === 0, errors, playbooks };
+}
 
 const NAMED_PLAYBOOK = /\b(?:the\s+)?([a-z][a-z-]+)\s+playbook\b/i;
 const MULTI_STEP =
@@ -99,16 +161,28 @@ export function routePrompt(text) {
   };
 }
 
-function queueNotice(id, decision) {
-  const entry = decision.skills.includes("goal")
+function routeLine(decision) {
+  return decision.skills.includes("goal")
     ? "Route through engineering-loop with the goal skill for this multi-step run"
     : "Route through engineering-loop";
+}
+
+function queueNotice(id, decision) {
   return (
-    `[queue] Task ${id} was created for this request. ${entry} ` +
+    `[queue] Task ${id} was created for this request. ${routeLine(decision)} ` +
     `(playbook: ${decision.playbook}). Run brief first to confirm scope, data ` +
     `shape, and acceptance, then implement, verify, review, close, and ship. ` +
     `Honor a playbook the user named. Stop only at the contract's human gates. ` +
     `Do not ask the operator to retype a command.`
+  );
+}
+
+function reusedNotice(id, decision) {
+  return (
+    `[queue] Existing task ${id} matches this request. Use it; do not create ` +
+    `a duplicate. ${routeLine(decision)} (playbook: ${decision.playbook}). ` +
+    `Run brief first to confirm scope, data shape, and acceptance, then ` +
+    `implement, verify, review, close, and ship.`
   );
 }
 
@@ -147,11 +221,11 @@ function slugOf(text) {
 function existingTask(text) {
   const suffix = `-${slugOf(text)}`;
   try {
-    const file = readdirSync(`${ROOT}/work/tasks`).find(
+    const file = readdirSync(`${stateDir()}/work/tasks`).find(
       (name) => name.endsWith(".md") && name.includes(suffix),
     );
     if (!file) return null;
-    const body = readFileSync(`${ROOT}/work/tasks/${file}`, "utf8");
+    const body = readFileSync(`${stateDir()}/work/tasks/${file}`, "utf8");
     return /^status:\s*(inbox|ready)\s*$/m.test(body) ? file.slice(0, -3) : null;
   } catch {
     return null;
@@ -164,7 +238,7 @@ function createTask(text, directory) {
   const output = execFileSync(
     "python3",
     [
-      TASKS,
+      tasksCli(),
       "new",
       "--project",
       project,
@@ -180,11 +254,12 @@ function createTask(text, directory) {
     {
       encoding: "utf8",
       timeout: 2500,
+      stdio: ["ignore", "pipe", "pipe"],
       // Do not hand the queue helper the provider/session environment.
       env: {
         PATH: process.env.PATH ?? "/usr/bin:/bin",
         HOME: process.env.HOME ?? "",
-        HARNESS_STATE: ROOT,
+        HARNESS_STATE: stateDir(),
         PYTHONDONTWRITEBYTECODE: "1",
       },
     },
@@ -196,6 +271,7 @@ export default {
   id: "auto-intake",
   async setup(ctx) {
     if (DISABLED || !ctx?.session?.hook) return;
+    const workflow = validateWorkflow(homeDir());
     await ctx.session.hook("prompt", (event) => {
       const text = event?.prompt?.text ?? "";
       const sessionID = event?.sessionID ?? event?.session?.id ?? "unknown";
@@ -205,21 +281,29 @@ export default {
       }
       if (!nontrivial(text) || SECRET.test(text)) return;
       if (seen.has(sessionID)) return;
+      if (!workflow.ok) {
+        seen.set(sessionID, "blocked");
+        event.prompt.text = text + `\n\n${BLOCKED_NOTICE}`;
+        return;
+      }
+      const decision = routePrompt(text);
+      if (!workflow.playbooks.has(decision.playbook)) {
+        seen.set(sessionID, "blocked");
+        event.prompt.text = text + `\n\n${BLOCKED_NOTICE}`;
+        return;
+      }
       const existing = existingTask(text);
       if (existing) {
         seen.set(sessionID, existing);
-        event.prompt.text =
-          text +
-          `\n\n[queue] Existing task ${existing} matches this request. ` +
-          `Use it; do not create a duplicate.`;
+        event.prompt.text = text + `\n\n${reusedNotice(existing, decision)}`;
         return;
       }
       try {
         const id = createTask(text, ctx.location?.directory);
         seen.set(sessionID, id);
-        event.prompt.text = text + `\n\n${queueNotice(id, routePrompt(text))}`;
+        event.prompt.text = text + `\n\n${queueNotice(id, decision)}`;
       } catch {
-        // Never block a prompt because the queue helper is unavailable.
+        event.prompt.text = text + `\n\n${HELPER_FAILURE_NOTICE}`;
       }
     });
   },

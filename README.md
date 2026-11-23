@@ -67,6 +67,9 @@ The four agent stubs are required. The plugin fills each one's prompt, mode, and
 permissions; add a model to a stub for per-agent routing. From a checkout, use
 the absolute path instead of the npm name.
 
+OpenCode loads global and project `AGENTS.md` files natively. The plugin does not
+inject instructions, so the LibreHarness contract stays scoped to this workspace.
+
 The default state directory is `~/.local/state/libreharness`, created with mode
 700. Upgrade by changing the version and reloading OpenCode.
 

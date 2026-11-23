@@ -474,5 +474,248 @@ class QueueTests(unittest.TestCase):
         self.assertNotIn("feature/lane-work", tasks.run_git(["branch"], repo))
 
 
+class ReviewArtifactTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        self.root = base / "state"
+        (self.root / "work/tasks").mkdir(parents=True)
+        self.repo = base / "repo"
+        (self.repo / "tests").mkdir(parents=True)
+        (self.repo / "tests/test_ok.py").write_text(
+            "import unittest\n\n"
+            "class Ok(unittest.TestCase):\n"
+            "    def test_ok(self):\n"
+            "        self.assertTrue(True)\n"
+        )
+        (self.repo / "tests/test_goal_start.py").write_text(
+            "import unittest\n\n"
+            "class GoalStart(unittest.TestCase):\n"
+            "    def test_ok(self):\n"
+            "        self.assertTrue(True)\n"
+        )
+        (self.repo / "tests/test_bad.py").write_text(
+            "import unittest\n\n"
+            "class Bad(unittest.TestCase):\n"
+            "    def test_bad(self):\n"
+            "        self.assertTrue(False)\n"
+        )
+        subprocess.run(["git", "init", "-q", "-b", "main", str(self.repo)], check=True)
+        subprocess.run(["git", "-C", str(self.repo), "config", "user.email", "test@example.com"], check=True)
+        subprocess.run(["git", "-C", str(self.repo), "config", "user.name", "Test"], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.repo), "config", "commit.gpgsign", "false"],
+            check=True,
+        )
+        subprocess.run(["git", "-C", str(self.repo), "add", "-A"], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.repo), "commit", "-q", "-m", "base"],
+            check=True,
+        )
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def make_task(self, verify: str) -> dict:
+        task = tasks.new_task(
+            self.root,
+            f"Review {verify}",
+            project="demo",
+            acceptance="- [x] review runs",
+        )
+        task["sections"]["Plan"] = (
+            'Data shape: {"state":"idle|running"}\n'
+            f"Verify: {verify}\n"
+        )
+        tasks.write_task(task)
+        return task
+
+    def artifact(self, task: dict) -> dict:
+        path = self.root / "work/reviews" / f"{task['meta']['id']}.json"
+        return json.loads(path.read_text())
+
+    def test_pass_records_observed_exits_at_head(self) -> None:
+        verify = "python3 -m unittest tests.test_ok -v"
+        task = self.make_task(verify)
+        result = tasks.review_task(
+            self.root, task["meta"]["id"], repo=self.repo, runs=[verify]
+        )
+        self.assertEqual(result, 0)
+        payload = self.artifact(task)
+        self.assertEqual(payload["verdict"], "PASS")
+        self.assertEqual(payload["head"], tasks.git_head(self.repo))
+        self.assertEqual(payload["checks"], [{"command": verify, "exit": 0}])
+
+    def test_second_verify_command_passes_only_when_it_ran(self) -> None:
+        verify = "python3 -m unittest tests.test_goal_start -v"
+        task = self.make_task(verify)
+        with self.assertRaises(SystemExit):
+            tasks.review_task(
+                self.root,
+                task["meta"]["id"],
+                repo=self.repo,
+                runs=["python3 -m unittest tests.test_ok -v"],
+            )
+        self.assertEqual(
+            tasks.review_task(
+                self.root,
+                task["meta"]["id"],
+                repo=self.repo,
+                runs=[verify, "python3 -m unittest tests.test_ok -v"],
+            ),
+            0,
+        )
+
+    def test_nonzero_exit_blocks(self) -> None:
+        verify = "python3 -m unittest tests.test_bad -v"
+        task = self.make_task(verify)
+        result = tasks.review_task(
+            self.root, task["meta"]["id"], repo=self.repo, runs=[verify]
+        )
+        self.assertEqual(result, 1)
+        payload = self.artifact(task)
+        self.assertEqual(payload["verdict"], "UNVERIFIED")
+        self.assertEqual(payload["checks"][0]["exit"], 1)
+
+    def test_unknown_command_is_rejected_before_execution(self) -> None:
+        marker = Path(self.tmp.name) / "marker"
+        command = f"bash -c 'touch {marker}'"
+        task = self.make_task(command)
+        with self.assertRaises(SystemExit):
+            tasks.review_task(
+                self.root, task["meta"]["id"], repo=self.repo, runs=[command]
+            )
+        self.assertFalse(marker.exists())
+        self.assertFalse((self.root / "work/reviews").exists())
+
+    def test_path_outside_repository_is_rejected(self) -> None:
+        outside = Path(self.tmp.name) / "outside_test.py"
+        outside.write_text("raise SystemExit(0)\n")
+        verify = f"python3 -m unittest {outside}"
+        task = self.make_task(verify)
+        with self.assertRaises(SystemExit):
+            tasks.review_task(
+                self.root, task["meta"]["id"], repo=self.repo, runs=[verify]
+            )
+
+    def test_missing_empty_stale_and_failed_artifacts_block(self) -> None:
+        verify = "python3 -m unittest tests.test_ok -v"
+        task = self.make_task(verify)
+        task_id = task["meta"]["id"]
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+        self.assertEqual(
+            tasks.review_task(
+                self.root, task_id, repo=self.repo, runs=[verify]
+            ),
+            0,
+        )
+        path = self.root / "work/reviews" / f"{task_id}.json"
+
+        path.write_text(
+            json.dumps(
+                {
+                    "task": task_id,
+                    "head": tasks.git_head(self.repo),
+                    "verdict": "PASS",
+                    "checks": [],
+                }
+            )
+        )
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+
+        path.write_text(
+            json.dumps(
+                {
+                    "task": task_id,
+                    "head": tasks.git_head(self.repo),
+                    "verdict": "PASS",
+                    "checks": [{"command": verify, "exit": 1}],
+                }
+            )
+        )
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+
+        path.write_text(
+            json.dumps(
+                {
+                    "task": task_id,
+                    "head": tasks.git_head(self.repo),
+                    "verdict": "PASS",
+                    "checks": [
+                        {
+                            "command": "node tests/harness-ratchets.test.mjs",
+                            "exit": 0,
+                        }
+                    ],
+                }
+            )
+        )
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+
+        self.assertEqual(
+            tasks.review_task(
+                self.root, task_id, repo=self.repo, runs=[verify]
+            ),
+            0,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.repo), "commit", "-q", "--allow-empty", "-m", "next"],
+            check=True,
+        )
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+
+    def test_unverify_downgrades_and_blocks(self) -> None:
+        verify = "python3 -m unittest tests.test_ok -v"
+        task = self.make_task(verify)
+        self.assertEqual(
+            tasks.review_task(
+                self.root, task["meta"]["id"], repo=self.repo, runs=[verify]
+            ),
+            0,
+        )
+        self.assertEqual(
+            tasks.review_task(
+                self.root,
+                task["meta"]["id"],
+                repo=self.repo,
+                unverify=True,
+            ),
+            1,
+        )
+        self.assertEqual(self.artifact(task)["verdict"], "UNVERIFIED")
+
+    def test_cli_records_and_validates(self) -> None:
+        verify = "python3 -m unittest tests.test_ok -v"
+        task = self.make_task(verify)
+        command = [
+            sys.executable,
+            str(Path(tasks.__file__)),
+            "--root",
+            str(self.root),
+            "review",
+            task["meta"]["id"],
+            "--repo",
+            str(self.repo),
+            "--run",
+            verify,
+        ]
+        recorded = subprocess.run(command, text=True, capture_output=True)
+        self.assertEqual(recorded.returncode, 0, recorded.stdout + recorded.stderr)
+        validated = subprocess.run(
+            command[:-2], text=True, capture_output=True
+        )
+        self.assertEqual(validated.returncode, 0, validated.stdout + validated.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

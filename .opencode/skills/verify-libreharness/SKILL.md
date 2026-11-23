@@ -29,7 +29,8 @@ Before it drives anything, the script checks:
 
 - `src/plugin.js` imports and `setup` returns a cleanup function;
 - the state directory exists with mode `0700`;
-- the `context` and `prompt` session hooks are registered;
+- the plugin registers the `prompt` hook and no `context` hook, because native
+  OpenCode instruction discovery owns `AGENTS.md` files;
 - the queue CLI answers `validate` in the temporary state.
 
 It stops with the failed check instead of driving a half-built instance.

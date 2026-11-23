@@ -38,6 +38,10 @@ The four agent stubs are required. The plugin API can update an existing agent
 but cannot create one; the plugin fills each stub's prompt, mode, and
 permissions. Add a model to a stub for per-agent routing.
 
+OpenCode loads global and project `AGENTS.md` files natively. The plugin registers
+no instruction-injection hook, so the LibreHarness contract stays scoped to this
+workspace.
+
 From a checkout, use the absolute path instead of the npm name:
 
 ```jsonc

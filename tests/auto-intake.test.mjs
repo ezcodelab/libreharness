@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: MIT
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  cpSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -25,12 +33,61 @@ copyFileSync(
   join(root, "bin/tasks.py"),
 );
 
+process.env.HARNESS_HOME = join(here, "..");
 process.env.AUTO_INTAKE_ROOT = root;
 process.env.AUTO_INTAKE_TASKS = join(root, "bin", "tasks.py");
 process.env.AUTO_INTAKE = "on";
-const { default: plugin, routePrompt } = await import(
-  new URL(`../plugins/auto-intake.js?test=${process.pid}`, import.meta.url)
-);
+const { default: plugin, PLAYBOOK_IDS, routePrompt, validateWorkflow } =
+  await import(
+    new URL(`../plugins/auto-intake.js?test=${process.pid}`, import.meta.url)
+  );
+
+function taskFiles() {
+  return readdirSync(join(root, "work/tasks")).filter((name) =>
+    name.endsWith(".md"),
+  );
+}
+
+function tempHome(label) {
+  const home = join(root, `home-${label}`);
+  mkdirSync(join(home, "skills"), { recursive: true });
+  cpSync(
+    join(here, "..", "skills", "engineering-loop"),
+    join(home, "skills", "engineering-loop"),
+    { recursive: true },
+  );
+  return home;
+}
+
+async function hookFor(home) {
+  const previous = process.env.HARNESS_HOME;
+  process.env.HARNESS_HOME = home;
+  let callback;
+  await plugin.setup({
+    location: { directory: "/tmp/example-project" },
+    session: { hook: async (_name, registered) => { callback = registered; } },
+  });
+  process.env.HARNESS_HOME = previous;
+  if (!callback) throw new Error(`prompt hook not registered for ${home}`);
+  return callback;
+}
+
+function assertBlocked(text, label) {
+  if (!text.includes("[workflow] BLOCKED")) {
+    throw new Error(`${label}: blocked workflow notice missing`);
+  }
+  if (!text.includes("no task was created")) {
+    throw new Error(`${label}: blocked notice does not say no task was created`);
+  }
+  if (text.includes("[queue] Task ")) {
+    throw new Error(`${label}: blocked notice created or claimed a task`);
+  }
+  for (const id of PLAYBOOK_IDS) {
+    if (new RegExp(`\\b${id}\\b`).test(text)) {
+      throw new Error(`${label}: blocked notice claimed playbook ${id}`);
+    }
+  }
+}
 
 let hook;
 const ctx = {
@@ -121,6 +178,7 @@ if (second.prompt.text.includes("[queue] Task ")) {
   throw new Error("duplicate task created for one session");
 }
 
+const beforeReuse = taskFiles().length;
 const otherSession = {
   sessionID: "s4",
   prompt: { text: "Fix the login redirect bug" },
@@ -129,8 +187,91 @@ hook(otherSession);
 if (!otherSession.prompt.text.includes("Existing task")) {
   throw new Error("same prompt in a new session did not reuse the task");
 }
+if (!otherSession.prompt.text.includes("engineering-loop")) {
+  throw new Error("reused-task notice did not route through engineering-loop");
+}
+if (!otherSession.prompt.text.includes("playbook: bug-fix")) {
+  throw new Error("reused-task notice did not name the validated playbook");
+}
+if (taskFiles().length !== beforeReuse) {
+  throw new Error("reused-task notice created a duplicate task");
+}
 const afterOther = readFileSync(join(root, "work/tasks", `${id}.md`), "utf8");
 if (!afterOther.includes("status: inbox")) throw new Error("task changed");
+
+// A queue-helper failure is route-only: no task id, no playbook id.
+const helperBefore = taskFiles().length;
+rmSync(join(root, "bin/tasks.py"));
+const helperFailure = {
+  sessionID: "s-helper-failure",
+  prompt: { text: "Fix the broken helper path" },
+};
+hook(helperFailure);
+if (!helperFailure.prompt.text.includes("[workflow]")) {
+  throw new Error("helper failure did not append a workflow notice");
+}
+if (!helperFailure.prompt.text.includes("engineering-loop")) {
+  throw new Error("helper failure did not name engineering-loop");
+}
+if (!helperFailure.prompt.text.includes("no task was created")) {
+  throw new Error("helper failure did not say no task was created");
+}
+if (helperFailure.prompt.text.includes("[queue] Task ")) {
+  throw new Error("helper failure claimed a task");
+}
+for (const playbookId of PLAYBOOK_IDS) {
+  if (new RegExp(`\\b${playbookId}\\b`).test(helperFailure.prompt.text)) {
+    throw new Error(`helper failure named playbook ${playbookId}`);
+  }
+}
+if (taskFiles().length !== helperBefore) {
+  throw new Error("helper failure created a task file");
+}
+copyFileSync(join(here, "..", "bin", "tasks.py"), join(root, "bin/tasks.py"));
+
+// Invalid setup fails closed before creating a task or naming a playbook.
+const invalidCases = [];
+
+const missingHome = join(root, "home-missing");
+mkdirSync(missingHome, { recursive: true });
+invalidCases.push(["missing skill", missingHome]);
+
+const renamedHome = tempHome("renamed");
+writeFileSync(
+  join(renamedHome, "skills/engineering-loop/SKILL.md"),
+  readFileSync(join(renamedHome, "skills/engineering-loop/SKILL.md"), "utf8")
+    .replace(/^name: engineering-loop$/m, "name: engineering-loop-broken"),
+);
+invalidCases.push(["wrong skill name", renamedHome]);
+
+const sectionHome = tempHome("section");
+const playbookPath = join(
+  sectionHome,
+  "skills/engineering-loop/references/playbooks.md",
+);
+const playbookText = readFileSync(playbookPath, "utf8");
+const sectionEnd = playbookText.indexOf("\n## ", playbookText.indexOf("## feature"));
+const withoutFeature =
+  playbookText.slice(0, playbookText.indexOf("## feature")) +
+  playbookText.slice(sectionEnd + 1);
+writeFileSync(playbookPath, withoutFeature);
+invalidCases.push(["missing playbook section", sectionHome]);
+
+for (const [label, home] of invalidCases) {
+  const before = taskFiles().length;
+  const workflow = validateWorkflow(home);
+  if (workflow.ok) throw new Error(`${label}: validation unexpectedly passed`);
+  const invalidHook = await hookFor(home);
+  const event = {
+    sessionID: `s-invalid-${label.replaceAll(" ", "-")}`,
+    prompt: { text: "Fix the login redirect bug" },
+  };
+  invalidHook(event);
+  assertBlocked(event.prompt.text, label);
+  if (taskFiles().length !== before) {
+    throw new Error(`${label}: invalid setup created a task file`);
+  }
+}
 
 // The inbox template starts with an unchecked acceptance. A finishing agent
 // must replace it with the concrete, checked criterion before `done`.
