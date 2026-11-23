@@ -19,8 +19,10 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-export const MAX_SKILL_LINES = 120;
-export const MAX_AGENTS_LINES = 110;
+export const MAX_SKILL_LINES = 115;
+export const MAX_AGENTS_LINES = 89;
+export const MAX_AGENT_LINES = 283;
+export const MAX_INSTRUCTION_LINES = 2437;
 export const MAX_ENFORCEMENT_ROWS = 4;
 export const MAX_PLAYBOOK_LINES = 25;
 export const MIN_PLAYBOOK_STEPS = 3;
@@ -333,6 +335,79 @@ export function checkAgentsBudget(root) {
   return problems;
 }
 
+export function checkInstructionOwners(root) {
+  const problems = [];
+  const owner = "skills/README.md";
+  const header = "| Skill | Use |";
+  const ownerPath = join(root, owner);
+  if (!existsSync(ownerPath)) {
+    push(problems, "instruction-owners", owner, "missing the skill-map owner");
+  } else if (!readFileSync(ownerPath, "utf8").includes(header)) {
+    push(problems, "instruction-owners", owner, "the skill map must own the Skill | Use table");
+  }
+  for (const name of ["AGENTS.md", "README.md", "docs/reference.md"]) {
+    const path = join(root, name);
+    if (!existsSync(path)) {
+      push(problems, "instruction-owners", name, "missing file");
+      continue;
+    }
+    const text = readFileSync(path, "utf8");
+    if (!/\]\([^)]*skills\/README\.md(?:#[^)]*)?\)/.test(text)) {
+      push(problems, "instruction-owners", name, `must link to ${owner}`);
+    }
+  }
+  const scope = [
+    join(root, "AGENTS.md"),
+    join(root, "README.md"),
+    ...walk(join(root, "docs")),
+    ...walk(join(root, "commands")),
+    ...walk(join(root, "agents")),
+    ...walk(join(root, "skills")),
+    ...walk(join(root, ".opencode", "skills")),
+  ].filter((path) => path.endsWith(".md"));
+  for (const path of scope) {
+    const relPath = rel(root, path);
+    if (relPath === owner) continue;
+    if (ignored(relPath, ["CHANGELOG.md", "docs/process-lessons.md", "skills/correct/references/rule-ledger.md"])) continue;
+    if (readFileSync(path, "utf8").includes(header)) {
+      push(problems, "instruction-owners", relPath, `the skill map has one owner: ${owner}`);
+    }
+  }
+  return problems;
+}
+
+function instructionFiles(root) {
+  return [
+    join(root, "AGENTS.md"),
+    ...walk(join(root, "commands")),
+    ...walk(join(root, "agents")),
+    ...walk(join(root, "skills")),
+  ].filter((path) => path.endsWith(".md") && existsSync(path));
+}
+
+export function checkInstructionBudget(root) {
+  const problems = [];
+  for (const path of walk(join(root, "agents"))) {
+    if (!path.endsWith(".md")) continue;
+    const relPath = rel(root, path);
+    const lines = countLines(readFileSync(path, "utf8"));
+    if (lines > MAX_AGENT_LINES) {
+      push(problems, "instruction-budget", relPath, `${lines} lines exceeds ${MAX_AGENT_LINES}; delete before adding`);
+    }
+  }
+  const files = instructionFiles(root);
+  const total = files.reduce((sum, path) => sum + countLines(readFileSync(path, "utf8")), 0);
+  if (total > MAX_INSTRUCTION_LINES) {
+    push(
+      problems,
+      "instruction-budget",
+      "instructions",
+      `${total} lines exceeds ${MAX_INSTRUCTION_LINES}; delete a line elsewhere before adding`,
+    );
+  }
+  return problems;
+}
+
 export function checkRelativeLinks(root) {
   const problems = [];
   const scope = [
@@ -510,6 +585,8 @@ const CHECKS = [
   checkAsciiProse,
   checkCommentDiscipline,
   checkAgentsBudget,
+  checkInstructionOwners,
+  checkInstructionBudget,
   checkRelativeLinks,
   checkRouterWiring,
   checkIntakeWiring,
@@ -675,6 +752,64 @@ function selfTests() {
       "the stale gate exception must fail",
     );
     writeFileSync(join(tmp, "commands/review.md"), "review\n");
+
+    mkdirSync(join(tmp, "docs"), { recursive: true });
+    writeFileSync(
+      join(tmp, "skills/README.md"),
+      "| Skill | Use |\n|---|---|\n| `one` | valid |\n",
+    );
+    writeFileSync(join(tmp, "README.md"), "See [skills](skills/README.md).\n");
+    writeFileSync(
+      join(tmp, "docs/reference.md"),
+      "See [skills](../skills/README.md).\n",
+    );
+    const agentsWithLink = "# Rules\n\nSee [skills](skills/README.md).\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n";
+    writeFileSync(join(tmp, "AGENTS.md"), agentsWithLink);
+    assert.deepEqual(checkInstructionOwners(tmp), [], "one owner and three links must pass");
+    writeFileSync(
+      join(tmp, "AGENTS.md"),
+      "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n",
+    );
+    assert.ok(
+      checkInstructionOwners(tmp).some((problem) =>
+        problem.message.includes("must link"),
+      ),
+      "AGENTS.md without a skill-map link must fail",
+    );
+    writeFileSync(join(tmp, "AGENTS.md"), agentsWithLink);
+    writeFileSync(join(tmp, "README.md"), "| Skill | Use |\n|---|---|\n| `two` | duplicate |\n");
+    assert.ok(
+      checkInstructionOwners(tmp).some((problem) =>
+        problem.message.includes("one owner"),
+      ),
+      "a second skill table must fail",
+    );
+    writeFileSync(join(tmp, "README.md"), "See [skills](skills/README.md).\n");
+
+    writeFileSync(
+      join(tmp, "agents/big.md"),
+      "- step\n".repeat(MAX_AGENT_LINES + 1),
+    );
+    assert.ok(
+      checkInstructionBudget(tmp).some(
+        (problem) =>
+          problem.rule === "instruction-budget" &&
+          problem.file === "agents/big.md",
+      ),
+      "an agent over the fixed cap must fail",
+    );
+    rmSync(join(tmp, "agents/big.md"));
+    writeFileSync(
+      join(tmp, "commands/huge.md"),
+      "- step\n".repeat(MAX_INSTRUCTION_LINES + 1),
+    );
+    assert.ok(
+      checkInstructionBudget(tmp).some((problem) =>
+        problem.message.includes("delete a line elsewhere"),
+      ),
+      "net instruction growth must fail",
+    );
+    rmSync(join(tmp, "commands/huge.md"));
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }

@@ -42,8 +42,6 @@ Routing rules:
   Never divert an in-flight `bug-fix`, `feature`, or `refactoring` into it.
 - Multi-deliverable or unattended work also loads the `goal` skill. A single task
   does not.
-- No row fits: use `feature` when any edit is in scope and `investigation` when
-  the whole request is read-only. Say the fallback and the reason in one line.
 
 ## Fallback
 

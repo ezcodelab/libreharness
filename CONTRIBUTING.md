@@ -134,8 +134,9 @@ reviewer's decision.
 ## Adding a skill
 
 1. Create `skills/<name>/SKILL.md` with `name` and `description` frontmatter.
-2. Keep it under 120 lines. Split a skill when its triggers or procedure are
-   distinct.
+2. Keep it inside the line budget enforced by
+   `tests/harness-ratchets.test.mjs`. Split a skill when its triggers or
+   procedure are distinct.
 3. Write the trigger in the description, not only in the body.
 4. Prove it pays off on one real task with and without the skill. A neutral
    result is a reason to delete it or keep it project-local.

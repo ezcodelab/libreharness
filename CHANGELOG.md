@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### Instruction budget
+
+- The skill map has one owner, `skills/README.md`; `AGENTS.md`, `README.md`, and
+  `docs/reference.md` link to it.
+- Instruction ceilings are fixed from the measured post-delete sizes plus two
+  lines of slack, and a total budget fails on net growth until a line is
+  deleted. The numbers live in `tests/harness-ratchets.test.mjs`.
+
 ### Review and shipping
 
 - `/review` records observed exits and the exact HEAD in

@@ -13,9 +13,8 @@ outlives one chat:
   generated board.
 - A workflow that scales process to risk: trivial changes skip the queue;
   nontrivial changes get a brief, a review, and evidence.
-- Portable skills for the engineering loop, goals, parallel lanes, shipping,
-  state audits, UI design, no-comments, unslop, correct, verification, and the
-  work queue.
+- Portable skills, mapped in [skills/README.md](skills/README.md), with
+  `engineering-loop` as the entry point.
 - A playbook router that turns a request into one checklist: investigation, bug
   fix, feature, refactoring, perf, hillclimb, autonomous multi-phase, or a
   repeated-mistake sweep.

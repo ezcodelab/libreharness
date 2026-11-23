@@ -39,8 +39,8 @@ tokens, components and design doc first; they win where they are more specific.
 
 - Does an existing component or token already do this? If yes, use it.
 - Can the element be removed instead of restyled? If yes, remove it.
-- Is this a new pattern or a variant of an existing one? Prefer the variant.
-  and a new component joins the system or does not ship.
+- Is this a new pattern or a variant of an existing one? Prefer the variant;
+  a new component must earn its place in the system.
 - What are the empty, loading, error and long-content cases?
 - Write a compact design plan before code: 4 to 6 named colors, the typefaces
   and their roles, one layout concept, and 3 to 5 principles. Then review the

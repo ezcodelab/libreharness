@@ -70,19 +70,8 @@ Name the principle and the decision it changed. These words steer.
 
 ## Skills
 
-Load on demand. The router picks the playbook; this table is the map.
-
-| Skill | Use |
-|---|---|
-| `engineering-loop` | Entry point for any non-trivial change |
-| `goal`, `work-queue` | Multi-deliverable or durable work |
-| `no-comments` | Before review: remove comment alibis |
-| `unslop` | Prose: replies, PR bodies, docs, commit messages |
-| `correct` | Repeated mistake classes become checks |
-| `verification` | Prove behavior on the real artifact |
-| `state-audit` | Queues, retries, locks, lifecycle paths |
-| `shipping` | Ready PR, review artifact, exact-head CI, merge |
-| `parallel-lanes`, `ui-design` | Parallel slices, interface work |
+Load on demand. The map lives in [skills/README.md](skills/README.md); the
+router picks the playbook.
 
 ## Rule enforcement
 
