@@ -23,8 +23,8 @@
   merges. It does not leave a ready PR for the operator.
 - Independent goal children ship their own small PRs. Only dependent children
   stack, and stacks land bottom-up.
-- `pr_guard.py land` recognizes a concurrent auto-merge and never reports it as
-  a blocker.
+- `pr_guard.py land` recognizes a concurrent auto-merge and retries transient
+  forge errors before reporting a blocker.
 
 ### Cost and verification
 
