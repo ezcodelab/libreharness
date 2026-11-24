@@ -54,5 +54,8 @@
   },
   "devDependencies": {
     "@opencode-ai/plugin": "1.14.20"
+  },
+  "allowScripts": {
+    "@ast-grep/cli@0.51.3": true
   }
 }

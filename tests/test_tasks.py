@@ -412,7 +412,7 @@ class QueueTests(unittest.TestCase):
         result = tasks.create_plan(self.root, plan, autorun_override=True)
         goal = tasks.find_task(self.root, result["goal"])
         self.assertEqual(goal["meta"]["autorun"], "true")
-        self.assertEqual(goal["meta"]["max_continuations"], "12")
+        self.assertEqual(goal["meta"]["max_continuations"], "")
 
     def test_plan_rejects_bad_lanes_live_ownership_and_autorun_type(self) -> None:
         base = {

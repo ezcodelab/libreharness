@@ -1,6 +1,6 @@
 ---
 name: parallel-lanes
-description: Use when splitting work across two or three agents or sessions. Defines independent slices, ownership, worktrees, merge order, integration, and the conditions that make parallelism a net loss.
+description: Use when splitting work across multiple agents or sessions. Defines independent slices, ownership, worktrees, merge order, integration, and the conditions that make parallelism a net loss.
 ---
 <!-- SPDX-License-Identifier: MIT -->
 
@@ -37,16 +37,17 @@ Write an ownership map in the task or a short lane plan:
 | B | ... | ... | `feature/b` | A's contract | 2 |
 
 One lane owns the integration point. Shared files get one owner or are written
-after the lanes merge. Cap at **two or three** lanes; a fourth adds coordination,
-not throughput.
+after the lanes merge. Add a lane only when its `owns` are disjoint and the
+integrator can merge it without coordination. More lanes than that buy
+contention, not throughput.
 
 ## Run
 
 1. `/goal` the outcome; the plan gets one child per independent slice and
    explicit dependencies.
-2. `/goal go` runs `goal-start`; it creates up to three lanes for ready
-   children with disjoint `owns`. Use `/lane` only for a manual worktree or an
-   existing task.
+2. `/goal go` runs `goal-start`; it creates lanes for ready children with
+   disjoint `owns`; `--max-lanes` is an optional operator budget. Use `/lane`
+   only for a manual worktree or an existing task.
 3. `/brief <task>` for each lane; fix the interface and acceptance before code.
 4. Each lane works only in its worktree. It does not edit shared config, the
    state, or another lane's files.

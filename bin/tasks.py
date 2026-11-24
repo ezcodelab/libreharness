@@ -191,7 +191,7 @@ def goal_task(
     tags: str = "goal",
     session: str = "",
     autorun: bool = False,
-    max_continuations: int = 12,
+    max_continuations: int | None = None,
 ) -> dict:
     return new_task(
         root,
@@ -339,7 +339,7 @@ def new_task(
     lane: str = "",
     owns: str = "",
     autorun: bool = False,
-    max_continuations: int = 12,
+    max_continuations: int | None = None,
 ) -> dict:
     if status not in STATUSES:
         raise SystemExit(f"error: unknown status {status!r}")
@@ -377,7 +377,7 @@ def new_task(
         ),
         "reviewer": "",
         "autorun": "true" if autorun else "false",
-        "max_continuations": str(max(0, min(100, max_continuations))),
+        "max_continuations": "" if max_continuations is None else str(max(0, max_continuations)),
         "blocked_reason": "",
         "created": today(),
         "updated": today(),
@@ -459,12 +459,16 @@ def validate_plan(root: Path, plan: dict) -> dict:
         plan_error("goal.priority must be an integer")
     if not 0 <= goal_priority <= 4:
         plan_error("goal.priority must be 0..4")
-    try:
-        max_continuations = int(goal_conf.get("max_continuations", 12))
-    except (TypeError, ValueError):
-        plan_error("goal.max_continuations must be an integer")
-    if not 0 <= max_continuations <= 100:
-        plan_error("goal.max_continuations must be 0..100")
+    raw_continuations = goal_conf.get("max_continuations")
+    if raw_continuations in (None, ""):
+        max_continuations = None
+    else:
+        try:
+            max_continuations = int(raw_continuations)
+        except (TypeError, ValueError):
+            plan_error("goal.max_continuations must be an integer")
+        if max_continuations < 0:
+            plan_error("goal.max_continuations must be >= 0")
 
     children = plan.get("children")
     if not isinstance(children, list) or not children:
@@ -1793,7 +1797,7 @@ def goal_start(
     key: str,
     *,
     repo: Path,
-    max_lanes: int = 3,
+    max_lanes: int | None = None,
     serial: bool = False,
     as_json: bool = False,
 ) -> dict:
@@ -1803,8 +1807,8 @@ def goal_start(
         raise SystemExit(f"error: {goal['meta']['id']} is not a goal")
     if goal["meta"].get("status") in FINAL:
         raise SystemExit(f"error: goal {goal['meta']['id']} is already {goal['meta']['status']}")
-    if max_lanes < 1 or max_lanes > 3:
-        raise SystemExit("error: --max-lanes must be 1..3")
+    if max_lanes is not None and max_lanes < 1:
+        raise SystemExit("error: --max-lanes must be at least 1")
     repo = repo.resolve()
     if not (repo / ".git").exists() and not (repo / ".git").is_file():
         raise SystemExit(f"error: {repo} is not a git repository")
@@ -1830,7 +1834,7 @@ def goal_start(
             if owns:
                 laneable.append((child, owns))
 
-        selected = laneable[:max_lanes]
+        selected = laneable if max_lanes is None else laneable[:max_lanes]
         should_lane = not serial and bool(selected) and (
             len(selected) >= 2 or max_lanes == 1
         )
@@ -1907,7 +1911,7 @@ def goal_start(
                 "laneable": laneable_ids,
                 "skipped": skipped,
                 "lanes": created,
-                "deferred": [
+                "deferred": [] if max_lanes is None else [
                     child["meta"]["id"] for child, _ in laneable[max_lanes:]
                 ],
             }
@@ -2136,7 +2140,7 @@ def main() -> int:
     goal.add_argument("--session", default=os.environ.get("OPENCODE_SESSION_ID", ""))
     goal.add_argument("--autorun", action="store_true")
     goal.add_argument("--unattended", action="store_true")
-    goal.add_argument("--max-continuations", type=int, default=12)
+    goal.add_argument("--max-continuations", type=int, default=None)
 
     goal_status_parser = sub.add_parser("goal-status")
     goal_status_parser.add_argument("task")
@@ -2145,7 +2149,7 @@ def main() -> int:
     goal_start_parser = sub.add_parser("goal-start")
     goal_start_parser.add_argument("task")
     goal_start_parser.add_argument("--repo", default=".")
-    goal_start_parser.add_argument("--max-lanes", type=int, default=3)
+    goal_start_parser.add_argument("--max-lanes", type=int, default=None)
     goal_start_parser.add_argument("--serial", action="store_true")
     goal_start_parser.add_argument("--json", action="store_true")
 

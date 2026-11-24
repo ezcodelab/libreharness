@@ -71,11 +71,25 @@ tasks(
 if (!goal) throw new Error("goal not created");
 
 process.env.GOAL_WATCH_ROOT = root;
-const { default: plugin, maxContinuations, continuationChild } = await import(
+const { default: plugin, maxContinuations, continuationChild, continuationAllowed, progressSignature } = await import(
   new URL(`../plugins/goal-watch.js?test=${process.pid}`, import.meta.url)
 );
-if (maxContinuations("abc") !== 12 || maxContinuations("") !== 12 || maxContinuations("0") !== 0) {
+if (maxContinuations("abc") !== null || maxContinuations("") !== null || maxContinuations("0") !== 0) {
   throw new Error("malformed continuation bound is not handled");
+}
+const before = { counts: { ready: 1 }, ready: ["child-a"], open: ["child-a"] };
+const after = { counts: { done: 1 }, ready: [], open: [] };
+if (!continuationAllowed({ max: null, used: 0, previous: undefined, state: before })) {
+  throw new Error("first continuation was blocked");
+}
+if (continuationAllowed({ max: null, used: 0, previous: progressSignature(before), state: before })) {
+  throw new Error("a continuation without progress was allowed");
+}
+if (!continuationAllowed({ max: null, used: 0, previous: progressSignature(before), state: after })) {
+  throw new Error("a continuation after progress was blocked");
+}
+if (continuationAllowed({ max: 2, used: 2, previous: undefined, state: before })) {
+  throw new Error("explicit continuation budget was ignored");
 }
 if (continuationChild({ ready: [] }) !== "" || continuationChild({}) !== "") {
   throw new Error("goal without ready work must not prompt");

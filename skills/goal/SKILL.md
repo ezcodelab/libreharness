@@ -26,16 +26,17 @@ The goal flow plans first (manual form `/goal`): it writes a validated
 goal/child/lane JSON and stops. Review or revise it, then create and execute it;
 the manual form is `/goal go`, and `--unattended` sets the per-goal continuation
 flag. Each child has one scope, testable acceptance, dependencies, and a review
-boundary. If a child cannot be reviewed in one sitting, split it. For two to six
-children, shape each one with `references/spec-shape.md`. The reviewed lane map
-is used by `goal-start`; the operator does not create lanes by hand.
+boundary. If a child cannot be reviewed in one sitting, split it. For a
+multi-child goal, shape each one with `references/spec-shape.md`. The reviewed
+lane map is used by `goal-start`; the operator does not create lanes by hand.
 
 ## Run
 
 After creating or resuming a goal, run `tasks.py goal-start <goal> --repo
-<repo>` once. It creates up to three lanes for ready children with disjoint
-`owns`. If it reports serial, work in the current tree. The manual `/lane`
-command is only for a worktree you deliberately want outside the goal.
+<repo>` once. It creates lanes for ready children with disjoint `owns`; use
+`--max-lanes` only as an explicit operator budget. If it reports serial, work in
+the current tree. The manual `/lane` command is only for a worktree you
+deliberately want outside the goal.
 
 For each stable, unblocked child in priority order:
 
@@ -83,18 +84,18 @@ the exact next action. Do not mark a goal done to make the board green.
 ## Unattended mode
 
 `goal-watch` has two jobs. For an `autorun: true` goal, it continues the
-creating session on idle, bounded by `max_continuations` (default 12), and skips
-if more than one autorun goal matches. For any active goal whose children are
-all final, it sends one closable reminder per goal per session, including a goal
-from another session. The operator can reply "close now" to run `/close` or
-"later" to keep it open. The watcher never creates tasks, closes a goal, marks
-anything done, pushes, or deploys.
+creating session on idle while the goal makes progress; an explicit
+`max_continuations` caps it. It skips if more than one autorun goal matches. For
+any active goal whose children are all final, it sends one closable reminder per
+goal per session, including a goal from another session. The operator can reply
+"close now" to run `/close` or "later" to keep it open. The watcher never
+creates tasks, closes a goal, marks anything done, pushes, or deploys.
 
 Without the watcher, the current session still runs the loop until it stops;
 the watcher only resumes after an idle boundary.
 
 ## Learning
 
-A failed child leaves a queue log and, at close, one lesson. If the same failure
-class recurs three times, the lesson becomes a project skill. Do not write a
+A failed child leaves a queue log and, at close, one lesson. When the same
+failure class recurs, the lesson becomes a project skill. Do not write a
 "lesson" for every turn; only a rule that changes the next decision.

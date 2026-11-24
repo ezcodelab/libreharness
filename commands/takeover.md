@@ -12,8 +12,8 @@ edit code until the state is clear.
    is `active` under another owner, stop and ask before dual-writing.
 3. Read the task's Handoff, the project `AGENTS.md`, the relevant
    `DECISIONS.md` standing rules, and `docs/reference.md`. Read only the files the
-   handoff names plus what the next action needs. Load at most two matching
-   lessons and one matching skill.
+   handoff names plus what the next action needs. Load the lessons and skills
+   that change the next action.
 4. Run the check the handoff says was last run, if it is safe and local. Treat
    "done" as a claim until the check reproduces.
 5. Output: **State**, **What is proven**, **What is open**, **Next action**

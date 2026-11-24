@@ -11,9 +11,9 @@ Use the work-queue and engineering-loop skills.
    If there is no task, say so and use the stated scope.
 2. Read the project `AGENTS.md`, `CONTRIBUTING.md`, and the files or tests the
    task names. Do not read the whole repository.
-3. Find up to three matching lessons in the project's
-   `docs/process-lessons.md`. Include only lessons that change the next action.
-4. List the skills under `${HARNESS_HOME}/skills/*/SKILL.md` and name at most two
+3. Find the matching lessons in the project's `docs/process-lessons.md`.
+   Include only lessons that change the next action.
+4. List the skills under `${HARNESS_HOME}/skills/*/SKILL.md` and name the skills
    that apply.
 5. Output, in this order:
    - **Task** and one-sentence scope

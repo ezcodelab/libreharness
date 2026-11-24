@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Spec shape for a goal
 
-Use when a goal has two to six children. A single task keeps the flat acceptance
+Use when a goal has multiple children. A single task keeps the flat acceptance
 checklist in its packet.
 
 Adapted from `github/spec-kit` (`spec-template.md`, MIT).
