@@ -21,11 +21,14 @@ Do not edit feature code in this turn.
      artifact;
    - build the merge map from branch, base, owns, and merge order; stop if two
      children claim the same file or interface;
-   - merge in the declared order into one integration branch; for a single
-     task, create that branch from its base and merge its branch into it. Keep
-     the work off main; land it only through a PR and the shipping gates;
+   - ship each independently shippable child as its own small PR off trunk;
+     stack only a child that needs the code below it, and land the stack
+     bottom-up. For a single task, ship its branch as one PR from its base;
+   - create a combined integration branch only when a cross-lane acceptance
+     cannot be proved on trunk. Split that combined work by review boundary;
+     never merge independent lanes into one large PR;
    - stop on a conflict and leave the tree resumable;
-   - run the full project check on the merged tree.
+   - run the full project check on current trunk after child PRs land.
    Do not create a separate integration task or command; this is part of close.
 4. First gate: validate the review artifact on the tree that will land:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" review <id> --repo "$PWD"`.
@@ -58,11 +61,12 @@ Do not edit feature code in this turn.
    the smoke JSON path when one exists, and the review artifact path:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> done --evidence "<commands and results>"`.
 10. If the task is mergeable and a forge is configured, use the `shipping`
-    skill: validate the review artifact on the branch head, open a ready PR,
-    wait for the required checks on the exact head, require a mergeable PR and
-    the repository's human gates, and merge with
-    `gh pr merge --match-head-commit`. Stop at the contract's human gates. If no
-    forge resolves, print the manual PR and merge commands and stop. Never push
-    directly to main.
+    skill. Split first if the diff exceeds 600 lines or 20 files. Open one
+    ready PR with a `type(scope): subject` title and a body of at most 40
+    lines. Stay active until `bin/pr_guard.py land` merges the exact reviewed
+    head, or one actionable blocker is recorded. Fix CI, rebase your own branch,
+    or close a superseded oversized PR; do not leave an open ready PR for the
+    operator to finish. If no forge resolves, print the manual PR and merge
+    commands and stop. Never push directly to main.
 11. Show what passed, what remains unproven, the PR state, and the next action.
     Stop.

@@ -361,23 +361,33 @@ live key in an issue.
 ## Shipping and CI
 
 Public repositories use GitHub as canonical and Gitea as a read-only mirror.
-Validate the review artifact on the head that will land, open a ready PR, wait
-for the required checks on that exact head, satisfy any repository human gate,
-then merge that head:
+One task gets one small PR: at most 600 changed lines, 20 files, and 40 body
+lines. Independent tasks open separate PRs off trunk. Only dependent follow-ups
+stack, and a stack lands bottom-up. Split before opening when a limit is
+exceeded.
+
+Validate the review artifact on the head that will land, check the local PR
+contract, then stay through required checks and merge that exact head:
 
 ```sh
 python3 "$HARNESS_HOME/bin/tasks.py" review <id> --repo "$PWD"
+python3 "$HARNESS_HOME/bin/pr_guard.py" check --base main \
+  --title "type(scope): subject" --body-file /tmp/opencode/pr-body.md
 HEAD=$(gh pr view <number> --json headRefOid --jq .headRefOid)
-gh pr checks <number> --watch --required --interval 20
-gh pr merge <number> --squash --match-head-commit "$HEAD" --delete-branch
+python3 "$HARNESS_HOME/bin/pr_guard.py" land \
+  --pr <number> --head "$HEAD" --base main
 ```
 
-A missing, stale, failed, or UNVERIFIED artifact, a pending or failed required
-check, a conflict, a draft, or a secret in the diff stops the merge. A repository
-human gate, such as required reviews or a ruleset, also stops it until satisfied.
-Do not replace that gate with a model verdict.
+A missing, stale, failed, or UNVERIFIED artifact, an oversized or malformed PR,
+a pending or failed required check, a conflict, a draft, or a secret in the diff
+stops the merge. Fix CI, rebase only the PR's own branch, or close a superseded
+oversized PR. Do not leave a ready PR open for the operator to finish. A
+repository human gate, such as required reviews or a ruleset, also stops it
+until satisfied. Do not replace that gate with a model verdict.
 
-Never push to `main` or force-push a shared branch.
+Never push to `main` or force-push a shared branch. A force-with-lease push is
+allowed only on the PR branch you own, after a rebase, followed by a new review
+artifact.
 
 The repository checks are native tools:
 

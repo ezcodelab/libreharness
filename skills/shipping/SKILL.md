@@ -1,113 +1,97 @@
 ---
 name: shipping
-description: Open a ready pull request, validate the review artifact and required CI on the exact head, and merge only that head. Use after review or when a task is ready to land.
+description: Open one reviewably sized ready PR, validate the review artifact and required CI on the exact head, and stay until it merges. Use after review or when a task is ready to land.
 ---
 <!-- SPDX-License-Identifier: MIT -->
 
 # Shipping
 
-Use after the task is `review` or `done`, the diff is reviewed, and the review
-artifact is PASS. The goal is one verified PR through the forge, not a direct
-push.
+Ship one small verified PR, then confirm it merged. Opening a PR is not the end
+of the task, and a ready PR left for the operator is unfinished work.
 
-## Resolve the forge once
+## Forge
 
-1. Public repos (Credarr, LibreHarness): `gh`; GitHub is canonical and Gitea is
-   a read-only mirror.
-2. Gitea-canonical repos (Brain and the homelab repos): push an AGit PR to
-   `refs/for/main/<topic>`. The repository gate schedules the merge after CI;
-   no agent token is needed.
-3. If no forge path resolves, stop with the exact command and the missing
-   capability. Do not claim the work merged.
+Use `gh` for GitHub-canonical repositories. For Gitea-canonical repositories,
+push an AGit PR to `refs/for/main/<topic>` and let the repository gate merge it.
+If no forge resolves, stop with the exact manual command. Never require both,
+push to `main`, force-push a shared branch, or install a CLI silently.
 
-Never install a CLI silently, put a token in argv or output, require both forges,
-push to `main`, or force-push a shared branch.
+## Gates
 
-## Auto-merge is the default
+- Task scope, acceptance, and evidence are recorded.
+- Review artifact is PASS for the exact head, includes Verify, and every exit is
+  zero.
+- PR is one logical change: at most 600 changed lines, 20 files, and 40 body
+  lines. Split before opening when over a limit.
+- Title is `type(scope): subject`.
+- Body has `Why`, `What changed`, `Scope`, optional `Tradeoffs`, `Blast Radius`,
+  and `Verification`, in order.
+- Required CI is green on the exact head, the PR is ready and mergeable, and
+  repository human gates are satisfied.
 
-Once the review artifact and required checks pass, merge in the same task. Do not
-ask the operator to merge a green, reviewed PR or leave it open as "ready for
-review"; an unmerged reviewed patch is unfinished work.
+## 1. Open
 
-## Required gates
+Work from a lane worktree or a fresh branch off trunk. Keep unrelated work out.
+Group changes into small verifiable commits. One task gets one PR.
 
-- The task has scope, observable acceptance, and recorded evidence.
-- The review artifact is PASS for the exact head, includes the task's Verify
-  command, and every recorded exit is zero.
-- Deterministic checks pass on the exact head: tests, Markdown, links, secrets,
-  and the repository's other required checks.
-- CI is green on that head, with no pending or skipped required check.
-- The PR is ready, mergeable, conflict-free, and has no secrets.
-- Any repository human gate, such as required reviews or a ruleset, is satisfied.
+Independent changes branch off trunk and land as separate PRs. Stack only a
+dependent follow-up, one PR per review unit, and land bottom-up. A cleanup,
+refactor, docs change, or separate capability gets its own PR when it can land
+alone. Split by behavior and review boundary, not file count. If a split needs
+more than three follow-ups, split the task before opening anything.
 
-A green CI is not a review. A failed gate is a stop, not a reason to weaken it.
+Write the body first, then run:
 
-## 1. Prepare the patch
+```sh
+python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/pr_guard.py" check \
+  --repo "$PWD" --base main --title "<title>" --body-file /tmp/opencode/pr-body.md
+```
 
-Work from the lane branch or a fresh branch off current trunk. Rebase only your
-own branch. Keep the diff small; prefer narrow PRs to one large PR. Commit with
-`-s`, and run the project checks before the first push and after any change that
-invalidates them.
+It must return `"ok": true` and `"next": "open"` on a clean committed head.
+`next: split` means split; do not open the PR. Commit with `-s` and run the
+project checks before the first push and after any invalidating change.
 
-## 2. Validate the review artifact
-
-Before opening the PR, and again after any new commit, validate the artifact on
-the tree that will land:
+Validate the artifact on the tree that will land:
 
 ```sh
 python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" review <id> --repo "$PWD"
 ```
 
-A missing, stale, failed, mismatched, or UNVERIFIED artifact blocks. Record a new
-one with the task's Verify command when the head moves.
+Then open the PR ready. Never open a draft. Keep the URL.
 
-## 3. Open the PR ready
+## 2. Land
 
-Never open a draft. Use a one-minute briefing for a reviewer who has the diff:
-
-- `## Why`: the problem and approach.
-- `## What changed`: short bullets naming real symbols or paths.
-- `## Scope`: what this covers and deliberately leaves out.
-- `## Tradeoffs`: only rejected alternatives worth asking about.
-- `## Blast Radius`: who or what it touches and why that is safe.
-- `## Verification`: the real commands, observed exits, and artifact path.
-
-Open it with `gh pr create` and keep the URL.
-
-## 4. Watch CI and merge
-
-Pin the head, wait for every required check, then merge the exact commit:
+Pin the head, run the guard in the foreground with a timeout long enough for CI,
+and act on its JSON:
 
 ```sh
 HEAD=$(gh pr view <number> --json headRefOid --jq .headRefOid)
-gh pr checks <number> --watch --required --interval 20
-gh pr merge <number> --squash --match-head-commit "$HEAD" --delete-branch
+python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/pr_guard.py" land \
+  --pr <number> --head "$HEAD" --base main --repo "$PWD"
 ```
 
-If the artifact head and `$HEAD` differ, stop and re-record. If a required check
-is missing, pending, skipped, or failed, stop.
+- `fix`: fix the failed required check, commit, record a new artifact, push, and
+  run `land` again.
+- `rebase`: rebase only this PR's branch with `--force-with-lease`, record a new
+  artifact, push, and run `land` again.
+- `rereview`: the head moved. Record the artifact before merging.
+- `split`: close the oversized PR after the smaller replacements open.
+- `wait`: the forge has not settled. Read the PR again; do not claim a merge.
 
-For a Gitea-canonical repo, push the AGit PR and let the repository gate merge it,
-with no token polling.
+Do not start `land` in the background and end the turn. If a required check
+fails twice on the same axis or a human gate blocks, stop with that one blocker
+and the exact next action. Do not open another PR for the same task.
 
-## 5. After the merge
+## 3. Confirm
 
-Re-read the PR and confirm it is merged, not merely queued. Delete only the
-branch you created, after its worktree is gone. Update the task with the PR URL
-and merge commit. A queued or blocked merge is reported as that state, not as
-landed.
+Read the PR after merge: state `MERGED`, merge commit, and the reviewed head.
+Delete only the branch you created after its worktree is gone. Update the task
+with the PR URL and merge commit.
 
-## Stop conditions
+## Stop
 
-Stop and report instead of merging when:
-
-- the forge is unavailable or does not resolve the repository;
-- the review artifact is missing, failed, stale, or for a different head;
-- CI is pending, failed, skipped, or absent;
-- the PR has conflicts, is a draft, or is not mergeable;
-- a repository human gate is unsatisfied;
-- evidence is missing or the diff contains a secret;
-- the next action is irreversible: production deploy, data deletion, force-push,
-  live secret rotation, or an external message. Stop and name the exact action.
-
-Do not disable a required check or merge on a stale artifact.
+Stop only for an unavailable forge, a missing or stale artifact, an oversized or
+malformed PR that cannot be split safely, failed required checks after two
+same-axis fixes, a conflict you cannot resolve on your own branch, an unsatisfied
+human gate, a secret, or an irreversible action. A queued or pending result is
+not merged.

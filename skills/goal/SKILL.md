@@ -46,15 +46,20 @@ For each stable, unblocked child in priority order:
 4. Run the review step (the `/review` command is its manual form); fix
    send-backs.
 5. Close the child (the `/close` command is its manual form); the child is
-   `done` only with evidence.
+   `done` only with evidence. Ship each independently shippable child as its
+   own small PR off trunk. Stack only a child that needs the code below it, and
+   land the stack bottom-up. Do not combine independent children into one large
+   integration PR.
 6. `goal-status <goal>`; continue or stop.
 
-When every child is final, run the close step; it integrates reviewed lanes as
-part of the finish path.
+When every child is final, run the close step. It verifies that child PRs
+merged, not that their lanes are combined into one branch.
 
-After the last child, review the goal's acceptance against the merged evidence,
-run the full check on the final tree, write the goal handoff, and close the goal
-with that evidence.
+After the last child, review the goal's acceptance against the merged evidence
+on current trunk, run the full check, write the goal handoff, and close the goal
+with that evidence. Integrate a combined branch only when the goal has a
+cross-lane acceptance that cannot be proved on trunk; that integration is
+itself split by review boundary.
 
 ## Stop conditions
 

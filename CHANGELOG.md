@@ -19,6 +19,12 @@
 - `bin/pr_guard.py` checks the local committed diff before opening and lands an
   exact-head PR after required checks, returning one actionable next action.
 - Auto-merge enforces the same size, title, and body rules in CI.
+- Shipping stays through required checks, fixes or rebases its own branch, and
+  merges. It does not leave a ready PR for the operator.
+- Independent goal children ship their own small PRs. Only dependent children
+  stack, and stacks land bottom-up.
+- `pr_guard.py land` recognizes a concurrent auto-merge and never reports it as
+  a blocker.
 
 ### Cost and verification
 
