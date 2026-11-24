@@ -71,13 +71,11 @@ export default {
           if (!Array.isArray(goals) || goals.length === 0) continue;
 
           // A closable goal is more important than a continuation nudge.
-          // It may belong to another session; the prompt says to ignore it if
-          // this session is not working on that goal.
           let promptedClose = false;
           for (const goal of goals) {
             const id = goal?.id;
             const reminderKey = `${sessionID}:${id}`;
-            if (!id || reminded.has(reminderKey)) continue;
+            if (!id || goal?.session !== sessionID || reminded.has(reminderKey)) continue;
             let state;
             try {
               state = JSON.parse(await run(["goal-status", id, "--json"]));
@@ -115,20 +113,17 @@ export default {
             continue;
           }
           if (state.closable) continue; // the close reminder owns this case
+          if (!state.ready?.length) continue;
           counts.set(id, used + 1);
-          const next =
-            state.ready?.length > 0
-              ? `Next ready child: ${state.ready[0]}.`
-              : "No ready child; inspect the blocked/open children and stop if a person is needed.";
           try {
             await ctx.session.prompt({
               sessionID,
               text:
                 `Continue the active goal ${id}. Run ` +
                 `\`python3 ${TASKS} goal-status ${id} --json\`, then follow ` +
-                `the goal skill. ${next} If this session is not working on ` +
-                `${id}, ignore this message and do not start work. Do not repeat ` +
-                `completed work; stop on a blocker, a one-way door, or an approval.`,
+                `the goal skill. Next ready child: ${state.ready[0]}. ` +
+                `Do not repeat completed work; stop on a blocker, a one-way door, ` +
+                `or an approval.`,
             });
           } catch {
             // The session may be closing; a missed nudge is safe.

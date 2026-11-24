@@ -28,6 +28,18 @@ const taskCli = (...args) =>
 rmSync(root, { recursive: true, force: true });
 mkdirSync(join(root, "bin"), { recursive: true });
 mkdirSync(join(root, "work/tasks"), { recursive: true });
+const repo = join(root, "repo");
+mkdirSync(join(repo, "tests"), { recursive: true });
+writeFileSync(
+  join(repo, "tests/test_ok.py"),
+  "import unittest\n\nclass Ok(unittest.TestCase):\n    def test_ok(self):\n        self.assertTrue(True)\n",
+);
+writeFileSync(join(repo, ".gitignore"), "__pycache__/\n*.pyc\n");
+execFileSync("git", ["init", "-q", "-b", "main", repo]);
+execFileSync("git", ["-C", repo, "config", "user.email", "test@example.com"]);
+execFileSync("git", ["-C", repo, "config", "user.name", "Test"]);
+execFileSync("git", ["-C", repo, "add", "-A"]);
+execFileSync("git", ["-C", repo, "commit", "-q", "-m", "base"]);
 copyFileSync(
   join(here, "..", "bin", "tasks.py"),
   join(root, "bin/tasks.py"),
@@ -105,7 +117,8 @@ if (!first.prompt.text.includes("[queue] Task ")) {
 if (
   !first.prompt.text.includes("engineering-loop") ||
   !first.prompt.text.includes("playbook: bug-fix") ||
-  !first.prompt.text.includes("brief") ||
+  !first.prompt.text.includes("Data shape") ||
+  !first.prompt.text.includes("work in this turn") ||
   !first.prompt.text.includes("ship") ||
   !first.prompt.text.includes("human gates") ||
   first.prompt.text.includes("/intake")
@@ -283,11 +296,27 @@ writeFileSync(
     .replace(
       /## Plan\n\n/,
       '## Plan\n\nData shape: {"state":"idle|running"}\n' +
-        "Verify: python3 -m unittest tests.test_tasks -v\n\n",
+        "Verify: python3 -m unittest tests.test_ok -v\n\n",
     ),
 );
 taskCli("claim", id, "--owner", "test");
-taskCli("status", id, "done", "--evidence", "unit: pass");
+taskCli(
+  "review",
+  id,
+  "--repo",
+  repo,
+  "--run",
+  "python3 -m unittest tests.test_ok -v",
+);
+taskCli(
+  "status",
+  id,
+  "done",
+  "--evidence",
+  "python3 -m unittest: PASS",
+  "--repo",
+  repo,
+);
 const closed = {
   sessionID: "s10",
   prompt: { text: "Fix the login redirect bug" },

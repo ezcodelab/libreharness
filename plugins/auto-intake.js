@@ -170,10 +170,12 @@ function routeLine(decision) {
 function queueNotice(id, decision) {
   return (
     `[queue] Task ${id} was created for this request. ${routeLine(decision)} ` +
-    `(playbook: ${decision.playbook}). Run brief first to confirm scope, data ` +
-    `shape, and acceptance, then implement, verify, review, close, and ship. ` +
-    `Honor a playbook the user named. Stop only at the contract's human gates. ` +
-    `Do not ask the operator to retype a command.`
+    `(playbook: ${decision.playbook}). For one reviewable diff, write concrete ` +
+    `acceptance plus the Data shape and Verify lines, claim it, then work in ` +
+    `this turn. Use /brief only for a multi-deliverable or ambiguous request. ` +
+    `Implement, verify, review, close, and ship. Honor a playbook the user ` +
+    `named. Stop only at the contract's human gates. Do not ask the operator ` +
+    `to retype a command.`
   );
 }
 
@@ -181,8 +183,9 @@ function reusedNotice(id, decision) {
   return (
     `[queue] Existing task ${id} matches this request. Use it; do not create ` +
     `a duplicate. ${routeLine(decision)} (playbook: ${decision.playbook}). ` +
-    `Run brief first to confirm scope, data shape, and acceptance, then ` +
-    `implement, verify, review, close, and ship.`
+    `For one reviewable diff, complete the acceptance, Data shape, and Verify ` +
+    `lines, claim it, then work in this turn; use /brief only when scope is ` +
+    `still ambiguous. Then implement, verify, review, close, and ship.`
   );
 }
 
