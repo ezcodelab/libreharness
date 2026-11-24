@@ -40,8 +40,8 @@ easier.
 4. Fix the code the check now rejects. Re-run the check and the full suite.
 5. Append one row to `references/rule-ledger.md`: date, rule, level, check command,
    and the past mistake it fails on.
-6. Never add a row to the `AGENTS.md` Rule enforcement table. It holds four
-   suite-level checks; per-rule detail belongs in the ledger.
+6. Never add a row to the `AGENTS.md` Rule enforcement table. It holds
+   suite-level checks only; per-rule detail belongs in the ledger.
 
 ## Ownership
 

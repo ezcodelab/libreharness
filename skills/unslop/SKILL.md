@@ -33,7 +33,7 @@ sweeps belong to `engineering-loop` and `correct`.
 16. No chatbot phrases.
 17. No praise or agreement openers. Answer directly.
 18. Cut filler. "In order to" becomes "to".
-19. One hedge at most: "may".
+19. Use a hedge only when the uncertainty is real: "may".
 20. No generic conclusion. State the specific plan or fact.
 21. No abstract metaphor nouns: substrate, wedge, vector, nexus, primitive,
     surface, scaffolding, paradigm, north star, flywheel, harness.

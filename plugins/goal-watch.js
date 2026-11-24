@@ -16,9 +16,22 @@ const ROOT =
 const TASKS = process.env.GOAL_WATCH_TASKS ?? `${HOME}/bin/tasks.py`;
 
 export function maxContinuations(value) {
-  if (value === undefined || value === null || value === "") return 12;
+  if (value === undefined || value === null || value === "") return null;
   const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 12;
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+export function progressSignature(state) {
+  return JSON.stringify({
+    counts: state?.counts ?? {},
+    ready: state?.ready ?? [],
+    open: state?.open ?? [],
+  });
+}
+
+export function continuationAllowed({ max, used, previous, state }) {
+  if (max !== null) return used < max;
+  return previous !== progressSignature(state);
 }
 
 export function continuationChild(state) {
@@ -58,6 +71,7 @@ export default {
     if (!ctx?.event?.subscribe || !ctx?.session?.prompt) return;
     const counts = new Map();
     const reminded = new Set();
+    const seen = new Map();
     const controller = new AbortController();
 
     (async () => {
@@ -111,7 +125,7 @@ export default {
           if (!id) continue;
           const max = maxContinuations(goal.max_continuations);
           const used = counts.get(id) ?? 0;
-          if (used >= max) continue;
+          if (max !== null && used >= max) continue;
           let state;
           try {
             state = JSON.parse(await run(["goal-status", id, "--json"]));
@@ -121,6 +135,8 @@ export default {
           if (state.closable) continue; // the close reminder owns this case
           const next = continuationChild(state);
           if (!next) continue;
+          if (!continuationAllowed({ max, used, previous: seen.get(id), state })) continue;
+          seen.set(id, progressSignature(state));
           counts.set(id, used + 1);
           try {
             await ctx.session.prompt({

@@ -52,7 +52,7 @@ direct test, type check, lint, or command already proves the claim.
 5. **Triage.** Wrong or missing user-POV text is doc drift: fix the map. Working
    behavior the harness cannot drive is a harness gap: fix the harness. Broken
    app behavior is a product bug: report it, do not edit product code.
-6. **Outcome.** Name `clean` (no change), `changed` (at most one PR of proven
+6. **Outcome.** Name `clean` (no change), `changed` (one reviewable PR of proven
    corrections), or `blocked` (say exactly what blocked coverage).
 
 ## Formal

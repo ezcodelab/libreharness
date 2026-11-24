@@ -15,7 +15,8 @@ Use the handoff section in `engineering-loop`; the format is below. Do not edit 
    - **Open:** unresolved questions, risks, and what would change the plan
    - **Next:** one bounded next action, with the command or file
    - **Context:** links to the task, index section, lesson, and review
-3. Keep it under 40 lines. No secrets, tokens, values, full logs, or
+3. Keep it a bounded state transfer: state, decisions, changed files, next
+   action, open verification. No secrets, tokens, values, full logs, or
    transcript. Cite paths and shapes.
 4. Save it with `tasks.py handoff <id> --file /tmp/opencode/handoff-<id>.md`
    (write the file first) or with the edit tool. Then run `tasks.py validate` and show

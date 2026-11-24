@@ -58,9 +58,9 @@ repro, or deterministic command. `SUSPECTED` is a lead, not a bug claim.
 
 Add a Mermaid `stateDiagram-v2` to each machine section. Label states and
 arrows with what a user sees or cares about, not internal column names. Keep it
-under about 20 arrows; merge states that act the same. Mark a confirmed invalid
-path with a short note and keep its states. For a formal counterexample, draw
-the shortest path to the broken rule and replay it against the real code.
+readable and merge states that act the same. Mark a confirmed invalid path with a
+short note and keep its states. For a formal counterexample, draw the shortest
+path to the broken rule and replay it against the real code.
 
 ## 3. Hunt reachable invalid paths
 

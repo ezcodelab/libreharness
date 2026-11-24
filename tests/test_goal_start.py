@@ -74,7 +74,6 @@ class GoalStartTests(unittest.TestCase):
                 "acceptance": "- all children pass",
                 "priority": 1,
                 "autorun": False,
-                "max_continuations": 12,
             },
             "children": children,
             "lanes": [{"name": name, "tasks": keys} for name, keys in lanes.items()],
@@ -91,7 +90,7 @@ class GoalStartTests(unittest.TestCase):
             tasks.write_task(task)
         return result["goal"]
 
-    def test_creates_lanes_for_ready_children_and_defers_the_rest(self) -> None:
+    def test_creates_lanes_for_all_disjoint_ready_children(self) -> None:
         goal_id = self.create(
             [
                 self.child("a", owns=["docs/a.md"]),
@@ -103,13 +102,13 @@ class GoalStartTests(unittest.TestCase):
         )
         result = tasks.goal_start(self.root, goal_id, repo=self.repo, as_json=True)
         self.assertEqual(result["mode"], "lanes")
-        self.assertEqual(len(result["lanes"]), 3)
+        self.assertEqual(len(result["lanes"]), 4)
         self.assertEqual(len(result["ready"]), 5)
-        self.assertEqual(result["deferred"][0].rsplit("-", 1)[-1], "d")
+        self.assertEqual(result["deferred"], [])
         self.assertEqual(result["skipped"][0].rsplit("-", 1)[-1], "e")
         self.assertEqual(
             [item["task"].rsplit("-", 1)[-1] for item in result["lanes"]],
-            ["a", "b", "c"],
+            ["a", "b", "c", "d"],
         )
         for item in result["lanes"]:
             task = tasks.find_task(self.root, item["task"])
@@ -117,7 +116,6 @@ class GoalStartTests(unittest.TestCase):
             self.assertEqual(task["meta"]["branch"], item["branch"])
             self.assertTrue(Path(item["worktree"]).is_dir())
             self.assertIn(item["branch"], self.git("branch", "--list", item["branch"]))
-        self.assertEqual(tasks.find_task(self.root, result["deferred"][0])["meta"]["status"], "ready")
 
     def test_serial_creates_no_worktrees(self) -> None:
         goal_id = self.create(
@@ -157,7 +155,7 @@ class GoalStartTests(unittest.TestCase):
         self.assertEqual(result["ready"][0].rsplit("-", 1)[-1], "a")
         self.assertNotIn("feature/b", self.git("branch", "--list", "feature/b"))
 
-    def test_max_lanes_caps_the_batch(self) -> None:
+    def test_explicit_max_lanes_bounds_the_batch(self) -> None:
         goal_id = self.create(
             [
                 self.child("a", owns=["docs/a.md"]),

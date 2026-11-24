@@ -110,7 +110,7 @@ Frontmatter fields:
 | `branch`, `worktree`, `base` | Lane isolation fields |
 | `depends_on` | Comma-separated task ids that must finish first |
 | `reviewer` | Optional reviewer label |
-| `autorun`, `max_continuations` | Per-goal continuation policy |
+| `autorun`, `max_continuations` | Optional per-goal continuation cap; the default stops when progress stalls |
 | `blocked_reason` | Why a task is blocked |
 | `created`, `updated` | Dates |
 | `tags` | Comma-separated labels |
@@ -199,9 +199,9 @@ cycles, `owns` overlap, and lane assignment.
 
 A lane is one branch and worktree for one task, so independent slices do not
 edit the same files. A lane record has the task, branch, base, worktree, owner,
-and owned paths. Cap parallel lanes at two or three, give shared files one
-owner, and let one integrator merge in the declared order and rerun the full
-check. A green lane is not a green integration.
+and owned paths. Add lanes only for disjoint owned paths and when one integrator
+can merge them in the declared order; give shared files one owner and rerun the
+full check after integration. A green lane is not a green integration.
 
 ### Handoff
 
@@ -235,7 +235,7 @@ No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
 
 1. **Intake.** A nontrivial request becomes one `inbox` task. A trivial request
    is done directly. A request with several deliverables becomes a goal with
-   two to six children. Confirm scope and observable acceptance before
+   multiple children. Confirm scope and observable acceptance before
    claiming; ask one question if the request is ambiguous.
 2. **Brief.** Read the packet, project rules, and only the named source and
    tests. List invariants, risks, unknowns, the first action, and the exact check

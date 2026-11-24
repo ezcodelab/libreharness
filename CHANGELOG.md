@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+### Rationale over numbers
+
+- Replace the remaining fixed caps with the rule each encoded: continuations
+  stop when a goal makes no progress unless explicitly bounded, `goal-start`
+  lanes every disjoint ready child, and prose no longer uses magic counts for
+  lessons, skills, patches, handoffs, or diagrams.
+- Approve the pinned `@ast-grep/cli` postinstall in `allowScripts`.
+
 ### Limits
 
 - Remove the instruction line budgets and the PR size caps. Tests, secrets,

@@ -19,9 +19,6 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-export const MAX_ENFORCEMENT_ROWS = 4;
-export const MIN_PLAYBOOK_STEPS = 3;
-
 export const ASCII_IGNORE_GLOBS = [
   "CHANGELOG.md",
   "docs/process-lessons.md",
@@ -106,15 +103,6 @@ function walk(dir, files = []) {
     else if (entry.isFile()) files.push(path);
   }
   return files;
-}
-
-function section(text, heading) {
-  const padded = `\n${text}`;
-  const start = padded.indexOf(`\n${heading}\n`);
-  if (start < 0) return null;
-  const rest = padded.slice(start + heading.length + 2);
-  const next = rest.search(/\n## /);
-  return next < 0 ? rest : rest.slice(0, next);
 }
 
 function hasHeading(path, heading) {
@@ -284,28 +272,11 @@ export function checkAgentsContract(root) {
   const problems = [];
   const file = join(root, "AGENTS.md");
   if (!existsSync(file)) return [{ rule: "agents-contract", file: "AGENTS.md", message: "missing AGENTS.md" }];
-  const text = readFileSync(file, "utf8");
   if (hasHeading(file, "## Task scale")) {
     push(problems, "agents-contract", "AGENTS.md", "routing belongs in skills/engineering-loop, not always-on AGENTS.md");
   }
   for (const heading of ["## Commands", "## Boundaries", "## Rule enforcement"]) {
     if (!hasHeading(file, heading)) push(problems, "agents-contract", "AGENTS.md", `missing ${heading}`);
-  }
-  const enforcement = section(text, "## Rule enforcement");
-  if (enforcement !== null) {
-    const rows = enforcement
-      .split("\n")
-      .filter((line) => line.trim().startsWith("|"))
-      .filter((line) => !/^\|[\s|:-]+\|$/.test(line.trim()))
-      .slice(1);
-    if (rows.length > MAX_ENFORCEMENT_ROWS) {
-      push(
-        problems,
-        "agents-contract",
-        "AGENTS.md",
-        `Rule enforcement has ${rows.length} rows; keep at most ${MAX_ENFORCEMENT_ROWS} suite rows and append per-rule detail to skills/correct/references/rule-ledger.md`,
-      );
-    }
   }
   return problems;
 }
@@ -419,8 +390,8 @@ export function checkRouterWiring(root) {
     }
     const lines = readFileSync(path, "utf8").split("\n").filter((line) => line.trim() !== "");
     const steps = lines.filter((line) => /^\s*(?:\d+\.|-)\s+\S/.test(line));
-    if (steps.length < MIN_PLAYBOOK_STEPS) {
-      push(problems, "router-wiring", file, `${steps.length} steps, needs at least ${MIN_PLAYBOOK_STEPS}`);
+    if (steps.length === 0) {
+      push(problems, "router-wiring", file, "playbook needs at least one numbered step");
     }
   }
   return problems;
@@ -688,14 +659,14 @@ function selfTests() {
     );
     assert.deepEqual(checkWorkflowWiring(tmp), [], "complete wiring must pass");
 
-    writeFileSync(join(tmp, "skills/engineering-loop/references/playbooks/perf.md"), "1. one\n");
+    writeFileSync(join(tmp, "skills/engineering-loop/references/playbooks/perf.md"), "prose only\n");
     assert.ok(
-      checkWorkflowWiring(tmp).some((problem) => problem.message.includes("needs at least")),
-      "a hollow playbook file must fail",
+      checkWorkflowWiring(tmp).some((problem) => problem.message.includes("at least one numbered step")),
+      "a playbook without steps must fail",
     );
     writeFileSync(
       join(tmp, "skills/engineering-loop/references/playbooks/perf.md"),
-      "1. one\n2. two\n3. three\n",
+      "1. one\n",
     );
 
     writeFileSync(join(tmp, "plugins/auto-intake.js"), 'export const PLAYBOOK_IDS = ["bug-fix"];\nexport function routePrompt() {}\n');
