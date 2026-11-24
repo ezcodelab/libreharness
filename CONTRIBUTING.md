@@ -106,8 +106,8 @@ License.
 
 ## Pull request checklist
 
-- [ ] One task, one reviewable PR. The change does not mix unrelated work.
-- [ ] The PR is at most 600 changed lines, 20 files, and 40 body lines.
+- [ ] One task, one reviewable PR. The change does not mix unrelated work and
+      fits one reviewer's sitting.
 - [ ] The title is `type(scope): subject`; the body has `Why`, `What changed`,
       `Scope`, optional `Tradeoffs`, `Blast Radius`, and `Verification`.
 - [ ] The task has scope, acceptance, and evidence in the queue.
@@ -139,9 +139,7 @@ not replace the reviewer's decision.
 ## Adding a skill
 
 1. Create `skills/<name>/SKILL.md` with `name` and `description` frontmatter.
-2. Keep it inside the line budget enforced by
-   `tests/harness-ratchets.test.mjs`. Split a skill when its triggers or
-   procedure are distinct.
+2. Split a skill when its triggers or procedure are distinct.
 3. Write the trigger in the description, not only in the body.
 4. Prove it pays off on one real task with and without the skill. A neutral
    result is a reason to delete it or keep it project-local.

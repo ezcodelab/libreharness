@@ -78,8 +78,6 @@ jobs:
           test "$(jq -r .isDraft <<<"$meta")" = "false"
           test "$(jq -r .baseRefName <<<"$meta")" = "main"
           test "$(jq -r .headRefOid <<<"$meta")" = "$HEAD"
-          test "$(jq -r '.additions + .deletions' <<<"$meta")" -le 600
-          test "$(jq -r '.files | length' <<<"$meta")" -le 20
 
           title=$(jq -r .title <<<"$meta")
           if ! printf '%s' "$title" | grep -Eq '^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)(\([^)]+\))?: .+$'; then
@@ -87,7 +85,6 @@ jobs:
             exit 1
           fi
           body=$(jq -r .body <<<"$meta")
-          test "$(printf '%s' "$body" | awk 'END {print NR}')" -le 40
           printf '%s\n' "$body" | awk '
             BEGIN { split("Why|What changed|Scope|Blast Radius|Verification", want, "|"); i = 1 }
             /^## / {

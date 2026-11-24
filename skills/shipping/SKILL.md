@@ -21,8 +21,9 @@ push to `main`, force-push a shared branch, or install a CLI silently.
 - Task scope, acceptance, and evidence are recorded.
 - Review artifact is PASS for the exact head, includes Verify, and every exit is
   zero.
-- PR is one logical change: at most 600 changed lines, 20 files, and 40 body
-  lines. Split before opening when over a limit.
+- PR is one logical change, reviewable in one sitting, with the required title
+  and body headings. Split when a reviewer cannot review it in one pass; never
+  split by an arbitrary number.
 - Title is `type(scope): subject`.
 - Body has `Why`, `What changed`, `Scope`, optional `Tradeoffs`, `Blast Radius`,
   and `Verification`, in order.
@@ -37,8 +38,8 @@ Group changes into small verifiable commits. One task gets one PR.
 Independent changes branch off trunk and land as separate PRs. Stack only a
 dependent follow-up, one PR per review unit, and land bottom-up. A cleanup,
 refactor, docs change, or separate capability gets its own PR when it can land
-alone. Split by behavior and review boundary, not file count. If a split needs
-more than three follow-ups, split the task before opening anything.
+alone. Split by behavior and review boundary, not file count. If a split grows
+into many follow-ups, split the task before opening anything.
 
 Write the body first, then run:
 
@@ -48,8 +49,8 @@ python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/pr_guard.py" check \
 ```
 
 It must return `"ok": true` and `"next": "open"` on a clean committed head.
-`next: split` means split; do not open the PR. Commit with `-s` and run the
-project checks before the first push and after any invalidating change.
+Commit with `-s` and run the project checks before the first push and after any
+invalidating change.
 
 Validate the artifact on the tree that will land:
 
@@ -75,7 +76,6 @@ python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/pr_guard.py" land \
 - `rebase`: rebase only this PR's branch with `--force-with-lease`, record a new
   artifact, push, and run `land` again.
 - `rereview`: the head moved. Record the artifact before merging.
-- `split`: close the oversized PR after the smaller replacements open.
 - `wait`: the forge has not settled. Read the PR again; do not claim a merge.
 
 Do not start `land` in the background and end the turn. If a required check
@@ -90,8 +90,7 @@ with the PR URL and merge commit.
 
 ## Stop
 
-Stop only for an unavailable forge, a missing or stale artifact, an oversized or
-malformed PR that cannot be split safely, failed required checks after two
-same-axis fixes, a conflict you cannot resolve on your own branch, an unsatisfied
-human gate, a secret, or an irreversible action. A queued or pending result is
-not merged.
+Stop only for an unavailable forge, a missing or stale artifact, a malformed PR,
+failed required checks after two same-axis fixes, a conflict you cannot resolve
+on your own branch, an unsatisfied human gate, a secret, or an irreversible
+action. A queued or pending result is not merged.

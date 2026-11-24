@@ -86,20 +86,13 @@ class PrGuardTests(unittest.TestCase):
         self.assertEqual(result["files"], 1)
         self.assertEqual(result["next"], "open")
 
-    def test_large_diff_requires_split(self) -> None:
+    def test_large_diff_and_many_files_pass(self) -> None:
         self.commit("widget.py", "\n".join(f"line_{i} = {i}" for i in range(601)))
-        result = self.check()
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["next"], "split")
-        self.assertTrue(any("changed lines" in item for item in result["problems"]))
-
-    def test_too_many_files_requires_split(self) -> None:
         for index in range(21):
             self.commit(f"file_{index}.txt", "one\n")
         result = self.check()
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["next"], "split")
-        self.assertTrue(any("21 files" in item for item in result["problems"]))
+        self.assertTrue(result["ok"], result["problems"])
+        self.assertEqual(result["files"], 22)
 
     def test_title_and_body_contract(self) -> None:
         self.commit("widget.py", "value = 1\n")
@@ -109,9 +102,8 @@ class PrGuardTests(unittest.TestCase):
         missing = self.check("## Why\nOnly a why.\n")
         self.assertFalse(missing["ok"])
         self.assertTrue(any("## Verification" in item for item in missing["problems"]))
-        too_long = self.check(BODY + ("line\n" * 40))
-        self.assertFalse(too_long["ok"])
-        self.assertTrue(any("limit is 40" in item for item in too_long["problems"]))
+        long_body = self.check(BODY + ("line\n" * 40))
+        self.assertTrue(long_body["ok"], long_body["problems"])
 
     def test_dirty_worktree_is_not_openable(self) -> None:
         self.commit("widget.py", "value = 1\n")
