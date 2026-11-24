@@ -134,6 +134,9 @@ def main() -> int:
     parser.add_argument("--mock", choices=("good", "bad", "timeout"))
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    if not 0 <= args.min_confidence <= 1:
+        print("error: min-confidence must be between 0 and 1", file=sys.stderr)
+        return 3
 
     playbooks = playbook_ids()
     if args.fallback_playbook not in playbooks:

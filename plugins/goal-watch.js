@@ -21,6 +21,12 @@ export function maxContinuations(value) {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 12;
 }
 
+export function continuationChild(state) {
+  return Array.isArray(state?.ready) && state.ready.length > 0
+    ? state.ready[0]
+    : "";
+}
+
 async function run(args) {
   const { stdout } = await execFileAsync("python3", [TASKS, ...args], {
     encoding: "utf8",
@@ -113,7 +119,8 @@ export default {
             continue;
           }
           if (state.closable) continue; // the close reminder owns this case
-          if (!state.ready?.length) continue;
+          const next = continuationChild(state);
+          if (!next) continue;
           counts.set(id, used + 1);
           try {
             await ctx.session.prompt({
@@ -121,7 +128,7 @@ export default {
               text:
                 `Continue the active goal ${id}. Run ` +
                 `\`python3 ${TASKS} goal-status ${id} --json\`, then follow ` +
-                `the goal skill. Next ready child: ${state.ready[0]}. ` +
+                `the goal skill. Next ready child: ${next}. ` +
                 `Do not repeat completed work; stop on a blocker, a one-way door, ` +
                 `or an approval.`,
             });

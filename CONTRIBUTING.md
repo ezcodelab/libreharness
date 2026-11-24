@@ -40,6 +40,7 @@ npm run test:node
 node --check src/plugin.js
 node --check plugins/auto-intake.js
 node --check plugins/goal-watch.js
+node --check plugins/usage-ledger.js
 python3 -m json.tool package.json >/dev/null
 npm pack --dry-run
 npx --yes markdownlint-cli2@0.18.1 '**/*.md'

@@ -71,11 +71,17 @@ tasks(
 if (!goal) throw new Error("goal not created");
 
 process.env.GOAL_WATCH_ROOT = root;
-const { default: plugin, maxContinuations } = await import(
+const { default: plugin, maxContinuations, continuationChild } = await import(
   new URL(`../plugins/goal-watch.js?test=${process.pid}`, import.meta.url)
 );
 if (maxContinuations("abc") !== 12 || maxContinuations("") !== 12 || maxContinuations("0") !== 0) {
   throw new Error("malformed continuation bound is not handled");
+}
+if (continuationChild({ ready: [] }) !== "" || continuationChild({}) !== "") {
+  throw new Error("goal without ready work must not prompt");
+}
+if (continuationChild({ ready: ["child-a"] }) !== "child-a") {
+  throw new Error("ready child was not selected");
 }
 
 const prompts = [];

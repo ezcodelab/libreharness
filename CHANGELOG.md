@@ -12,12 +12,30 @@
   lines of slack, and a total budget fails on net growth until a line is
   deleted. The numbers live in `tests/harness-ratchets.test.mjs`.
 
+### Cost and verification
+
+- Add a local usage ledger for provider-reported cost, token classes, model
+  steps, and retries. It stores no prompts, diffs, or output.
+- `bin/usage_report.py` reports cost per verified task, including failed and
+  abandoned work in the numerator.
+- Split playbooks into one file per selection so a task loads only its checklist.
+- Add `agentModels` plugin options for per-subagent model routing. The main
+  session keeps its selected model and the repository contains no model IDs.
+- Add an offline Jev shadow router for fixed playbook and tier choices. Invalid
+  output, low confidence, timeout, or helper failure holds the existing route.
+- Small task intake records the plan facts and proceeds without a separate brief
+  turn. Close reuses a review only for the same diff.
+- Goal reminders stay in the owning session and autorun stops when no child is
+  ready.
+
 ### Review and shipping
 
-- `/review` records observed exits and the exact HEAD in
-  `$HARNESS_STATE/work/reviews/<task-id>.json` through `tasks.py review --run`.
-  Close, the review status transition, and shipping reject a missing, stale,
-  failed, mismatched, or UNVERIFIED artifact.
+- `/review` records observed exits, the exact HEAD, and a digest of the reviewed
+  diff in `$HARNESS_STATE/work/reviews/<task-id>.json` through
+  `tasks.py review --run`. Close, the review status transition, `done`, and
+  shipping reject a missing, stale, failed, mismatched, or UNVERIFIED artifact.
+- A task cannot reach `done` from `active` without a PASS artifact for the
+  current HEAD and working diff.
 - A task cannot be claimed without a structured `Data shape` line and one
   allowlisted `Verify` command in its Plan.
 - Remove the routine model review. A second opinion is an explicit operator

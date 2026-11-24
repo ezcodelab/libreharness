@@ -197,6 +197,7 @@ const PII =
   /([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|https?:\/\/\S+|\b\d{3}[-.]?\d{3}[-.]?\d{4}\b)/gi;
 
 const seen = new Map();
+let ledgerWarned = false;
 
 function sanitize(text) {
   return text.replace(SECRET, "[redacted]").replace(PII, "[redacted]");
@@ -248,8 +249,13 @@ function recordSessionTask(sessionID, taskID) {
       }) + "\n",
       { mode: 0o600 },
     );
-  } catch {
-    // A missing ledger must not block intake.
+  } catch (error) {
+    if (!ledgerWarned) {
+      ledgerWarned = true;
+      console.warn(
+        `libreharness: session-task ledger write failed: ${error?.message ?? error}`,
+      );
+    }
   }
 }
 
