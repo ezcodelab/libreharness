@@ -34,7 +34,10 @@ Add the package to the global `plugins` array in
 
 The four agent stubs are required. The plugin API can update an existing agent
 but cannot create one; the plugin fills each stub's prompt, mode, and
-permissions. Add a model to a stub for per-agent routing.
+permissions. Add a model to a stub for per-agent routing, or pass
+`options.agentModels` with entries such as
+`"explore": "<provider>/<model>#<variant>"`. The plugin validates the reference
+and changes only the fresh child agent's model.
 
 OpenCode loads global and project `AGENTS.md` files natively. The plugin registers
 no instruction-injection hook, so the LibreHarness contract stays scoped to this
@@ -313,6 +316,13 @@ encodings live in `skills/correct/references/rule-ledger.md`.
 | `implementer` | One scoped, testable implementation |
 | `integrator` | Bounded merge in a declared order |
 | `devils-advocate` | Independent read-only review |
+
+Per-agent routing is configuration, not an ambient model call. A normal setup
+uses a cheap workhorse for `explore`, routine `implementer` work, and
+`integrator`, while reserving a stronger planner or challenger model for
+ambiguous design, security, state/concurrency, repeated failure, and an
+operator-requested second opinion. The main session keeps the operator's chosen
+model.
 
 ## Plugins
 

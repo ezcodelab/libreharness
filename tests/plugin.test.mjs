@@ -32,7 +32,10 @@ const baseAgents = new Map(
 const updatedAgents = new Map();
 
 const ctx = {
-  options: { state },
+  options: {
+    state,
+    agentModels: { explore: "example/workhorse#high" },
+  },
   command: {
     transform: (callback) => callback({ add: (command) => commands.push(command) }),
   },
@@ -67,8 +70,22 @@ const ctx = {
   },
 };
 
-const { default: plugin, statePath } = await import("../src/plugin.js");
+const { default: plugin, modelRef, statePath } = await import(
+  "../src/plugin.js"
+);
 assert.equal(plugin.id, "libreharness");
+assert.deepEqual(modelRef("provider/model"), {
+  providerID: "provider",
+  id: "model",
+});
+assert.deepEqual(modelRef("provider/model#high"), {
+  providerID: "provider",
+  id: "model",
+  variant: "high",
+});
+assert.equal(modelRef("model-only"), null);
+assert.equal(modelRef("provider/"), null);
+assert.equal(modelRef("provider/model#"), null);
 
 const previousState = process.env.HARNESS_STATE;
 process.env.HARNESS_STATE = "/tmp/ignored-by-default";
@@ -117,6 +134,11 @@ assert.ok(
   "explore must allow reads",
 );
 assert.deepEqual(explore.model, {
+  providerID: "example",
+  id: "workhorse",
+  variant: "high",
+});
+assert.deepEqual(updatedAgents.get("implementer").model, {
   providerID: "commandcode",
   id: "deepseek-v4-flash",
 });
