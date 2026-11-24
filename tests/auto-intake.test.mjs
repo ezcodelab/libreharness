@@ -132,7 +132,15 @@ const id = first.prompt.text.match(/Task ([^\s]+)/)?.[1];
 if (!id) throw new Error("task id missing");
 const task = readFileSync(join(root, "work/tasks", `${id}.md`), "utf8");
 if (!task.includes("status: inbox")) throw new Error("task not inbox");
+if (!task.includes("session: s1")) throw new Error("task session not recorded");
 if (!task.includes("example-project")) throw new Error("project not inferred");
+const mapping = readFileSync(
+  join(root, "metrics/session-tasks.jsonl"),
+  "utf8",
+);
+if (!mapping.includes('"session":"s1"') || !mapping.includes(id)) {
+  throw new Error("session-task usage mapping missing");
+}
 if (task.includes("use /goal")) throw new Error("task scope still requires /goal");
 if (!task.includes("confirm scope and acceptance")) {
   throw new Error("task scope does not state the acceptance confirmation");

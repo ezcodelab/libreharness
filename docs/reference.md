@@ -76,7 +76,10 @@ $HARNESS_STATE/
 │   ├── reviews/<task-id>.json
 │   ├── BOARD.md
 │   └── .lock
-└── metrics/workflow-log.csv
+└── metrics/
+    ├── workflow-log.csv
+    ├── session-tasks.jsonl
+    └── usage-log.jsonl
 ```
 
 `BOARD.md` is generated. Edit task files, not the board.
@@ -287,6 +290,11 @@ Run `python3 "$HARNESS_HOME/bin/tasks.py" <command>`.
 | `goal-start`, `goal-status` | Start or inspect a goal |
 | `report`, `board`, `validate` | Metrics, generated board, and validation |
 
+`bin/usage_report.py` joins the local usage ledger to completed tasks. Its
+`cost_per_verified_task` divides all measured model cost, including failed and
+abandoned work, by the number of tasks with a PASS review artifact. Run
+`python3 "$HARNESS_HOME/bin/usage_report.py" --json`.
+
 ## Skills
 
 The map lives in [skills/README.md](../skills/README.md).
@@ -308,14 +316,17 @@ encodings live in `skills/correct/references/rule-ledger.md`.
 
 ## Plugins
 
-Two local plugins are bundled. They use Node built-ins and never call a model.
+Three local plugins are bundled. They use Node built-ins and never call a model.
 
 - **auto-intake** turns a nontrivial prompt into one inbox task and appends a
   queue note. It skips questions, delegation prompts, and secret-shaped text.
   Opt out with `AUTO_INTAKE=off`.
-- **goal-watch** reminds once per session when an active goal is closable, and
-  continues one `autorun` goal while it has ready children. It never creates,
-  closes, or marks work done.
+- **goal-watch** reminds the owning session once when an active goal is closable,
+  and continues one `autorun` goal while it has ready children. It never
+  creates, closes, or marks work done.
+- **usage-ledger** records provider-reported cost, token classes, model steps,
+  and retries per session. It stores no prompts, diffs, or model output. Opt out
+  with `USAGE_LEDGER=off`.
 
 Protect secret files in one layer rather than in every agent: install
 `envsitter-guard` or `cc-safety-net`, or add a global `read *.env ask` rule.
@@ -330,7 +341,8 @@ Protect secret files in one layer rather than in every agent: install
 - Review checks run local commands and record their exits; the artifact contains
   no secret material beyond what a command prints.
 - The queue does not encrypt task files.
-- Nothing here sends telemetry.
+- The usage ledger is local and contains no prompts, diffs, or model output.
+  Nothing here sends usage data off the machine.
 
 Report a vulnerability through the private advisory form at
 <https://github.com/ezcodelab/libreharness/security/advisories/new>. Do not put a

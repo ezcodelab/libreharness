@@ -3,7 +3,7 @@
 // answers. It never blocks admission on failure and never stores a prompt that
 // looks like it contains a secret. Opt out with AUTO_INTAKE=off.
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 
 function homeDir() {
@@ -236,7 +236,24 @@ function existingTask(text) {
   }
 }
 
-function createTask(text, directory) {
+function recordSessionTask(sessionID, taskID) {
+  try {
+    mkdirSync(`${stateDir()}/metrics`, { recursive: true, mode: 0o700 });
+    appendFileSync(
+      `${stateDir()}/metrics/session-tasks.jsonl`,
+      JSON.stringify({
+        observed_at: new Date().toISOString(),
+        session: sessionID,
+        task: taskID,
+      }) + "\n",
+      { mode: 0o600 },
+    );
+  } catch {
+    // A missing ledger must not block intake.
+  }
+}
+
+function createTask(text, directory, sessionID) {
   const title = titleOf(text);
   const project = basename(directory || "") || "general";
   const output = execFileSync(
@@ -248,6 +265,8 @@ function createTask(text, directory) {
       project,
       "--status",
       "inbox",
+      "--session",
+      sessionID,
       "--scope",
       "Auto-captured prompt; confirm scope and acceptance, then add Data shape and Verify lines before claiming.",
       "--acceptance",
@@ -299,12 +318,14 @@ export default {
       const existing = existingTask(text);
       if (existing) {
         seen.set(sessionID, existing);
+        recordSessionTask(sessionID, existing);
         event.prompt.text = text + `\n\n${reusedNotice(existing, decision)}`;
         return;
       }
       try {
-        const id = createTask(text, ctx.location?.directory);
+        const id = createTask(text, ctx.location?.directory, sessionID);
         seen.set(sessionID, id);
+        recordSessionTask(sessionID, id);
         event.prompt.text = text + `\n\n${queueNotice(id, decision)}`;
       } catch {
         event.prompt.text = text + `\n\n${HELPER_FAILURE_NOTICE}`;

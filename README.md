@@ -24,7 +24,8 @@ outlives one chat:
   challenge.
 - Commands for intake, briefs, lanes, takeover, review, close, handoff, design
   review, and tuning.
-- Two local plugins: automatic task intake and a goal watcher.
+- Three local plugins: automatic task intake, a goal watcher, and a usage
+  ledger for cost-per-verified-task measurement.
 
 The queue is stdlib Python plus Linux file locking. There is no database, no
 server, and no third-party Python package. The Node plugins use built-ins only.

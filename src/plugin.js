@@ -168,6 +168,7 @@ const plugin = Plugin.define({
     for (const featurePath of [
       "../plugins/auto-intake.js",
       "../plugins/goal-watch.js",
+      "../plugins/usage-ledger.js",
     ]) {
       try {
         const { default: feature } = await import(featurePath);

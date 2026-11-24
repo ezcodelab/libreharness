@@ -1339,6 +1339,7 @@ def review_task(
                     "task": task_id,
                     "head": head,
                     "diff_sha256": review_diff(repo),
+                    "recorded_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                     "verdict": "UNVERIFIED",
                     "checks": checks,
                 },
@@ -1377,6 +1378,7 @@ def review_task(
                 "task": task_id,
                 "head": head_after,
                 "diff_sha256": review_diff(repo),
+                "recorded_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                 "verdict": "PASS" if passed else "UNVERIFIED",
                 "checks": checks,
             },
@@ -2122,6 +2124,7 @@ def main() -> int:
     new.add_argument("--tags", default="")
     new.add_argument("--status", default="ready", choices=STATUSES)
     new.add_argument("--parent", default="")
+    new.add_argument("--session", default="")
 
     goal = sub.add_parser("goal")
     goal.add_argument("title")
@@ -2239,6 +2242,7 @@ def main() -> int:
             tags=args.tags,
             status=args.status,
             parent=args.parent,
+            session=args.session,
         )
         print(task["meta"]["id"])
         return 0
