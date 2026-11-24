@@ -5,10 +5,8 @@ description: Propose deletions and at most five portable AGENTS or skill patches
 Tuning turn. Use this after a work wave, not as a task finish. Do not do
 feature work, and do not edit global config yet.
 
-1. Run the Markdown and skill-budget check:
-   `npx --yes markdownlint-cli2@0.18.1 '**/*.md'`, then confirm every
-   `skills/*/SKILL.md` is at most 120 lines:
-   `find skills -name SKILL.md -print0 | xargs -0 wc -l`.
+1. Run the Markdown check:
+   `npx --yes markdownlint-cli2@0.18.1 '**/*.md'`.
 2. Run the `state-audit` skill over the project or the area changed since the
    last tune. Update `docs/state-machines.md`, group confirmed invalid
    transitions by root cause, and propose the highest-impact group. Do not fix

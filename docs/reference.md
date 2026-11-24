@@ -361,10 +361,10 @@ live key in an issue.
 ## Shipping and CI
 
 Public repositories use GitHub as canonical and Gitea as a read-only mirror.
-One task gets one small PR: at most 600 changed lines, 20 files, and 40 body
-lines. Independent tasks open separate PRs off trunk. Only dependent follow-ups
-stack, and a stack lands bottom-up. Split before opening when a limit is
-exceeded.
+One task gets one small, logically separated PR with a `type(scope): subject`
+title and the required body headings. Keep it reviewable in one sitting; split
+by review boundary, not an arbitrary number. Independent tasks open separate
+PRs off trunk. Only dependent follow-ups stack, and a stack lands bottom-up.
 
 Validate the review artifact on the head that will land, check the local PR
 contract, then stay through required checks and merge that exact head:
@@ -378,12 +378,12 @@ python3 "$HARNESS_HOME/bin/pr_guard.py" land \
   --pr <number> --head "$HEAD" --base main
 ```
 
-A missing, stale, failed, or UNVERIFIED artifact, an oversized or malformed PR,
-a pending or failed required check, a conflict, a draft, or a secret in the diff
-stops the merge. Fix CI, rebase only the PR's own branch, or close a superseded
-oversized PR. Do not leave a ready PR open for the operator to finish. A
-repository human gate, such as required reviews or a ruleset, also stops it
-until satisfied. Do not replace that gate with a model verdict.
+A missing, stale, failed, or UNVERIFIED artifact, a malformed PR, a pending or
+failed required check, a conflict, a draft, or a secret in the diff stops the
+merge. Fix CI, rebase only the PR's own branch, or close a superseded PR. Do not
+leave a ready PR open for the operator to finish. A repository human gate, such
+as required reviews or a ruleset, also stops it until satisfied. Do not replace
+that gate with a model verdict.
 
 Never push to `main` or force-push a shared branch. A force-with-lease push is
 allowed only on the PR branch you own, after a rebase, followed by a new review

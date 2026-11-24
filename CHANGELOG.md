@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### Limits
+
+- Remove the instruction line budgets and the PR size caps. Tests, secrets,
+  review artifacts, and required checks remain the gates; size is a review
+  judgement, not a hard number.
+
 ### Instruction budget
 
 - The skill map has one owner, `skills/README.md`; `AGENTS.md`, `README.md`, and

@@ -18,8 +18,8 @@ outlives one chat:
 - A playbook router that turns a request into one checklist: investigation, bug
   fix, feature, refactoring, perf, hillclimb, autonomous multi-phase, or a
   repeated-mistake sweep.
-- Structural ratchets that fail on a skill over budget, non-ASCII punctuation,
-  an unreferenced workaround comment, or an oversized always-on rule file.
+- Structural ratchets that fail on non-ASCII punctuation, an unreferenced
+  workaround comment, or a repeated always-on rule.
 - Agents for exploration, implementation, integration, and independent
   challenge.
 - Commands for intake, briefs, lanes, takeover, review, close, handoff, design

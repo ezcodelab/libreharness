@@ -79,7 +79,7 @@ router picks the playbook.
 |---|---|
 | Secrets and private markers stay out of the tree | `gitleaks detect --source . --config .gitleaks.toml` |
 | Tasks close only with a claim, checked acceptance, and real evidence | `python3 -m unittest tests.test_tasks -v` |
-| Skill budget, ASCII prose, comment discipline, and this file's size hold | `node tests/harness-ratchets.test.mjs` |
+| Skill structure, ASCII prose, and comment discipline hold | `node tests/harness-ratchets.test.mjs` |
 | Review artifacts, policy paths, and state audits stay wired | `node tests/harness-ratchets.test.mjs` |
 
 Per-rule history and new encodings live in

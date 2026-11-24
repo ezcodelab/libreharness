@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #!/usr/bin/env python3
-"""Check or land one reviewably sized pull request."""
+"""Check or land one reviewed pull request."""
 
 from __future__ import annotations
 
@@ -12,9 +12,6 @@ import sys
 import time
 from pathlib import Path
 
-MAX_LINES = 600
-MAX_FILES = 20
-MAX_BODY_LINES = 40
 TITLE = re.compile(
     r"^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)"
     r"(\([^)]+\))?: \S.+$"
@@ -43,21 +40,9 @@ def run(argv: list[str], repo: Path | None = None) -> subprocess.CompletedProces
     return result
 
 
-def boundaries() -> dict:
-    return {
-        "lines": MAX_LINES,
-        "files": MAX_FILES,
-        "body_lines": MAX_BODY_LINES,
-    }
-
-
 def body_problems(body: str) -> list[str]:
     lines = body.splitlines()
     problems = []
-    if len(lines) > MAX_BODY_LINES:
-        problems.append(
-            f"body has {len(lines)} lines; limit is {MAX_BODY_LINES}"
-        )
     positions = {}
     for index, line in enumerate(lines):
         if line.startswith("## "):
@@ -81,12 +66,6 @@ def pr_checks(
     require_mergeable: bool = True,
 ) -> tuple[list[str], str]:
     problems = []
-    files = view.get("files") or []
-    changed = int(view.get("additions") or 0) + int(view.get("deletions") or 0)
-    if len(files) > MAX_FILES:
-        problems.append(f"{len(files)} files; limit is {MAX_FILES}")
-    if changed > MAX_LINES:
-        problems.append(f"{changed} changed lines; limit is {MAX_LINES}")
     if view.get("isDraft"):
         problems.append("PR is a draft; open it ready for review")
     if view.get("baseRefName") != base:
@@ -100,7 +79,7 @@ def pr_checks(
         mergeable = view.get("mergeable")
         if mergeable != "MERGEABLE":
             problems.append(f"PR is {mergeable or 'not mergeable'}")
-    next_action = "split" if any("limit is" in item for item in problems) else "fix"
+    next_action = "fix"
     return problems, next_action
 
 
@@ -123,15 +102,10 @@ def local_diff(repo: Path, base: str) -> tuple[dict, list[str]]:
         if deleted.isdigit():
             changed += int(deleted)
         files.append(path)
-    if len(files) > MAX_FILES:
-        problems.append(f"{len(files)} files; limit is {MAX_FILES}")
-    if changed > MAX_LINES:
-        problems.append(f"{changed} changed lines; limit is {MAX_LINES}")
     return {
         "head": head,
         "files": len(files),
         "changed_lines": changed,
-        "limits": boundaries(),
     }, problems
 
 
@@ -299,10 +273,9 @@ def local_check(
             problems.append(str(exc))
         else:
             problems.extend(body_problems(body))
-            details["body_lines"] = len(body.splitlines())
     next_action = "open"
     if problems:
-        next_action = "split" if any("limit is" in item for item in problems) else "fix"
+        next_action = "fix"
     return {
         "ok": not problems,
         **details,

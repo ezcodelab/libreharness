@@ -19,14 +19,8 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-export const MAX_SKILL_LINES = 115;
-export const MAX_AGENTS_LINES = 89;
-export const MAX_AGENT_LINES = 283;
-export const MAX_INSTRUCTION_LINES = 2437;
 export const MAX_ENFORCEMENT_ROWS = 4;
-export const MAX_PLAYBOOK_LINES = 25;
 export const MIN_PLAYBOOK_STEPS = 3;
-export const MAX_PLAYBOOKS_FILE_LINES = 40;
 
 export const ASCII_IGNORE_GLOBS = [
   "CHANGELOG.md",
@@ -83,12 +77,6 @@ const PLAYBOOKS = [
 
 function rel(root, path) {
   return relative(root, path).split("\\").join("/");
-}
-
-function countLines(text) {
-  const lines = text.split("\n");
-  if (lines.at(-1) === "") lines.pop();
-  return lines.length;
 }
 
 function frontmatter(text) {
@@ -148,7 +136,7 @@ export function formatProblem(problem) {
   return `${problem.rule}: ${location}: ${problem.message}`;
 }
 
-export function checkSkillBudgets(root) {
+export function checkSkillStructure(root) {
   const problems = [];
   for (const base of [join(root, "skills"), join(root, ".opencode", "skills")]) {
     if (!existsSync(base)) continue;
@@ -158,30 +146,21 @@ export function checkSkillBudgets(root) {
       const file = join(directory, "SKILL.md");
       const relDir = rel(root, directory);
       if (!existsSync(file)) {
-        push(problems, "skill-budget", relDir, "missing SKILL.md");
+        push(problems, "skill-structure", relDir, "missing SKILL.md");
         continue;
       }
       const relFile = rel(root, file);
       const text = readFileSync(file, "utf8");
-      const lines = countLines(text);
-      if (lines > MAX_SKILL_LINES) {
-        push(
-          problems,
-          "skill-budget",
-          relFile,
-          `${lines} lines exceeds ${MAX_SKILL_LINES}; move detail into references/ and keep the entry short`,
-        );
-      }
       const meta = frontmatter(text);
       if (!meta) {
-        push(problems, "skill-budget", relFile, "missing YAML frontmatter");
+        push(problems, "skill-structure", relFile, "missing YAML frontmatter");
         continue;
       }
-      if (!meta.name) push(problems, "skill-budget", relFile, "frontmatter needs a name");
+      if (!meta.name) push(problems, "skill-structure", relFile, "frontmatter needs a name");
       else if (meta.name !== entry.name) {
-        push(problems, "skill-budget", relFile, `frontmatter name "${meta.name}" must match the directory "${entry.name}"`);
+        push(problems, "skill-structure", relFile, `frontmatter name "${meta.name}" must match the directory "${entry.name}"`);
       }
-      if (!meta.description) push(problems, "skill-budget", relFile, "frontmatter needs a description");
+      if (!meta.description) push(problems, "skill-structure", relFile, "frontmatter needs a description");
     }
   }
   return problems;
@@ -301,20 +280,16 @@ export function checkCommentDiscipline(root) {
   return problems;
 }
 
-export function checkAgentsBudget(root) {
+export function checkAgentsContract(root) {
   const problems = [];
   const file = join(root, "AGENTS.md");
-  if (!existsSync(file)) return [{ rule: "agents-budget", file: "AGENTS.md", message: "missing AGENTS.md" }];
+  if (!existsSync(file)) return [{ rule: "agents-contract", file: "AGENTS.md", message: "missing AGENTS.md" }];
   const text = readFileSync(file, "utf8");
-  const lines = countLines(text);
-  if (lines > MAX_AGENTS_LINES) {
-    push(problems, "agents-budget", "AGENTS.md", `${lines} lines exceeds ${MAX_AGENTS_LINES}; move procedure into skills/`);
-  }
   if (hasHeading(file, "## Task scale")) {
-    push(problems, "agents-budget", "AGENTS.md", "routing belongs in skills/engineering-loop, not always-on AGENTS.md");
+    push(problems, "agents-contract", "AGENTS.md", "routing belongs in skills/engineering-loop, not always-on AGENTS.md");
   }
   for (const heading of ["## Commands", "## Boundaries", "## Rule enforcement"]) {
-    if (!hasHeading(file, heading)) push(problems, "agents-budget", "AGENTS.md", `missing ${heading}`);
+    if (!hasHeading(file, heading)) push(problems, "agents-contract", "AGENTS.md", `missing ${heading}`);
   }
   const enforcement = section(text, "## Rule enforcement");
   if (enforcement !== null) {
@@ -326,7 +301,7 @@ export function checkAgentsBudget(root) {
     if (rows.length > MAX_ENFORCEMENT_ROWS) {
       push(
         problems,
-        "agents-budget",
+        "agents-contract",
         "AGENTS.md",
         `Rule enforcement has ${rows.length} rows; keep at most ${MAX_ENFORCEMENT_ROWS} suite rows and append per-rule detail to skills/correct/references/rule-ledger.md`,
       );
@@ -372,38 +347,6 @@ export function checkInstructionOwners(root) {
     if (readFileSync(path, "utf8").includes(header)) {
       push(problems, "instruction-owners", relPath, `the skill map has one owner: ${owner}`);
     }
-  }
-  return problems;
-}
-
-function instructionFiles(root) {
-  return [
-    join(root, "AGENTS.md"),
-    ...walk(join(root, "commands")),
-    ...walk(join(root, "agents")),
-    ...walk(join(root, "skills")),
-  ].filter((path) => path.endsWith(".md") && existsSync(path));
-}
-
-export function checkInstructionBudget(root) {
-  const problems = [];
-  for (const path of walk(join(root, "agents"))) {
-    if (!path.endsWith(".md")) continue;
-    const relPath = rel(root, path);
-    const lines = countLines(readFileSync(path, "utf8"));
-    if (lines > MAX_AGENT_LINES) {
-      push(problems, "instruction-budget", relPath, `${lines} lines exceeds ${MAX_AGENT_LINES}; delete before adding`);
-    }
-  }
-  const files = instructionFiles(root);
-  const total = files.reduce((sum, path) => sum + countLines(readFileSync(path, "utf8")), 0);
-  if (total > MAX_INSTRUCTION_LINES) {
-    push(
-      problems,
-      "instruction-budget",
-      "instructions",
-      `${total} lines exceeds ${MAX_INSTRUCTION_LINES}; delete a line elsewhere before adding`,
-    );
   }
   return problems;
 }
@@ -461,9 +404,6 @@ export function checkRouterWiring(root) {
     push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", "missing playbook index");
   } else {
     const text = readFileSync(index, "utf8");
-    if (countLines(text) > MAX_PLAYBOOKS_FILE_LINES) {
-      push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `${countLines(text)} lines exceeds ${MAX_PLAYBOOKS_FILE_LINES}`);
-    }
     for (const name of PLAYBOOKS) {
       if (!text.includes(`playbooks/${name}.md`)) {
         push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `index is missing ${name}`);
@@ -479,9 +419,6 @@ export function checkRouterWiring(root) {
     }
     const lines = readFileSync(path, "utf8").split("\n").filter((line) => line.trim() !== "");
     const steps = lines.filter((line) => /^\s*(?:\d+\.|-)\s+\S/.test(line));
-    if (lines.length > MAX_PLAYBOOK_LINES) {
-      push(problems, "router-wiring", file, `${lines.length} lines exceeds ${MAX_PLAYBOOK_LINES}`);
-    }
     if (steps.length < MIN_PLAYBOOK_STEPS) {
       push(problems, "router-wiring", file, `${steps.length} steps, needs at least ${MIN_PLAYBOOK_STEPS}`);
     }
@@ -587,11 +524,6 @@ export function checkPrContract(root) {
     push(problems, "pr-contract", ".github/workflows/auto-merge.yml", "missing auto-merge workflow");
   } else {
     const text = readFileSync(workflow, "utf8");
-    for (const limit of ["-le 600", "-le 20", "-le 40"]) {
-      if (!text.includes(limit)) {
-        push(problems, "pr-contract", ".github/workflows/auto-merge.yml", `missing size or body limit ${limit}`);
-      }
-    }
     if (!text.includes("(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)")) {
       push(problems, "pr-contract", ".github/workflows/auto-merge.yml", "missing conventional title check");
     }
@@ -601,13 +533,6 @@ export function checkPrContract(root) {
   }
   if (!existsSync(guard)) {
     push(problems, "pr-contract", "bin/pr_guard.py", "missing local PR guard");
-  } else {
-    const text = readFileSync(guard, "utf8");
-    for (const limit of ["MAX_LINES = 600", "MAX_FILES = 20", "MAX_BODY_LINES = 40"]) {
-      if (!text.includes(limit)) {
-        push(problems, "pr-contract", "bin/pr_guard.py", `local guard drifted from ${limit}`);
-      }
-    }
   }
   return problems;
 }
@@ -622,12 +547,11 @@ export function checkWorkflowWiring(root) {
 }
 
 const CHECKS = [
-  checkSkillBudgets,
+  checkSkillStructure,
   checkAsciiProse,
   checkCommentDiscipline,
-  checkAgentsBudget,
+  checkAgentsContract,
   checkInstructionOwners,
-  checkInstructionBudget,
   checkRelativeLinks,
   checkRouterWiring,
   checkIntakeWiring,
@@ -643,18 +567,7 @@ function selfTests() {
       join(tmp, "skills/short/SKILL.md"),
       `---\nname: short\ndescription: valid\n---\n\n# Short\n`,
     );
-    assert.deepEqual(checkSkillBudgets(tmp), [], "a valid short skill must pass");
-
-    mkdirSync(join(tmp, "skills/long"), { recursive: true });
-    writeFileSync(
-      join(tmp, "skills/long/SKILL.md"),
-      `---\nname: long\ndescription: invalid\n---\n${"- step\n".repeat(MAX_SKILL_LINES)}`,
-    );
-    const longProblems = checkSkillBudgets(tmp);
-    assert.ok(
-      longProblems.some((problem) => problem.rule === "skill-budget" && problem.file === "skills/long/SKILL.md"),
-      "a skill over the budget must fail",
-    );
+    assert.deepEqual(checkSkillStructure(tmp), [], "a valid short skill must pass");
 
     mkdirSync(join(tmp, "skills/renamed"), { recursive: true });
     writeFileSync(
@@ -662,7 +575,7 @@ function selfTests() {
       `---\nname: other\ndescription: mismatch\n---\n\n# Other\n`,
     );
     assert.ok(
-      checkSkillBudgets(tmp).some((problem) => problem.message.includes("must match the directory")),
+      checkSkillStructure(tmp).some((problem) => problem.message.includes("must match the directory")),
       "a mismatched frontmatter name must fail",
     );
 
@@ -719,10 +632,10 @@ function selfTests() {
     writeFileSync(join(tmp, "src/bad.js"), "const x = 1;\n");
 
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n");
-    assert.deepEqual(checkAgentsBudget(tmp), [], "a small enforced AGENTS.md must pass");
+    assert.deepEqual(checkAgentsContract(tmp), [], "a small enforced AGENTS.md must pass");
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Task scale\n\nlong prose\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n");
     assert.ok(
-      checkAgentsBudget(tmp).some((problem) => problem.message.includes("routing belongs in skills/engineering-loop")),
+      checkAgentsContract(tmp).some((problem) => problem.message.includes("routing belongs in skills/engineering-loop")),
       "task-scale routing in AGENTS.md must fail",
     );
 
@@ -767,11 +680,11 @@ function selfTests() {
     mkdirSync(join(tmp, "bin"), { recursive: true });
     writeFileSync(
       join(tmp, ".github/workflows/auto-merge.yml"),
-      "test additions -le 600\ntest files -le 20\ntest body -le 40\n(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)\nWhy|What changed|Scope|Blast Radius|Verification\n",
+      "(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)\nWhy|What changed|Scope|Blast Radius|Verification\n",
     );
     writeFileSync(
       join(tmp, "bin/pr_guard.py"),
-      "MAX_LINES = 600\nMAX_FILES = 20\nMAX_BODY_LINES = 40\n",
+      "def body_problems(body):\n    return []\n",
     );
     assert.deepEqual(checkWorkflowWiring(tmp), [], "complete wiring must pass");
 
@@ -847,31 +760,6 @@ function selfTests() {
       "a second skill table must fail",
     );
     writeFileSync(join(tmp, "README.md"), "See [skills](skills/README.md).\n");
-
-    writeFileSync(
-      join(tmp, "agents/big.md"),
-      "- step\n".repeat(MAX_AGENT_LINES + 1),
-    );
-    assert.ok(
-      checkInstructionBudget(tmp).some(
-        (problem) =>
-          problem.rule === "instruction-budget" &&
-          problem.file === "agents/big.md",
-      ),
-      "an agent over the fixed cap must fail",
-    );
-    rmSync(join(tmp, "agents/big.md"));
-    writeFileSync(
-      join(tmp, "commands/huge.md"),
-      "- step\n".repeat(MAX_INSTRUCTION_LINES + 1),
-    );
-    assert.ok(
-      checkInstructionBudget(tmp).some((problem) =>
-        problem.message.includes("delete a line elsewhere"),
-      ),
-      "net instruction growth must fail",
-    );
-    rmSync(join(tmp, "commands/huge.md"));
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }

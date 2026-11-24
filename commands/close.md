@@ -61,12 +61,12 @@ Do not edit feature code in this turn.
    the smoke JSON path when one exists, and the review artifact path:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> done --evidence "<commands and results>"`.
 10. If the task is mergeable and a forge is configured, use the `shipping`
-    skill. Split first if the diff exceeds 600 lines or 20 files. Open one
-    ready PR with a `type(scope): subject` title and a body of at most 40
-    lines. Stay active until `bin/pr_guard.py land` merges the exact reviewed
-    head, or one actionable blocker is recorded. Fix CI, rebase your own branch,
-    or close a superseded oversized PR; do not leave an open ready PR for the
-    operator to finish. If no forge resolves, print the manual PR and merge
-    commands and stop. Never push directly to main.
+    skill. Open one ready PR that one reviewer can review in one sitting, with
+    a `type(scope): subject` title and the required body headings. Stay active
+    until `bin/pr_guard.py land` merges the exact reviewed head, or one
+    actionable blocker is recorded. Fix CI, rebase your own branch, or close a
+    superseded PR; do not leave an open ready PR for the operator to finish. If
+    no forge resolves, print the manual PR and merge commands and stop. Never
+    push directly to main.
 11. Show what passed, what remains unproven, the PR state, and the next action.
     Stop.
