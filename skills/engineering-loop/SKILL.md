@@ -16,8 +16,9 @@ Restate the goal and the smallest change that meets it. Then route.
 
 ## Playbook router
 
-Match the request to one row, open `references/playbooks.md`, and copy that
-section's steps into the todo list before touching code.
+Match the request to one row, open only `references/playbooks/<id>.md`, and
+copy its steps into the todo list before touching code. Use
+`references/playbooks.md` as the index, not as the invocation text.
 
 | Playbook | Use when | Proof |
 |---|---|---|

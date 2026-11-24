@@ -63,9 +63,9 @@ function frontmatterName(text) {
 export function validateWorkflow(home) {
   const errors = [];
   const skillPath = join(home, "skills/engineering-loop/SKILL.md");
-  const referencePath = join(
+  const referenceDir = join(
     home,
-    "skills/engineering-loop/references/playbooks.md",
+    "skills/engineering-loop/references/playbooks",
   );
   let skill = "";
   try {
@@ -82,17 +82,15 @@ export function validateWorkflow(home) {
     }
   }
   const playbooks = new Set();
-  let reference = "";
   try {
-    reference = readFileSync(referencePath, "utf8");
+    for (const name of readdirSync(referenceDir)) {
+      if (name.endsWith(".md")) playbooks.add(name.slice(0, -3));
+    }
   } catch {
-    errors.push(`missing ${referencePath}`);
-  }
-  for (const match of reference.matchAll(/^##\s+([a-z][a-z-]+)\s*$/gm)) {
-    playbooks.add(match[1]);
+    errors.push(`missing ${referenceDir}`);
   }
   for (const id of PLAYBOOK_IDS) {
-    if (!playbooks.has(id)) errors.push(`missing playbook section ${id}`);
+    if (!playbooks.has(id)) errors.push(`missing playbook ${id}`);
   }
   return { ok: errors.length === 0, errors, playbooks };
 }
@@ -170,7 +168,9 @@ function routeLine(decision) {
 function queueNotice(id, decision) {
   return (
     `[queue] Task ${id} was created for this request. ${routeLine(decision)} ` +
-    `(playbook: ${decision.playbook}). For one reviewable diff, write concrete ` +
+    `(playbook: ${decision.playbook}; read only ` +
+    `skills/engineering-loop/references/playbooks/${decision.playbook}.md). ` +
+    `For one reviewable diff, write concrete ` +
     `acceptance plus the Data shape and Verify lines, claim it, then work in ` +
     `this turn. Use /brief only for a multi-deliverable or ambiguous request. ` +
     `Implement, verify, review, close, and ship. Honor a playbook the user ` +
@@ -182,7 +182,8 @@ function queueNotice(id, decision) {
 function reusedNotice(id, decision) {
   return (
     `[queue] Existing task ${id} matches this request. Use it; do not create ` +
-    `a duplicate. ${routeLine(decision)} (playbook: ${decision.playbook}). ` +
+    `a duplicate. ${routeLine(decision)} (playbook: ${decision.playbook}; read ` +
+    `only skills/engineering-loop/references/playbooks/${decision.playbook}.md). ` +
     `For one reviewable diff, complete the acceptance, Data shape, and Verify ` +
     `lines, claim it, then work in this turn; use /brief only when scope is ` +
     `still ambiguous. Then implement, verify, review, close, and ship.`

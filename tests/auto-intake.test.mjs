@@ -260,15 +260,10 @@ invalidCases.push(["wrong skill name", renamedHome]);
 const sectionHome = tempHome("section");
 const playbookPath = join(
   sectionHome,
-  "skills/engineering-loop/references/playbooks.md",
+  "skills/engineering-loop/references/playbooks/feature.md",
 );
-const playbookText = readFileSync(playbookPath, "utf8");
-const sectionEnd = playbookText.indexOf("\n## ", playbookText.indexOf("## feature"));
-const withoutFeature =
-  playbookText.slice(0, playbookText.indexOf("## feature")) +
-  playbookText.slice(sectionEnd + 1);
-writeFileSync(playbookPath, withoutFeature);
-invalidCases.push(["missing playbook section", sectionHome]);
+rmSync(playbookPath);
+invalidCases.push(["missing playbook file", sectionHome]);
 
 for (const [label, home] of invalidCases) {
   const before = taskFiles().length;

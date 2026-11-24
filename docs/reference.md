@@ -293,7 +293,8 @@ The map lives in [skills/README.md](../skills/README.md).
 
 `engineering-loop` maps a request to `investigation`, `bug-fix`, `feature`,
 `refactoring`, `perf`, `hillclimb`, `autonomous-multiphase`, or `correct`. The
-checklists live in `skills/engineering-loop/references/playbooks.md`. Per-rule
+index lives in `skills/engineering-loop/references/playbooks.md`; only the
+selected checklist under `references/playbooks/<id>.md` is loaded. Per-rule
 encodings live in `skills/correct/references/rule-ledger.md`.
 
 ## Agents

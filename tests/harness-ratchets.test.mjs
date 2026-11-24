@@ -26,7 +26,7 @@ export const MAX_INSTRUCTION_LINES = 2437;
 export const MAX_ENFORCEMENT_ROWS = 4;
 export const MAX_PLAYBOOK_LINES = 25;
 export const MIN_PLAYBOOK_STEPS = 3;
-export const MAX_PLAYBOOKS_FILE_LINES = 180;
+export const MAX_PLAYBOOKS_FILE_LINES = 40;
 
 export const ASCII_IGNORE_GLOBS = [
   "CHANGELOG.md",
@@ -443,40 +443,47 @@ export function checkRelativeLinks(root) {
 export function checkRouterWiring(root) {
   const problems = [];
   const router = join(root, "skills/engineering-loop/SKILL.md");
-  const playbooks = join(root, "skills/engineering-loop/references/playbooks.md");
+  const index = join(root, "skills/engineering-loop/references/playbooks.md");
+  const playbooks = join(root, "skills/engineering-loop/references/playbooks");
 
   for (const heading of ["## Playbook router", "## Fallback"]) {
     if (!hasHeading(router, heading)) push(problems, "router-wiring", "skills/engineering-loop/SKILL.md", `missing ${heading}`);
   }
-  if (!has(router, "references/playbooks.md")) {
-    push(problems, "router-wiring", "skills/engineering-loop/SKILL.md", "must link references/playbooks.md");
+  if (!has(router, "references/playbooks/")) {
+    push(problems, "router-wiring", "skills/engineering-loop/SKILL.md", "must load references/playbooks/<id>.md");
   }
   for (const name of PLAYBOOKS) {
     if (!has(router, `\`${name}\``)) {
       push(problems, "router-wiring", "skills/engineering-loop/SKILL.md", `router table is missing \`${name}\``);
     }
   }
-  if (!existsSync(playbooks)) {
-    push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", "missing playbook reference");
+  if (!existsSync(index)) {
+    push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", "missing playbook index");
   } else {
-    const text = readFileSync(playbooks, "utf8");
+    const text = readFileSync(index, "utf8");
     if (countLines(text) > MAX_PLAYBOOKS_FILE_LINES) {
       push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `${countLines(text)} lines exceeds ${MAX_PLAYBOOKS_FILE_LINES}`);
     }
     for (const name of PLAYBOOKS) {
-      const body = section(text, `## ${name}`);
-      if (body === null) {
-        push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `missing playbook section ${name}`);
-        continue;
+      if (!text.includes(`playbooks/${name}.md`)) {
+        push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `index is missing ${name}`);
       }
-      const lines = body.split("\n").filter((line) => line.trim() !== "");
-      const steps = lines.filter((line) => /^\s*(?:\d+\.|-)\s+\S/.test(line));
-      if (lines.length > MAX_PLAYBOOK_LINES) {
-        push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `${name} has ${lines.length} lines, cap is ${MAX_PLAYBOOK_LINES}`);
-      }
-      if (steps.length < MIN_PLAYBOOK_STEPS) {
-        push(problems, "router-wiring", "skills/engineering-loop/references/playbooks.md", `${name} has ${steps.length} steps, needs at least ${MIN_PLAYBOOK_STEPS}`);
-      }
+    }
+  }
+  for (const name of PLAYBOOKS) {
+    const file = `skills/engineering-loop/references/playbooks/${name}.md`;
+    const path = join(root, file);
+    if (!existsSync(path)) {
+      push(problems, "router-wiring", file, "missing playbook file");
+      continue;
+    }
+    const lines = readFileSync(path, "utf8").split("\n").filter((line) => line.trim() !== "");
+    const steps = lines.filter((line) => /^\s*(?:\d+\.|-)\s+\S/.test(line));
+    if (lines.length > MAX_PLAYBOOK_LINES) {
+      push(problems, "router-wiring", file, `${lines.length} lines exceeds ${MAX_PLAYBOOK_LINES}`);
+    }
+    if (steps.length < MIN_PLAYBOOK_STEPS) {
+      push(problems, "router-wiring", file, `${steps.length} steps, needs at least ${MIN_PLAYBOOK_STEPS}`);
     }
   }
   return problems;
@@ -693,15 +700,21 @@ function selfTests() {
       "a broken relative link must fail",
     );
 
-    mkdirSync(join(tmp, "skills/engineering-loop/references"), { recursive: true });
+    mkdirSync(join(tmp, "skills/engineering-loop/references/playbooks"), { recursive: true });
     writeFileSync(
       join(tmp, "skills/engineering-loop/SKILL.md"),
-      `# Router\n\n## Playbook router\n\n${PLAYBOOKS.map((name) => `| \`${name}\` | use |`).join("\n")}\n\nSee references/playbooks.md.\n\n## Fallback\n\nUse feature.\n`,
+      `# Router\n\n## Playbook router\n\n${PLAYBOOKS.map((name) => `| \`${name}\` | use |`).join("\n")}\n\nSee references/playbooks/<id>.md.\n\n## Fallback\n\nUse feature.\n`,
     );
     writeFileSync(
       join(tmp, "skills/engineering-loop/references/playbooks.md"),
-      PLAYBOOKS.map((name) => `## ${name}\n\n1. one\n2. two\n3. three\n`).join("\n"),
+      PLAYBOOKS.map((name) => `- [${name}](playbooks/${name}.md)`).join("\n"),
     );
+    for (const name of PLAYBOOKS) {
+      writeFileSync(
+        join(tmp, "skills/engineering-loop/references/playbooks", `${name}.md`),
+        "1. one\n2. two\n3. three\n",
+      );
+    }
     mkdirSync(join(tmp, "skills/no-comments"), { recursive: true });
     writeFileSync(join(tmp, "skills/no-comments/SKILL.md"), "# No comments\n\n## Keep exceptions\n\nMUST KILL workarounds.\n");
     mkdirSync(join(tmp, "skills/correct"), { recursive: true });
@@ -717,10 +730,14 @@ function selfTests() {
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n");
     assert.deepEqual(checkWorkflowWiring(tmp), [], "complete wiring must pass");
 
-    writeFileSync(join(tmp, "skills/engineering-loop/references/playbooks.md"), "## perf\n\n1. one\n");
+    writeFileSync(join(tmp, "skills/engineering-loop/references/playbooks/perf.md"), "1. one\n");
     assert.ok(
       checkWorkflowWiring(tmp).some((problem) => problem.message.includes("needs at least")),
-      "a hollow playbook section must fail",
+      "a hollow playbook file must fail",
+    );
+    writeFileSync(
+      join(tmp, "skills/engineering-loop/references/playbooks/perf.md"),
+      "1. one\n2. two\n3. three\n",
     );
 
     writeFileSync(join(tmp, "plugins/auto-intake.js"), 'export const PLAYBOOK_IDS = ["bug-fix"];\nexport function routePrompt() {}\n');
