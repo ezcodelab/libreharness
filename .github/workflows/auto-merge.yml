@@ -73,13 +73,34 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          meta=$(gh pr view "$PR" --json state,isDraft,baseRefName,headRefOid,labels,additions,deletions,files)
+          meta=$(gh pr view "$PR" --json state,isDraft,baseRefName,headRefOid,labels,additions,deletions,files,title,body)
           test "$(jq -r .state <<<"$meta")" = "OPEN"
           test "$(jq -r .isDraft <<<"$meta")" = "false"
           test "$(jq -r .baseRefName <<<"$meta")" = "main"
           test "$(jq -r .headRefOid <<<"$meta")" = "$HEAD"
-          test "$(jq -r '.additions + .deletions' <<<"$meta")" -le 2000
-          test "$(jq -r '.files | length' <<<"$meta")" -le 50
+          test "$(jq -r '.additions + .deletions' <<<"$meta")" -le 600
+          test "$(jq -r '.files | length' <<<"$meta")" -le 20
+
+          title=$(jq -r .title <<<"$meta")
+          if ! printf '%s' "$title" | grep -Eq '^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)(\([^)]+\))?: .+$'; then
+            echo "title must be type(scope): subject: $title"
+            exit 1
+          fi
+          body=$(jq -r .body <<<"$meta")
+          test "$(printf '%s' "$body" | awk 'END {print NR}')" -le 40
+          printf '%s\n' "$body" | awk '
+            BEGIN { split("Why|What changed|Scope|Blast Radius|Verification", want, "|"); i = 1 }
+            /^## / {
+              name = substr($0, 4)
+              if (name == "Tradeoffs") next
+              if (i > 5 || name != want[i]) exit 1
+              i++
+            }
+            END { if (i != 6) exit 1 }
+          ' || {
+            echo "body needs the ordered headings: Why, What changed, Scope, Tradeoffs (optional), Blast Radius, Verification"
+            exit 1
+          }
           if jq -r '.labels[].name' <<<"$meta" | grep -Eq '^(do-not-merge|no-auto-merge|wip)$'; then
             echo "blocked label present"
             exit 1

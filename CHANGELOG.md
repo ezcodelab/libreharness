@@ -12,6 +12,14 @@
   lines of slack, and a total budget fails on net growth until a line is
   deleted. The numbers live in `tests/harness-ratchets.test.mjs`.
 
+### Pull requests
+
+- Add a PR contract: at most 600 changed lines, 20 files, and 40 body lines,
+  with a `type(scope): subject` title and ordered briefing headings.
+- `bin/pr_guard.py` checks the local committed diff before opening and lands an
+  exact-head PR after required checks, returning one actionable next action.
+- Auto-merge enforces the same size, title, and body rules in CI.
+
 ### Cost and verification
 
 - Add a local usage ledger for provider-reported cost, token classes, model
