@@ -889,6 +889,18 @@ def set_status(
                     "error: done needs real evidence, not a placeholder "
                     "('none', 'ok', 'tests pass', ...)"
                 )
+            if task["meta"].get("kind") != "goal":
+                worktree = task["meta"].get("worktree", "")
+                target = (
+                    repo
+                    or (Path(worktree).expanduser() if worktree else None)
+                    or Path.cwd()
+                )
+                if validate_review(root, task["meta"]["id"], Path(target)) != 0:
+                    raise SystemExit(
+                        "error: done needs a PASS review artifact at the current "
+                        "HEAD and diff"
+                    )
             if task["meta"].get("kind") == "goal":
                 children = children_of(root, task["meta"]["id"])
                 if not children:
@@ -953,6 +965,7 @@ def append_metric(root: Path, task: dict) -> None:
 
 REVIEW_VERDICTS = ("PASS", "UNVERIFIED")
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
+SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 def review_path(root: Path, task_id: str) -> Path:
@@ -1167,6 +1180,53 @@ def git_head(repo: Path) -> str:
     return head
 
 
+def git_bytes(repo: Path, args: list[str], label: str) -> bytes:
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.decode("utf-8", "replace").strip()
+        raise SystemExit(f"review: cannot {label}: {detail or 'git failed'}")
+    return result.stdout
+
+
+def review_diff(repo: Path) -> str:
+    repo = repo.resolve()
+    head = git_head(repo)
+    diff = git_bytes(
+        repo,
+        ["diff", "--binary", "--no-ext-diff", "HEAD", "--"],
+        "read the reviewed diff",
+    )
+    untracked = git_bytes(
+        repo,
+        ["ls-files", "--others", "--exclude-standard", "-z"],
+        "list untracked files",
+    )
+    digest = hashlib.sha256()
+    digest.update(b"head\0")
+    digest.update(head.encode("ascii"))
+    digest.update(b"\0diff\0")
+    digest.update(diff)
+    digest.update(b"\0untracked\0")
+    for raw in sorted(item for item in untracked.split(b"\0") if item):
+        relative = os.fsdecode(raw)
+        path = (repo / relative).resolve()
+        if not inside(path, repo) or not path.is_file():
+            raise SystemExit(f"review: untracked path is not a repository file: {relative}")
+        object_id = git_bytes(
+            repo,
+            ["hash-object", "--no-filters", "--", relative],
+            "hash an untracked file",
+        ).strip()
+        digest.update(raw)
+        digest.update(b"\0")
+        digest.update(object_id)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def validate_review(root: Path, task_id: str, repo: Path) -> int:
     path = review_path(root, task_id)
     problems: list[str] = []
@@ -1190,10 +1250,17 @@ def validate_review(root: Path, task_id: str, repo: Path) -> int:
         head = data.get("head")
         if not isinstance(head, str) or not SHA40.match(head):
             problems.append("artifact head must be a full 40-character git sha")
-        elif head != git_head(repo):
-            problems.append(
-                f"artifact head {head} is stale; current HEAD is {git_head(repo)}"
-            )
+        else:
+            current_head = git_head(repo)
+            if head != current_head:
+                problems.append(
+                    f"artifact head {head} is stale; current HEAD is {current_head}"
+                )
+        diff_sha256 = data.get("diff_sha256")
+        if not isinstance(diff_sha256, str) or not SHA256.match(diff_sha256):
+            problems.append("artifact diff_sha256 must be a 64-character hex digest")
+        elif diff_sha256 != review_diff(repo):
+            problems.append("artifact diff is stale; the working diff changed")
         verdict = data.get("verdict")
         if verdict not in REVIEW_VERDICTS:
             problems.append(f"unknown verdict {verdict!r}")
@@ -1271,6 +1338,7 @@ def review_task(
                 {
                     "task": task_id,
                     "head": head,
+                    "diff_sha256": review_diff(repo),
                     "verdict": "UNVERIFIED",
                     "checks": checks,
                 },
@@ -1308,6 +1376,7 @@ def review_task(
             {
                 "task": task_id,
                 "head": head_after,
+                "diff_sha256": review_diff(repo),
                 "verdict": "PASS" if passed else "UNVERIFIED",
                 "checks": checks,
             },

@@ -55,6 +55,7 @@ class QueueTests(unittest.TestCase):
                 {
                     "task": task["meta"]["id"],
                     "head": tasks.git_head(repo or self.repo),
+                    "diff_sha256": tasks.review_diff(repo or self.repo),
                     "verdict": "PASS",
                     "checks": [{"command": verify, "exit": 0}],
                 }
@@ -78,6 +79,7 @@ class QueueTests(unittest.TestCase):
             task["meta"]["id"],
             "done",
             evidence="make test: 12 passed",
+            repo=self.repo,
         )
         self.assertEqual(done["meta"]["status"], "done")
         log = (self.root / "metrics/workflow-log.csv").read_text()
@@ -99,8 +101,35 @@ class QueueTests(unittest.TestCase):
             tasks.set_status(self.root, task["meta"]["id"], "done", evidence="none")
         with self.assertRaises(SystemExit):
             tasks.set_status(self.root, task["meta"]["id"], "done", evidence="tests pass")
+        self.pass_review(task)
         done = tasks.set_status(
-            self.root, task["meta"]["id"], "done", evidence="make check: 42 passed"
+            self.root,
+            task["meta"]["id"],
+            "done",
+            evidence="make check: 42 passed",
+            repo=self.repo,
+        )
+        self.assertEqual(done["meta"]["status"], "done")
+
+    def test_done_requires_review_artifact(self) -> None:
+        task = self.make_task("Needs review", acceptance="- [x] proof exists")
+        tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
+        with self.assertRaises(SystemExit) as caught:
+            tasks.set_status(
+                self.root,
+                task["meta"]["id"],
+                "done",
+                evidence="make check: 42 passed",
+                repo=self.repo,
+            )
+        self.assertIn("review artifact", str(caught.exception))
+        self.pass_review(task)
+        done = tasks.set_status(
+            self.root,
+            task["meta"]["id"],
+            "done",
+            evidence="make check: 42 passed",
+            repo=self.repo,
         )
         self.assertEqual(done["meta"]["status"], "done")
 
@@ -171,9 +200,22 @@ class QueueTests(unittest.TestCase):
             "Reopened", acceptance="- [x] reopened"
         )
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
-        tasks.set_status(self.root, task["meta"]["id"], "done", evidence="make check: 1 passed")
+        self.pass_review(task)
+        tasks.set_status(
+            self.root,
+            task["meta"]["id"],
+            "done",
+            evidence="make check: 1 passed",
+            repo=self.repo,
+        )
         tasks.set_status(self.root, task["meta"]["id"], "active")
-        tasks.set_status(self.root, task["meta"]["id"], "done", evidence="make check: 2 passed")
+        tasks.set_status(
+            self.root,
+            task["meta"]["id"],
+            "done",
+            evidence="make check: 2 passed",
+            repo=self.repo,
+        )
         rows = (self.root / "metrics/workflow-log.csv").read_text().splitlines()
         self.assertEqual(len(rows), 2)  # header + one task row
 
@@ -186,7 +228,14 @@ class QueueTests(unittest.TestCase):
         )
         self.assertFalse(tasks.is_unblocked(self.root, second)[0])
         tasks.claim_task(self.root, first["meta"]["id"], owner="lane-a")
-        tasks.set_status(self.root, first["meta"]["id"], "done", evidence="unit: ok")
+        self.pass_review(first)
+        tasks.set_status(
+            self.root,
+            first["meta"]["id"],
+            "done",
+            evidence="unit: ok",
+            repo=self.repo,
+        )
         self.assertTrue(tasks.is_unblocked(self.root, second)[0])
         self.assertEqual(tasks.validate(self.root), 0)
 
@@ -254,7 +303,14 @@ class QueueTests(unittest.TestCase):
                 self.root, goal["meta"]["id"], "done", evidence="demo: not yet"
             )
         tasks.claim_task(self.root, child["meta"]["id"], owner="lane-a")
-        tasks.set_status(self.root, child["meta"]["id"], "done", evidence="pytest: 4 passed")
+        self.pass_review(child)
+        tasks.set_status(
+            self.root,
+            child["meta"]["id"],
+            "done",
+            evidence="pytest: 4 passed",
+            repo=self.repo,
+        )
         done = tasks.set_status(
             self.root, goal["meta"]["id"], "done", evidence="child evidence checked"
         )
@@ -601,6 +657,7 @@ class PlanContractTests(unittest.TestCase):
                 {
                     "task": task["meta"]["id"],
                     "head": tasks.git_head(self.repo),
+                    "diff_sha256": tasks.review_diff(self.repo),
                     "verdict": "PASS",
                     "checks": [
                         {
@@ -645,6 +702,7 @@ class ReviewArtifactTests(unittest.TestCase):
             "    def test_bad(self):\n"
             "        self.assertTrue(False)\n"
         )
+        (self.repo / ".gitignore").write_text("__pycache__/\n*.pyc\n")
         subprocess.run(["git", "init", "-q", "-b", "main", str(self.repo)], check=True)
         subprocess.run(["git", "-C", str(self.repo), "config", "user.email", "test@example.com"], check=True)
         subprocess.run(["git", "-C", str(self.repo), "config", "user.name", "Test"], check=True)
@@ -690,6 +748,35 @@ class ReviewArtifactTests(unittest.TestCase):
         self.assertEqual(payload["verdict"], "PASS")
         self.assertEqual(payload["head"], tasks.git_head(self.repo))
         self.assertEqual(payload["checks"], [{"command": verify, "exit": 0}])
+
+    def test_changed_worktree_invalidates_pass(self) -> None:
+        verify = "python3 -m unittest tests.test_ok -v"
+        task = self.make_task(verify)
+        task_id = task["meta"]["id"]
+        self.assertEqual(
+            tasks.review_task(
+                self.root, task_id, repo=self.repo, runs=[verify]
+            ),
+            0,
+        )
+        untracked = self.repo / "new_file.txt"
+        untracked.write_text("new\n")
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+        untracked.unlink()
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 0
+        )
+        (self.repo / "tests/test_ok.py").write_text(
+            "import unittest\n\n"
+            "class Ok(unittest.TestCase):\n"
+            "    def test_ok(self):\n"
+            "        self.assertTrue(True)\n\n"
+        )
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
 
     def test_second_verify_command_passes_only_when_it_ran(self) -> None:
         verify = "python3 -m unittest tests.test_goal_start -v"
@@ -763,6 +850,7 @@ class ReviewArtifactTests(unittest.TestCase):
                 {
                     "task": task_id,
                     "head": tasks.git_head(self.repo),
+                    "diff_sha256": tasks.review_diff(self.repo),
                     "verdict": "PASS",
                     "checks": [],
                 }
@@ -777,6 +865,7 @@ class ReviewArtifactTests(unittest.TestCase):
                 {
                     "task": task_id,
                     "head": tasks.git_head(self.repo),
+                    "diff_sha256": tasks.review_diff(self.repo),
                     "verdict": "PASS",
                     "checks": [{"command": verify, "exit": 1}],
                 }
@@ -791,6 +880,7 @@ class ReviewArtifactTests(unittest.TestCase):
                 {
                     "task": task_id,
                     "head": tasks.git_head(self.repo),
+                    "diff_sha256": tasks.review_diff(self.repo),
                     "verdict": "PASS",
                     "checks": [
                         {
