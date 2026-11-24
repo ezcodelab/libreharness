@@ -51,11 +51,15 @@ not throughput.
 4. Each lane works only in its worktree. It does not edit shared config, the
    state, or another lane's files.
 5. At a pause, `/handoff <task>`; at review, `/review <task>`.
-6. For a goal, `/close <goal>` runs the integration in the declared order,
-   resolves no conflicts by guessing, reruns the full check on the merged tree,
-   and reviews the merged diff. Use the `integrator` agent directly only for an
-   explicit branch set.
-7. A green lane is not a green integration. Close each task with its own
+6. Close and ship each independent child as its own PR off trunk. Run those
+   owners in parallel only while their paths stay disjoint. Stack dependent
+   children by base branch and land bottom-up. Use the `integrator` agent only
+   for an explicit branch set that cannot land independently.
+7. For a goal, `/close <goal>` verifies merged child PRs and reruns the full
+   check on current trunk. It does not combine independent lanes into one large
+   integration PR. Integrate only for a cross-lane acceptance, and split that
+   integration by review boundary.
+8. A green lane is not a green integration. Close each task with its own
    evidence, then close the goal.
 
 ## Stop conditions

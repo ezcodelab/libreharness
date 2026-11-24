@@ -579,11 +579,45 @@ export function checkIntakeWiring(root) {
   return problems;
 }
 
+export function checkPrContract(root) {
+  const problems = [];
+  const workflow = join(root, ".github/workflows/auto-merge.yml");
+  const guard = join(root, "bin/pr_guard.py");
+  if (!existsSync(workflow)) {
+    push(problems, "pr-contract", ".github/workflows/auto-merge.yml", "missing auto-merge workflow");
+  } else {
+    const text = readFileSync(workflow, "utf8");
+    for (const limit of ["-le 600", "-le 20", "-le 40"]) {
+      if (!text.includes(limit)) {
+        push(problems, "pr-contract", ".github/workflows/auto-merge.yml", `missing size or body limit ${limit}`);
+      }
+    }
+    if (!text.includes("(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)")) {
+      push(problems, "pr-contract", ".github/workflows/auto-merge.yml", "missing conventional title check");
+    }
+    if (!text.includes("Why|What changed|Scope|Blast Radius|Verification")) {
+      push(problems, "pr-contract", ".github/workflows/auto-merge.yml", "missing ordered body headings");
+    }
+  }
+  if (!existsSync(guard)) {
+    push(problems, "pr-contract", "bin/pr_guard.py", "missing local PR guard");
+  } else {
+    const text = readFileSync(guard, "utf8");
+    for (const limit of ["MAX_LINES = 600", "MAX_FILES = 20", "MAX_BODY_LINES = 40"]) {
+      if (!text.includes(limit)) {
+        push(problems, "pr-contract", "bin/pr_guard.py", `local guard drifted from ${limit}`);
+      }
+    }
+  }
+  return problems;
+}
+
 export function checkWorkflowWiring(root) {
   return [
     ...checkRouterWiring(root),
     ...checkIntakeWiring(root),
     ...checkPolicyWiring(root),
+    ...checkPrContract(root),
   ];
 }
 
@@ -598,6 +632,7 @@ const CHECKS = [
   checkRouterWiring,
   checkIntakeWiring,
   checkPolicyWiring,
+  checkPrContract,
 ];
 
 function selfTests() {
@@ -728,6 +763,16 @@ function selfTests() {
     mkdirSync(join(tmp, "plugins"), { recursive: true });
     writeFileSync(join(tmp, "plugins/auto-intake.js"), `export const PLAYBOOK_IDS = ${JSON.stringify(PLAYBOOKS)};\nexport function routePrompt(text) { return text; }\n`);
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n");
+    mkdirSync(join(tmp, ".github/workflows"), { recursive: true });
+    mkdirSync(join(tmp, "bin"), { recursive: true });
+    writeFileSync(
+      join(tmp, ".github/workflows/auto-merge.yml"),
+      "test additions -le 600\ntest files -le 20\ntest body -le 40\n(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)\nWhy|What changed|Scope|Blast Radius|Verification\n",
+    );
+    writeFileSync(
+      join(tmp, "bin/pr_guard.py"),
+      "MAX_LINES = 600\nMAX_FILES = 20\nMAX_BODY_LINES = 40\n",
+    );
     assert.deepEqual(checkWorkflowWiring(tmp), [], "complete wiring must pass");
 
     writeFileSync(join(tmp, "skills/engineering-loop/references/playbooks/perf.md"), "1. one\n");

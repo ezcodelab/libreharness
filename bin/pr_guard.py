@@ -9,6 +9,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 MAX_LINES = 600
@@ -19,6 +20,10 @@ TITLE = re.compile(
     r"(\([^)]+\))?: \S.+$"
 )
 HEADINGS = ("Why", "What changed", "Scope", "Blast Radius", "Verification")
+TRANSIENT = re.compile(
+    r"something went wrong|timed out|timeout|connection reset|http 5\d\d",
+    re.IGNORECASE,
+)
 
 
 class GuardError(RuntimeError):
@@ -156,11 +161,25 @@ def pr_view(pr: str, repo: Path | None = None) -> dict:
 
 
 def wait_checks(pr: str, repo: Path | None = None) -> None:
-    run(["gh", "pr", "checks", pr, "--watch", "--required", "--interval", "20"], repo)
+    for attempt in range(3):
+        try:
+            run(
+                ["gh", "pr", "checks", pr, "--watch", "--required", "--interval", "20"],
+                repo,
+            )
+            return
+        except GuardError as exc:
+            if attempt == 2 or not TRANSIENT.search(str(exc)):
+                raise
+            time.sleep(5)
 
 
 def merge_pr(pr: str, head: str, repo: Path | None = None) -> None:
     run(["gh", "pr", "merge", pr, "--merge", "--match-head-commit", head], repo)
+
+
+def is_merged(view: dict) -> bool:
+    return bool(view.get("mergedAt")) or view.get("state") == "MERGED"
 
 
 def land(
@@ -172,9 +191,10 @@ def land(
     view=pr_view,
     checks=wait_checks,
     merge=merge_pr,
+    pause=time.sleep,
 ) -> dict:
     current = view(pr, repo)
-    if current.get("mergedAt") or current.get("state") == "MERGED":
+    if is_merged(current):
         return {"ok": True, "pr": pr, "head": expected_head, "state": "MERGED"}
     problems, next_action = pr_checks(
         current,
@@ -194,7 +214,7 @@ def land(
         checks(pr, repo)
     except GuardError as exc:
         current = view(pr, repo)
-        if current.get("mergedAt") or current.get("state") == "MERGED":
+        if is_merged(current):
             return {"ok": True, "pr": pr, "head": expected_head, "state": "MERGED"}
         return {
             "ok": False,
@@ -213,6 +233,14 @@ def land(
             "problems": ["head moved while checks ran; review the new head"],
         }
     mergeable = current.get("mergeable")
+    for _attempt in range(6):
+        if mergeable != "UNKNOWN":
+            break
+        pause(5)
+        current = view(pr, repo)
+        if is_merged(current):
+            return {"ok": True, "pr": pr, "head": expected_head, "state": "MERGED"}
+        mergeable = current.get("mergeable")
     if mergeable == "UNKNOWN":
         return {
             "ok": False,
@@ -233,7 +261,7 @@ def land(
         merge(pr, expected_head, repo)
     except GuardError as exc:
         current = view(pr, repo)
-        if current.get("mergedAt") or current.get("state") == "MERGED":
+        if is_merged(current):
             return {"ok": True, "pr": pr, "head": expected_head, "state": "MERGED"}
         return {
             "ok": False,

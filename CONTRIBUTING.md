@@ -106,9 +106,13 @@ License.
 
 ## Pull request checklist
 
-- [ ] One task, one reviewable diff. The change does not mix unrelated work.
+- [ ] One task, one reviewable PR. The change does not mix unrelated work.
+- [ ] The PR is at most 600 changed lines, 20 files, and 40 body lines.
+- [ ] The title is `type(scope): subject`; the body has `Why`, `What changed`,
+      `Scope`, optional `Tradeoffs`, `Blast Radius`, and `Verification`.
 - [ ] The task has scope, acceptance, and evidence in the queue.
 - [ ] Tests were run, and the exact command and result are in the pull request.
+- [ ] The owner stays through required checks and merge, or records one blocker.
 - [ ] New behavior has a test or a measured check.
 - [ ] No secret, private path, hostname, personal data, or generated state.
 - [ ] New files have the correct SPDX header.

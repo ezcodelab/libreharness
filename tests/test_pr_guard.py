@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin"))
 import pr_guard  # noqa: E402
@@ -154,6 +155,62 @@ class PrGuardTests(unittest.TestCase):
         self.assertEqual(result["state"], "MERGED")
         self.assertEqual(calls[0][0], "checks")
         self.assertEqual(calls[1], ("merge", "1", "a" * 40, self.repo))
+
+    def test_check_wait_retries_a_transient_forge_error(self) -> None:
+        ok = subprocess.CompletedProcess([], 0, "", "")
+        with mock.patch.object(
+            pr_guard,
+            "run",
+            side_effect=[
+                pr_guard.GuardError("GraphQL: Something went wrong"),
+                ok,
+            ],
+        ), mock.patch.object(pr_guard.time, "sleep", return_value=None):
+            pr_guard.wait_checks("1", self.repo)
+
+    def test_check_wait_does_not_retry_a_real_failure(self) -> None:
+        with mock.patch.object(
+            pr_guard,
+            "run",
+            side_effect=pr_guard.GuardError("lint failed"),
+        ) as run:
+            with self.assertRaises(pr_guard.GuardError):
+                pr_guard.wait_checks("1", self.repo)
+        self.assertEqual(run.call_count, 1)
+
+    def test_land_recognizes_concurrent_auto_merge(self) -> None:
+        unknown = {**PR_DATA, "mergeable": "UNKNOWN"}
+        merged = {**PR_DATA, "state": "MERGED", "mergedAt": "now"}
+        views = iter([PR_DATA, unknown, merged])
+        result = pr_guard.land(
+            "1",
+            "a" * 40,
+            repo=self.repo,
+            base="main",
+            view=lambda _pr, _repo: next(views),
+            checks=lambda _pr, _repo: None,
+            merge=lambda *_args: None,
+            pause=lambda _seconds: None,
+        )
+        self.assertTrue(result["ok"], result.get("problems"))
+        self.assertEqual(result["state"], "MERGED")
+
+    def test_land_waits_briefly_for_unknown_mergeability(self) -> None:
+        unknown = {**PR_DATA, "mergeable": "UNKNOWN"}
+        views = iter([PR_DATA, unknown, PR_DATA, {**PR_DATA, "state": "MERGED", "mergedAt": "now"}])
+        merged = []
+        result = pr_guard.land(
+            "1",
+            "a" * 40,
+            repo=self.repo,
+            base="main",
+            view=lambda _pr, _repo: next(views),
+            checks=lambda _pr, _repo: None,
+            merge=lambda *args: merged.append(args),
+            pause=lambda _seconds: None,
+        )
+        self.assertTrue(result["ok"], result["problems"])
+        self.assertEqual(len(merged), 1)
 
     def test_land_reports_actionable_check_failure(self) -> None:
         def checks(_pr, _repo):
