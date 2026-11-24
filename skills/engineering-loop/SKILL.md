@@ -16,8 +16,9 @@ Restate the goal and the smallest change that meets it. Then route.
 
 ## Playbook router
 
-Match the request to one row, open `references/playbooks.md`, and copy that
-section's steps into the todo list before touching code.
+Match the request to one row, open only `references/playbooks/<id>.md`, and
+copy its steps into the todo list before touching code. Use
+`references/playbooks.md` as the index, not as the invocation text.
 
 | Playbook | Use when | Proof |
 |---|---|---|
@@ -78,5 +79,7 @@ Stop and report instead of claiming done when:
 - the same check fails twice on the same axis;
 - the next action would deploy, delete data, force-push, or message a customer.
 
-Otherwise continue: `/brief`, implement, verify, `/review`, `/close`, and ship
-through `shipping`.
+Otherwise continue. For one reviewable diff, write the task acceptance, Data
+shape, and Verify lines, then implement in the same turn. Use `/brief` when the
+scope spans several deliverables or remains ambiguous. Verify, `/review`,
+`/close`, and ship through `shipping`.

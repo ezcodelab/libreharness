@@ -116,6 +116,37 @@ export function statePath(value) {
   return resolve(chosen.replace(/^~/, homedir()));
 }
 
+export function modelRef(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const text = value.trim();
+  const slash = text.indexOf("/");
+  if (slash <= 0 || slash === text.length - 1) return null;
+  const providerID = text.slice(0, slash);
+  const rest = text.slice(slash + 1);
+  const hash = rest.lastIndexOf("#");
+  if (hash <= 0) return { providerID, id: rest };
+  if (hash === rest.length - 1) return null;
+  return {
+    providerID,
+    id: rest.slice(0, hash),
+    variant: rest.slice(hash + 1),
+  };
+}
+
+function applyAgentModels(agent, agentModels) {
+  if (!agentModels || typeof agentModels !== "object") return;
+  const value = agentModels[agent.id];
+  if (value === undefined) return;
+  const model = modelRef(value);
+  if (!model) {
+    console.warn(
+      `libreharness: agentModels.${agent.id} must be provider/model#variant`,
+    );
+    return;
+  }
+  agent.model = model;
+}
+
 const plugin = Plugin.define({
   id: "libreharness",
   async setup(ctx) {
@@ -155,6 +186,7 @@ const plugin = Plugin.define({
           current.mode = agent.mode;
           current.permissions = agent.permissions;
           if (agent.steps) current.steps = agent.steps;
+          applyAgentModels(current, ctx.options?.agentModels);
         });
       }
     });
@@ -168,6 +200,7 @@ const plugin = Plugin.define({
     for (const featurePath of [
       "../plugins/auto-intake.js",
       "../plugins/goal-watch.js",
+      "../plugins/usage-ledger.js",
     ]) {
       try {
         const { default: feature } = await import(featurePath);

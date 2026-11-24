@@ -114,10 +114,14 @@ try {
   const match = event.prompt.text.match(/Task ([^\s]+)/);
   check(match, "intake notice did not name a task");
   taskId = match[1];
-  verified.push("auto-intake prompt hook");
+  verified.push("auto-intake prompt hook", "session-task usage mapping");
 
   const taskPath = join(state, "work/tasks", `${taskId}.md`);
   check(existsSync(taskPath), `task file missing: ${taskPath}`);
+  check(
+    existsSync(join(state, "metrics/session-tasks.jsonl")),
+    "session-task usage mapping was not written",
+  );
   const task = readFileSync(taskPath, "utf8");
   check(task.includes("status: inbox"), "task is not inbox");
   const accepted = task.replace(
@@ -150,6 +154,10 @@ try {
   check(existsSync(artifactPath), "review artifact was not written");
   const artifact = JSON.parse(readFileSync(artifactPath, "utf8"));
   check(artifact.head === head, "review artifact head does not match git HEAD");
+  check(
+    typeof artifact.diff_sha256 === "string" && artifact.diff_sha256.length === 64,
+    "review artifact has no diff fingerprint",
+  );
   check(artifact.verdict === "PASS", "review artifact is not PASS");
   check(
     Array.isArray(artifact.checks) && artifact.checks.length > 0,
@@ -176,6 +184,8 @@ try {
     "done",
     "--evidence",
     `review artifact ${artifactPath} PASS at ${head}; tasks.py validate exit 0`,
+    "--repo",
+    ROOT,
   ]);
   check(
     readFileSync(taskPath, "utf8").includes("status: done"),

@@ -30,11 +30,16 @@ Do not edit feature code in this turn.
 4. First gate: validate the review artifact on the tree that will land:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" review <id> --repo "$PWD"`.
    A missing, stale, failed, mismatched, or UNVERIFIED artifact stops the close.
-   Integration or any new commit makes the artifact stale; record a new PASS
+   Integration or any commit or working-tree change makes the artifact stale; record a new PASS
    with the task's Verify command before continuing.
 5. Run the final `/review` on the merged diff, or on the single task's diff.
    A send-back stops the close. Fix empirical failures and rerun the acceptance
    check; there is no second abstract pass.
+   Reuse the recorded review without another abstract pass only when all hold:
+   the task is a single task in `review`, no integration occurred, and the
+   artifact validates for the same HEAD and diff fingerprint. Any new commit,
+   working-tree change, acceptance change, or new finding requires the full
+   review. State which path you took.
 6. If a single task still has a worktree and is `active`, move it to `review`
    now (`tasks.py status <id> review --note "final review passed" --repo "$PWD"`)
    so the reaper can evaluate it. The status gate revalidates the artifact.

@@ -24,7 +24,8 @@ outlives one chat:
   challenge.
 - Commands for intake, briefs, lanes, takeover, review, close, handoff, design
   review, and tuning.
-- Two local plugins: automatic task intake and a goal watcher.
+- Three local plugins: automatic task intake, a goal watcher, and a usage
+  ledger for cost-per-verified-task measurement.
 
 The queue is stdlib Python plus Linux file locking. There is no database, no
 server, and no third-party Python package. The Node plugins use built-ins only.
@@ -62,8 +63,30 @@ Add the package to the global `plugins` array in
 ```
 
 The four agent stubs are required. The plugin fills each one's prompt, mode, and
-permissions; add a model to a stub for per-agent routing. From a checkout, use
-the absolute path instead of the npm name.
+permissions. Add a model to a stub for per-agent routing, or set the optional
+`agentModels` plugin option:
+
+```jsonc
+{
+  "plugins": [
+    {
+      "package": "libreharness@2.0.0",
+      "options": {
+        "agentModels": {
+          "explore": "<provider>/<workhorse-model>#<variant>",
+          "implementer": "<provider>/<workhorse-model>#<variant>",
+          "integrator": "<provider>/<workhorse-model>#<variant>",
+          "devils-advocate": "<provider>/<challenger-model>#<variant>"
+        }
+      }
+    }
+  ]
+}
+```
+
+Use exact models available in the operator's provider. Routing is applied only
+when the agent launches; the main session keeps its selected model. From a
+checkout, use the absolute path instead of the npm name.
 
 OpenCode loads global and project `AGENTS.md` files natively. The plugin does not
 inject instructions, so the LibreHarness contract stays scoped to this workspace.

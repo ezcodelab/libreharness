@@ -35,9 +35,10 @@ work-queue skills. Do not edit code in this turn.
    lines, then record the real exits:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" review <id> --repo "$PWD" --run "<Verify>" --run "<focused check>"`
    The command runs argv without a shell and writes
-   `$HARNESS_STATE/work/reviews/<id>.json` with the exact HEAD. A missing or
-   stale head, an unreachable check, a non-zero exit, a different Verify
-   command, or an empty list blocks. If there is no task id, run the same
+   `$HARNESS_STATE/work/reviews/<id>.json` with the exact HEAD and a digest of
+   the reviewed diff, including untracked files. A missing or stale head or
+   diff, an unreachable check, a non-zero exit, a different Verify command, or
+   an empty list blocks. If there is no task id, run the same
    commands directly and say they are not recorded. A product task whose real
    check cannot be expressed in the allowlist stops unverified; do not point
    Verify at an unrelated harness check.

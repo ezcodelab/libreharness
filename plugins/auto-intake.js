@@ -3,7 +3,7 @@
 // answers. It never blocks admission on failure and never stores a prompt that
 // looks like it contains a secret. Opt out with AUTO_INTAKE=off.
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 
 function homeDir() {
@@ -63,9 +63,9 @@ function frontmatterName(text) {
 export function validateWorkflow(home) {
   const errors = [];
   const skillPath = join(home, "skills/engineering-loop/SKILL.md");
-  const referencePath = join(
+  const referenceDir = join(
     home,
-    "skills/engineering-loop/references/playbooks.md",
+    "skills/engineering-loop/references/playbooks",
   );
   let skill = "";
   try {
@@ -82,17 +82,15 @@ export function validateWorkflow(home) {
     }
   }
   const playbooks = new Set();
-  let reference = "";
   try {
-    reference = readFileSync(referencePath, "utf8");
+    for (const name of readdirSync(referenceDir)) {
+      if (name.endsWith(".md")) playbooks.add(name.slice(0, -3));
+    }
   } catch {
-    errors.push(`missing ${referencePath}`);
-  }
-  for (const match of reference.matchAll(/^##\s+([a-z][a-z-]+)\s*$/gm)) {
-    playbooks.add(match[1]);
+    errors.push(`missing ${referenceDir}`);
   }
   for (const id of PLAYBOOK_IDS) {
-    if (!playbooks.has(id)) errors.push(`missing playbook section ${id}`);
+    if (!playbooks.has(id)) errors.push(`missing playbook ${id}`);
   }
   return { ok: errors.length === 0, errors, playbooks };
 }
@@ -170,19 +168,25 @@ function routeLine(decision) {
 function queueNotice(id, decision) {
   return (
     `[queue] Task ${id} was created for this request. ${routeLine(decision)} ` +
-    `(playbook: ${decision.playbook}). Run brief first to confirm scope, data ` +
-    `shape, and acceptance, then implement, verify, review, close, and ship. ` +
-    `Honor a playbook the user named. Stop only at the contract's human gates. ` +
-    `Do not ask the operator to retype a command.`
+    `(playbook: ${decision.playbook}; read only ` +
+    `skills/engineering-loop/references/playbooks/${decision.playbook}.md). ` +
+    `For one reviewable diff, write concrete ` +
+    `acceptance plus the Data shape and Verify lines, claim it, then work in ` +
+    `this turn. Use /brief only for a multi-deliverable or ambiguous request. ` +
+    `Implement, verify, review, close, and ship. Honor a playbook the user ` +
+    `named. Stop only at the contract's human gates. Do not ask the operator ` +
+    `to retype a command.`
   );
 }
 
 function reusedNotice(id, decision) {
   return (
     `[queue] Existing task ${id} matches this request. Use it; do not create ` +
-    `a duplicate. ${routeLine(decision)} (playbook: ${decision.playbook}). ` +
-    `Run brief first to confirm scope, data shape, and acceptance, then ` +
-    `implement, verify, review, close, and ship.`
+    `a duplicate. ${routeLine(decision)} (playbook: ${decision.playbook}; read ` +
+    `only skills/engineering-loop/references/playbooks/${decision.playbook}.md). ` +
+    `For one reviewable diff, complete the acceptance, Data shape, and Verify ` +
+    `lines, claim it, then work in this turn; use /brief only when scope is ` +
+    `still ambiguous. Then implement, verify, review, close, and ship.`
   );
 }
 
@@ -193,6 +197,7 @@ const PII =
   /([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|https?:\/\/\S+|\b\d{3}[-.]?\d{3}[-.]?\d{4}\b)/gi;
 
 const seen = new Map();
+let ledgerWarned = false;
 
 function sanitize(text) {
   return text.replace(SECRET, "[redacted]").replace(PII, "[redacted]");
@@ -232,7 +237,29 @@ function existingTask(text) {
   }
 }
 
-function createTask(text, directory) {
+function recordSessionTask(sessionID, taskID) {
+  try {
+    mkdirSync(`${stateDir()}/metrics`, { recursive: true, mode: 0o700 });
+    appendFileSync(
+      `${stateDir()}/metrics/session-tasks.jsonl`,
+      JSON.stringify({
+        observed_at: new Date().toISOString(),
+        session: sessionID,
+        task: taskID,
+      }) + "\n",
+      { mode: 0o600 },
+    );
+  } catch (error) {
+    if (!ledgerWarned) {
+      ledgerWarned = true;
+      console.warn(
+        `libreharness: session-task ledger write failed: ${error?.message ?? error}`,
+      );
+    }
+  }
+}
+
+function createTask(text, directory, sessionID) {
   const title = titleOf(text);
   const project = basename(directory || "") || "general";
   const output = execFileSync(
@@ -244,6 +271,8 @@ function createTask(text, directory) {
       project,
       "--status",
       "inbox",
+      "--session",
+      sessionID,
       "--scope",
       "Auto-captured prompt; confirm scope and acceptance, then add Data shape and Verify lines before claiming.",
       "--acceptance",
@@ -295,12 +324,14 @@ export default {
       const existing = existingTask(text);
       if (existing) {
         seen.set(sessionID, existing);
+        recordSessionTask(sessionID, existing);
         event.prompt.text = text + `\n\n${reusedNotice(existing, decision)}`;
         return;
       }
       try {
-        const id = createTask(text, ctx.location?.directory);
+        const id = createTask(text, ctx.location?.directory, sessionID);
         seen.set(sessionID, id);
+        recordSessionTask(sessionID, id);
         event.prompt.text = text + `\n\n${queueNotice(id, decision)}`;
       } catch {
         event.prompt.text = text + `\n\n${HELPER_FAILURE_NOTICE}`;

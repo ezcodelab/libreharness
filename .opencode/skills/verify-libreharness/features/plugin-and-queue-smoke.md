@@ -3,16 +3,16 @@
 
 ## Sub-features
 
-- `plugin.setup` registers commands, agents, skills, and the two bundled plugins.
+- `plugin.setup` registers commands, agents, skills, and the three bundled plugins.
 - `auto-intake` turns one prompt into an inbox task with an intake notice.
-- `tasks.py` enforces claim, review, validate, and done with evidence.
-- The board and the workflow log appear in the state directory.
+- `tasks.py` enforces claim, review, validate, and done with a PASS artifact.
+- The board, workflow log, and usage mapping appear in the state directory.
 
 ## How to get to it (user POV)
 
 Describe a non-trivial change in an OpenCode session. The harness creates a task,
-states the playbook, and asks for a brief first. The operator then reads the task,
-the board, and the evidence.
+states the playbook, and asks for acceptance plus the Data shape and Verify lines.
+The operator then reads the task, the board, and the evidence.
 
 ## Driving it with smoke.mjs
 

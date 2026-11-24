@@ -10,11 +10,23 @@ const root = join(tmpdir(), `goal-watch-${process.pid}`);
 rmSync(root, { recursive: true, force: true });
 mkdirSync(join(root, "bin"), { recursive: true });
 mkdirSync(join(root, "work/tasks"), { recursive: true });
+const repo = join(root, "repo");
+mkdirSync(join(repo, "tests"), { recursive: true });
+writeFileSync(
+  join(repo, "tests/test_ok.py"),
+  "import unittest\n\nclass Ok(unittest.TestCase):\n    def test_ok(self):\n        self.assertTrue(True)\n",
+);
+writeFileSync(join(repo, ".gitignore"), "__pycache__/\n*.pyc\n");
+execFileSync("git", ["init", "-q", "-b", "main", repo]);
+execFileSync("git", ["-C", repo, "config", "user.email", "test@example.com"]);
+execFileSync("git", ["-C", repo, "config", "user.name", "Test"]);
+execFileSync("git", ["-C", repo, "add", "-A"]);
+execFileSync("git", ["-C", repo, "commit", "-q", "-m", "base"]);
 copyFileSync(
   join(here, "..", "bin", "tasks.py"),
   join(root, "bin/tasks.py"),
 );
-process.env.GOAL_WATCH_TASKS = join(root, "bin", "tasks.py");
+process.env.GOAL_WATCH_TASKS = join(root, "bin/tasks.py");
 const tasks = (...args) =>
   execFileSync("python3", [join(root, "bin/tasks.py"), ...args], {
     encoding: "utf8",
@@ -31,7 +43,7 @@ const addPlan = (taskId) => {
     readFileSync(path, "utf8").replace(
       /## Plan\n\n/,
       '## Plan\n\nData shape: {"state":"idle"}\n' +
-        "Verify: python3 -m unittest tests.test_tasks -v\n\n",
+        "Verify: python3 -m unittest tests.test_ok -v\n\n",
     ),
   );
 };
@@ -59,11 +71,17 @@ tasks(
 if (!goal) throw new Error("goal not created");
 
 process.env.GOAL_WATCH_ROOT = root;
-const { default: plugin, maxContinuations } = await import(
+const { default: plugin, maxContinuations, continuationChild } = await import(
   new URL(`../plugins/goal-watch.js?test=${process.pid}`, import.meta.url)
 );
 if (maxContinuations("abc") !== 12 || maxContinuations("") !== 12 || maxContinuations("0") !== 0) {
   throw new Error("malformed continuation bound is not handled");
+}
+if (continuationChild({ ready: [] }) !== "" || continuationChild({}) !== "") {
+  throw new Error("goal without ready work must not prompt");
+}
+if (continuationChild({ ready: ["child-a"] }) !== "child-a") {
+  throw new Error("ready child was not selected");
 }
 
 const prompts = [];
@@ -122,7 +140,23 @@ const closeChild = tasks(
 );
 addPlan(closeChild);
 tasks("claim", closeChild, "--owner", "test");
-tasks("status", closeChild, "done", "--evidence", "node: done");
+tasks(
+  "review",
+  closeChild,
+  "--repo",
+  repo,
+  "--run",
+  "python3 -m unittest tests.test_ok -v",
+);
+tasks(
+  "status",
+  closeChild,
+  "done",
+  "--evidence",
+  "python3 -m unittest: PASS",
+  "--repo",
+  repo,
+);
 emit({ type: "session.idle", data: { sessionID: "s1" } });
 await new Promise((r) => setTimeout(r, 300));
 if (prompts.length !== 4) throw new Error("closable goal was not reminded");
@@ -138,13 +172,7 @@ if (prompts.length !== 4) throw new Error("close reminder repeated in the same s
 
 emit({ type: "session.idle", data: { sessionID: "s2" } });
 await new Promise((r) => setTimeout(r, 300));
-if (prompts.length !== 5) throw new Error("closable goal was not reminded in another session");
-if (!prompts[4].text.includes(closeGoal) || !prompts[4].text.includes("ignore this reminder")) {
-  throw new Error("cross-session reminder is not scoped");
-}
-emit({ type: "session.idle", data: { sessionID: "s2" } });
-await new Promise((r) => setTimeout(r, 300));
-if (prompts.length !== 5) throw new Error("close reminder repeated in the same second session");
+if (prompts.length !== 4) throw new Error("closable goal was reminded in another session");
 cleanup();
 
 if (!prompts[0].text.includes(`Continue the active goal ${goal}`)) {

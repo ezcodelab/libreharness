@@ -69,9 +69,9 @@ The script writes `/tmp/opencode/verify-libreharness/latest.json` with exactly:
 ```
 
 `verdict` is `PASS` only when every step above ran and passed, and the review
-artifact's `head` equals `git rev-parse HEAD`. The artifact has a non-empty
-`checks` list containing the ratchet command with exit 0; the report carries the
-same `head`, `verdict`, and `checks`. The `unverified` list is required and names
+artifact's `head` equals `git rev-parse HEAD` with a current `diff_sha256`. The
+artifact has a non-empty `checks` list containing the ratchet command with exit
+0; the report carries the same `head`, `verdict`, and `checks`. The `unverified` list is required and names
 what this path cannot reach. Never mark a remote surface verified from here.
 
 ## Cleanup
@@ -89,6 +89,6 @@ fails, cleanup still runs, and the report records the failing step.
 - The intake notice is the only place the task id appears. Do not change its
   shape without updating the script.
 - `tasks.py done` refuses an unchecked acceptance line, an empty evidence string,
-  and a `Deferred` section. That is the point.
+  a `Deferred` section, or a missing/stale PASS artifact. That is the point.
 - Do not point `HARNESS_STATE` at the real state directory. The script ignores
   the ambient value for that reason.

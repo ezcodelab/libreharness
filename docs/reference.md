@@ -34,7 +34,10 @@ Add the package to the global `plugins` array in
 
 The four agent stubs are required. The plugin API can update an existing agent
 but cannot create one; the plugin fills each stub's prompt, mode, and
-permissions. Add a model to a stub for per-agent routing.
+permissions. Add a model to a stub for per-agent routing, or pass
+`options.agentModels` with entries such as
+`"explore": "<provider>/<model>#<variant>"`. The plugin validates the reference
+and changes only the fresh child agent's model.
 
 OpenCode loads global and project `AGENTS.md` files natively. The plugin registers
 no instruction-injection hook, so the LibreHarness contract stays scoped to this
@@ -76,7 +79,10 @@ $HARNESS_STATE/
 │   ├── reviews/<task-id>.json
 │   ├── BOARD.md
 │   └── .lock
-└── metrics/workflow-log.csv
+└── metrics/
+    ├── workflow-log.csv
+    ├── session-tasks.jsonl
+    └── usage-log.jsonl
 ```
 
 `BOARD.md` is generated. Edit task files, not the board.
@@ -173,13 +179,14 @@ pointing Verify at an unrelated harness check.
 ### Review artifact
 
 `tasks.py review <id> --repo <repo> --run "<command>"` runs allowlisted argv
-without a shell, records the observed exits and the exact HEAD in
-`work/reviews/<id>.json`, then validates the artifact. No-argument mode
-validates an existing artifact; `--unverify` downgrades it.
+without a shell, records the observed exits, the exact HEAD, and a digest of
+the reviewed diff in `work/reviews/<id>.json`, then validates the artifact.
+No-argument mode validates an existing artifact; `--unverify` downgrades it.
+Any commit or working-tree change makes the recorded diff stale.
 
 PASS needs at least one check, every recorded exit zero, and the task's Verify
 command exactly once. A missing, malformed, stale, failed, or task-mismatched
-artifact blocks `status <id> review`, `/close`, and shipping.
+artifact blocks `status <id> review`, `status <id> done`, `/close`, and shipping.
 
 ### Goal
 
@@ -286,13 +293,19 @@ Run `python3 "$HARNESS_HOME/bin/tasks.py" <command>`.
 | `goal-start`, `goal-status` | Start or inspect a goal |
 | `report`, `board`, `validate` | Metrics, generated board, and validation |
 
+`bin/usage_report.py` joins the local usage ledger to completed tasks. Its
+`cost_per_verified_task` divides all measured model cost, including failed and
+abandoned work, by the number of tasks with a PASS review artifact. Run
+`python3 "$HARNESS_HOME/bin/usage_report.py" --json`.
+
 ## Skills
 
 The map lives in [skills/README.md](../skills/README.md).
 
 `engineering-loop` maps a request to `investigation`, `bug-fix`, `feature`,
 `refactoring`, `perf`, `hillclimb`, `autonomous-multiphase`, or `correct`. The
-checklists live in `skills/engineering-loop/references/playbooks.md`. Per-rule
+index lives in `skills/engineering-loop/references/playbooks.md`; only the
+selected checklist under `references/playbooks/<id>.md` is loaded. Per-rule
 encodings live in `skills/correct/references/rule-ledger.md`.
 
 ## Agents
@@ -304,16 +317,26 @@ encodings live in `skills/correct/references/rule-ledger.md`.
 | `integrator` | Bounded merge in a declared order |
 | `devils-advocate` | Independent read-only review |
 
+Per-agent routing is configuration, not an ambient model call. A normal setup
+uses a cheap workhorse for `explore`, routine `implementer` work, and
+`integrator`, while reserving a stronger planner or challenger model for
+ambiguous design, security, state/concurrency, repeated failure, and an
+operator-requested second opinion. The main session keeps the operator's chosen
+model.
+
 ## Plugins
 
-Two local plugins are bundled. They use Node built-ins and never call a model.
+Three local plugins are bundled. They use Node built-ins and never call a model.
 
 - **auto-intake** turns a nontrivial prompt into one inbox task and appends a
   queue note. It skips questions, delegation prompts, and secret-shaped text.
   Opt out with `AUTO_INTAKE=off`.
-- **goal-watch** reminds once per session when an active goal is closable, and
-  continues one `autorun` goal while it has ready children. It never creates,
-  closes, or marks work done.
+- **goal-watch** reminds the owning session once when an active goal is closable,
+  and continues one `autorun` goal while it has ready children. It never
+  creates, closes, or marks work done.
+- **usage-ledger** records provider-reported cost, token classes, model steps,
+  and retries per session. It stores no prompts, diffs, or model output. Opt out
+  with `USAGE_LEDGER=off`.
 
 Protect secret files in one layer rather than in every agent: install
 `envsitter-guard` or `cc-safety-net`, or add a global `read *.env ask` rule.
@@ -328,7 +351,8 @@ Protect secret files in one layer rather than in every agent: install
 - Review checks run local commands and record their exits; the artifact contains
   no secret material beyond what a command prints.
 - The queue does not encrypt task files.
-- Nothing here sends telemetry.
+- The usage ledger is local and contains no prompts, diffs, or model output.
+  Nothing here sends usage data off the machine.
 
 Report a vulnerability through the private advisory form at
 <https://github.com/ezcodelab/libreharness/security/advisories/new>. Do not put a
