@@ -10,7 +10,10 @@ Do not edit feature code in this turn.
 1. Read the task packet:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" show <id> --packet`.
    Confirm every acceptance item and its evidence. Missing evidence means the
-   task stays open.
+   task stays open. Converge: compare every acceptance item and named
+   requirement with the code on the tree that will land. A completion claim
+   without evidence is open work. Append unmet work as a follow-up task or
+   child; never rewrite the scope to match what was built.
 2. If the task is a goal, run `goal-status <id>`. If it is not closable, stop
    and list the unfinished children; finish them with a follow-up goal or child,
    then run `/close` again. For a single task, skip this step.

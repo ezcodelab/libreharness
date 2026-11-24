@@ -26,6 +26,7 @@ Nothing in this list is bundled in the repository.
 |---|---|---|
 | OpenCode | The host application that loads agents, commands, skills, and plugins | Installed by the user, separate project |
 | `@opencode-ai/plugin` | Development dependency for plugin types and tests | Not bundled; license and version per upstream package |
+| `@ast-grep/cli` | Structural search CLI used through `bin/sg.py` | npm dependency, not bundled; MIT |
 | Jev inference endpoint | External service called by the Jev client | Not bundled; separate service and terms |
 | Provider models | Models selected by the user in OpenCode or by `JEV_MODEL` | Not bundled; separate provider terms |
 | External npm plugins named in user configuration | Optional user-installed plugins | Not bundled, not endorsed, and not supported |
@@ -35,8 +36,14 @@ Node built-ins only. See `package.json` for the development dependency version.
 
 ## Third-party source
 
-No third-party source code is copied into this repository. If a future change
-adapts a snippet, record the source, version, license, and URL here.
+No third-party source code is copied into this repository. The following MIT
+projects informed adapted prose; the adaptation lives in the named files.
+
+| Source | Revision | Adapted into | License | URL |
+|---|---|---|---|---|
+| github/github-mcp-server | `c6b62954` | `skills/shipping/references/ci-failure-classes.md` | MIT | <https://github.com/github/github-mcp-server> |
+| mattpocock/skills | `d6539114` | `skills/correct/references/skill-writing.md`, `skills/shipping/references/review-axes.md`, `skills/engineering-loop/references/wizard-template.sh` | MIT | <https://github.com/mattpocock/skills> |
+| github/spec-kit | `7def2cde` | `skills/goal/references/spec-shape.md`, converge steps in `commands/close.md` and `skills/goal/SKILL.md` | MIT | <https://github.com/github/spec-kit> |
 
 ## Trademarks
 

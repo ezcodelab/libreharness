@@ -27,8 +27,9 @@ feature work, and do not edit global config yet.
    pay off. Leaner beats more rules.
 6. Propose at most five patches to `AGENTS.md`, the `engineering-loop` skill,
    the `ui-design` skill, another skill under `${HARNESS_HOME}/skills/`, or the
-   named principles in `AGENTS.md`, as a unified diff. For each, quote the
-   evidence, name the target, and say what it replaces or deletes.
+   named principles in `AGENTS.md`, as a unified diff. Write each with
+   `skills/correct/references/skill-writing.md`. For each, quote the evidence,
+   name the target, and say what it replaces or deletes.
 7. Prefer folding a rule into an existing bullet over adding a new one. For a
    skill promotion, run the with/without check in the project's
    `CONTRIBUTING.md` when present and include the trigger rate, pass delta,

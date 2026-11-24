@@ -1,6 +1,6 @@
 ---
 name: shipping
-description: Open one reviewably sized ready PR, validate the review artifact and required CI on the exact head, and stay until it merges. Use after review or when a task is ready to land.
+description: Open one ready PR, validate the review artifact and required CI on the exact head, and stay until it merges. Use after review or when a task is ready to land.
 ---
 <!-- SPDX-License-Identifier: MIT -->
 
@@ -72,7 +72,8 @@ python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/pr_guard.py" land \
 ```
 
 - `fix`: fix the failed required check, commit, record a new artifact, push, and
-  run `land` again.
+  run `land` again. Classify it first with `references/ci-failure-classes.md`; a
+  rerun without a change is not a fix.
 - `rebase`: rebase only this PR's branch with `--force-with-lease`, record a new
   artifact, push, and run `land` again.
 - `rereview`: the head moved. Record the artifact before merging.

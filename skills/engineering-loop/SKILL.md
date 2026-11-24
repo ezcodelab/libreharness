@@ -79,7 +79,7 @@ Stop and report instead of claiming done when:
 - the same check fails twice on the same axis;
 - the next action would deploy, delete data, force-push, or message a customer.
 
-Otherwise continue. For one reviewable diff, write the task acceptance, Data
+Otherwise continue. When a human-only step blocks the work, hand over a script from `references/wizard-template.sh`; do not run it for them. For one reviewable diff, write the task acceptance, Data
 shape, and Verify lines, then implement in the same turn. Use `/brief` when the
 scope spans several deliverables or remains ambiguous. Verify, `/review`,
 `/close`, and ship through `shipping`.

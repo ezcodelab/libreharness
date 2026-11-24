@@ -10,6 +10,18 @@
   review artifacts, and required checks remain the gates; size is a review
   judgement, not a hard number.
 
+### Tooling review adoption
+
+- Shipping classifies a red build before rerunning and never reruns the same
+  head twice without a change.
+- `correct` carries a skill-writing standard; `/tune` uses it for patches.
+- `/close` and goals converge the original requirements against the code, and
+  review keeps Spec and Standards as separate axes.
+- Goal briefs use the spec shape for two to six children.
+- `engineering-loop` can generate a human-gate wizard script.
+- Add the pinned `@ast-grep/cli` and `bin/sg.py` for structural sweeps, with a
+  Node test.
+
 ### Instruction budget
 
 - The skill map has one owner, `skills/README.md`; `AGENTS.md`, `README.md`, and
