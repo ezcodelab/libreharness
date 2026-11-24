@@ -21,7 +21,8 @@ Use the work-queue and engineering-loop skills.
    - **Out of scope**
    - **Data shape**: the types, the state machine, the boundary parser, and which
      structure owns each piece of state
-   - **Acceptance** as observable checks
+   - **Acceptance** as observable checks. For a goal with children, shape each
+     one with `skills/goal/references/spec-shape.md`.
    - **Reach**: callers, importers, tests, fixtures, config, exports, and
      wire-format consumers the change must touch or preserve
    - **Invariants** and trust boundaries

@@ -27,7 +27,7 @@ easier.
 4. **Test.** Assert the behavior a user observes, so the test fails when the
    behavior breaks and survives an internal change.
 5. **Prose.** Last, and only for judgment calls. Nothing fails when an agent skips
-   it.
+   it. Write it with `references/skill-writing.md`.
 
 ## Steps
 

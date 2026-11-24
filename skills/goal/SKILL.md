@@ -26,8 +26,9 @@ The goal flow plans first (manual form `/goal`): it writes a validated
 goal/child/lane JSON and stops. Review or revise it, then create and execute it;
 the manual form is `/goal go`, and `--unattended` sets the per-goal continuation
 flag. Each child has one scope, testable acceptance, dependencies, and a review
-boundary. If a child cannot be reviewed in one sitting, split it. The reviewed
-lane map is used by `goal-start`; the operator does not create lanes by hand.
+boundary. If a child cannot be reviewed in one sitting, split it. For two to six
+children, shape each one with `references/spec-shape.md`. The reviewed lane map
+is used by `goal-start`; the operator does not create lanes by hand.
 
 ## Run
 
@@ -57,7 +58,9 @@ merged, not that their lanes are combined into one branch.
 
 After the last child, review the goal's acceptance against the merged evidence
 on current trunk, run the full check, write the goal handoff, and close the goal
-with that evidence. Integrate a combined branch only when the goal has a
+with that evidence. Converge first: compare every requirement and acceptance
+item with the code on trunk. Append unbuilt work as a child; never rewrite the
+scope to match what was built. Integrate a combined branch only when the goal has a
 cross-lane acceptance that cannot be proved on trunk; that integration is
 itself split by review boundary.
 

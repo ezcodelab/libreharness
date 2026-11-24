@@ -60,7 +60,9 @@ work-queue skills. Do not edit code in this turn.
    a comment-discipline finding from step 3. A P2/P3 is a fix or an explicit
    accepted risk. Do not accept feedback sycophantically or just because a
    reviewer raised it. A model second opinion runs only when the operator asks
-   for one in this turn; it cannot add checks or PASS. If it is incomplete,
+   for one in this turn; it cannot add checks or PASS. Use
+   `skills/shipping/references/review-axes.md` to keep Spec and Standards
+   separate. If it is incomplete,
    failed, truncated, or unproven, run
    `tasks.py review <id> --repo "$PWD" --unverify` and keep the task open.
    There is no second abstract pass. A green artifact is not proof: run the

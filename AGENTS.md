@@ -27,7 +27,7 @@ imports `@opencode/plugin`. The Python suite needs no third-party package.
 ## Boundaries
 
 - Linux, Node 20 or newer, Python 3.10 or newer. Standard library and Node
-  built-ins only; a new dependency needs an operator decision.
+  built-ins; `@ast-grep/cli` is the one approved dependency, others need an operator decision.
 - `src/plugin.js` registers commands, agents, and skills from `commands/`,
   `agents/`, and `skills/`. `plugins/` holds the hook modules.
 - `HARNESS_HOME` is the package root. `HARNESS_STATE` is mutable local state,
