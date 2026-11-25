@@ -100,7 +100,7 @@ else process.env.HARNESS_STATE = previousState;
 const cleanup = await plugin.setup(ctx);
 
 const commandNames = commands.map((command) => command.name);
-for (const name of ["goal", "review", "state-audit", "tune", "close"]) {
+for (const name of ["goal", "review", "state-audit", "tune", "close", "unslop-ui"]) {
   assert.ok(commandNames.includes(name), `missing command ${name}`);
 }
 
@@ -118,6 +118,17 @@ assert.match(prompts[0].text, /state-audit/);
 // delivery }, not a nested { prompt } object.
 assert.equal(prompts[0].prompt, undefined);
 assert.equal(prompts[0].delivery, "steer");
+
+const unslop = commands.find((command) => command.name === "unslop-ui");
+await unslop.execute({
+  sessionID: "ses_test",
+  prompt: { text: "Apps" },
+  delivery: "steer",
+});
+assert.equal(prompts.length, 2);
+assert.match(prompts[1].text, /Apps/);
+assert.match(prompts[1].text, /only operator stop is choosing A or B/);
+assert.match(prompts[1].text, /Reply A or B/);
 
 for (const id of agentIds) {
   assert.ok(updatedAgents.has(id), `agent was not updated: ${id}`);

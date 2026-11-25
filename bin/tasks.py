@@ -1191,10 +1191,12 @@ def allowed_command(argv: list[str]) -> bool:
     if program == "npm":
         if argv[1:] == ["test"]:
             return True
+        if len(argv) < 3 or argv[1] != "run":
+            return False
+        script = argv[2]
         return (
-            len(argv) >= 3
-            and argv[1] == "run"
-            and (argv[2].startswith("test:") or argv[2].startswith("lint:"))
+            script.startswith(("test:", "lint:", "ui:", "ui-"))
+            or script == "smoke"
         )
     if program == "node":
         if len(argv) != 2:
@@ -1210,7 +1212,9 @@ def allowed_command(argv: list[str]) -> bool:
     if program == "ruff":
         return len(argv) >= 2 and argv[1] == "check"
     if program == "make":
-        return argv[1:] == ["check"]
+        return argv[1:] == ["check"] or (
+            len(argv) == 2 and re.fullmatch(r"ui-[a-z0-9-]+", argv[1]) is not None
+        )
     if program == "cargo":
         return argv[1:] == ["test"]
     if program == "go":

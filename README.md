@@ -120,6 +120,7 @@ Slash commands remain escape hatches when you want to intervene directly:
 | Audit stateful code | `/state-audit <path>` |
 | Resume after a pause | `/takeover <task-id>` |
 | Finish a task or goal | `/close <task-id>` |
+| Unslop one UI surface with one A/B choice | `/unslop-ui <surface>` |
 | Review a UI | `/design-review` |
 | Prove real app behavior | `verification` skill |
 | Clean up the workflow | `/tune` |

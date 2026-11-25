@@ -278,6 +278,7 @@ No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
 | `/state-audit <path>` | Document and check a state machine |
 | `/close <id>` | Integrate, validate the artifact, reap, evidence, ship |
 | `/handoff` | Write a bounded handoff |
+| `/unslop-ui <surface>` | Baseline, two variants, one A/B choice, implement, verify, close, ship |
 | `/design-review` | Review UI work |
 | `/tune` | Propose deletions and process patches |
 
