@@ -28,6 +28,7 @@ Gitea: read the pipeline log in the forge UI or API. The classes do not change.
 | Infrastructure | Lost runner, connection reset, timeout with no failing assertion | Rerun failed jobs once. A second identical failure is code or configuration |
 | Configuration | Missing secret, permission, ref, or invalid workflow syntax | Fix the configuration, then rerun after the change |
 | Cancelled | A person or a concurrency rule stopped the run | Find which before treating it as a failure |
+| Stale status | A check has a terminal `success` conclusion and `completed_at`, but its status stays `in_progress` | Use `pr_guard.py land` or `check_wait.py`. The conclusion is the gate; do not rerun a successful job |
 | Still running | No conclusion yet | Wait. Do not diagnose an unfinished run |
 
 ## Rules

@@ -12,17 +12,13 @@ import sys
 import time
 from pathlib import Path
 
+import check_wait
+
 TITLE = re.compile(
     r"^(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)"
     r"(\([^)]+\))?: \S.+$"
 )
 HEADINGS = ("Why", "What changed", "Scope", "Blast Radius", "Verification")
-TRANSIENT = re.compile(
-    r"something went wrong|timed out|timeout|connection reset|http 5\d\d",
-    re.IGNORECASE,
-)
-
-
 class GuardError(RuntimeError):
     pass
 
@@ -134,18 +130,19 @@ def pr_view(pr: str, repo: Path | None = None) -> dict:
     )
 
 
-def wait_checks(pr: str, repo: Path | None = None) -> None:
-    for attempt in range(3):
-        try:
-            run(
-                ["gh", "pr", "checks", pr, "--watch", "--required", "--interval", "20"],
-                repo,
-            )
-            return
-        except GuardError as exc:
-            if attempt == 2 or not TRANSIENT.search(str(exc)):
-                raise
-            time.sleep(5)
+def wait_checks(pr: str, repo: Path | None = None, head: str = "") -> None:
+    if not head:
+        raise GuardError("wait_checks needs the reviewed head")
+    try:
+        check_wait.wait_for_checks(
+            pr=pr,
+            head=head,
+            repo_path=repo,
+            timeout=300,
+            interval=20,
+        )
+    except check_wait.CheckWaitError as exc:
+        raise GuardError(str(exc)) from exc
 
 
 def merge_pr(pr: str, head: str, repo: Path | None = None) -> None:
@@ -185,7 +182,7 @@ def land(
             "problems": problems,
         }
     try:
-        checks(pr, repo)
+        checks(pr, repo, expected_head)
     except GuardError as exc:
         current = view(pr, repo)
         if is_merged(current):
