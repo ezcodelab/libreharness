@@ -392,10 +392,13 @@ python3 "$HARNESS_HOME/bin/pr_guard.py" land \
 
 A missing, stale, failed, or UNVERIFIED artifact, a malformed PR, a pending or
 failed required check, a conflict, a draft, or a secret in the diff stops the
-merge. Fix CI, rebase only the PR's own branch, or close a superseded PR. Do not
-leave a ready PR open for the operator to finish. A repository human gate, such
-as required reviews or a ruleset, also stops it until satisfied. Do not replace
-that gate with a model verdict.
+merge. The check wait is bounded to five minutes and accepts a terminal
+successful conclusion even when GitHub leaves the check-run status stale. A
+failed or stalled check stops with its name and state instead of waiting for the
+workflow timeout. Fix CI, rebase only the PR's own branch, or close a superseded
+PR. Do not leave a ready PR open for the operator to finish. A repository human
+gate, such as required reviews or a ruleset, also stops it until satisfied. Do
+not replace that gate with a model verdict.
 
 Never push to `main` or force-push a shared branch. A force-with-lease push is
 allowed only on the PR branch you own, after a rebase, followed by a new review

@@ -135,7 +135,7 @@ jobs:
     needs: verify
     if: needs.verify.result == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
@@ -146,8 +146,15 @@ jobs:
       PR: ${{ github.event.pull_request.number }}
       HEAD: ${{ github.event.pull_request.head.sha }}
     steps:
+      - name: Check out the trusted helper
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
       - name: Wait for required checks
-        run: gh pr checks "$PR" --watch --required --interval 20
+        timeout-minutes: 7
+        run: python3 base/bin/check_wait.py --repo "$REPO" --pr "$PR" --head "$HEAD" --timeout 300
 
       - name: Merge the exact verified head
         run: gh pr merge "$PR" --merge --match-head-commit "$HEAD"

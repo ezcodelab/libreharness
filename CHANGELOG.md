@@ -22,6 +22,9 @@
   implementation, real UI verification, review, close, and ship in one command.
   Project UI targets such as `make ui-smoke` and `npm run smoke` are now valid
   review evidence.
+- Auto-merge and `pr_guard land` accept a terminal successful check conclusion
+  even when GitHub leaves the check-run status stale. The wait is bounded, names
+  failed or stalled checks, and fails before the workflow timeout.
 
 ### Rationale over numbers
 
