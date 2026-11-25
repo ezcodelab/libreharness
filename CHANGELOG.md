@@ -18,6 +18,10 @@
   checksum-verified lychee, gitleaks, actionlint, shellcheck, and markdownlint
   versions. Tools download to the user cache on Linux x64 or arm64; plugin users
   do not need them.
+- `/unslop-ui <surface>` runs baseline capture, two variants, one A/B selection,
+  implementation, real UI verification, review, close, and ship in one command.
+  Project UI targets such as `make ui-smoke` and `npm run smoke` are now valid
+  review evidence.
 
 ### Rationale over numbers
 

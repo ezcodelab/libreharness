@@ -756,6 +756,23 @@ class PlanContractTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.claim(task)
 
+    def test_ui_check_commands_are_allowlisted(self) -> None:
+        for argv in (
+            ["make", "check"],
+            ["make", "ui-smoke"],
+            ["make", "ui-test"],
+            ["npm", "run", "smoke"],
+            ["npm", "run", "ui-smoke"],
+            ["npm", "run", "test:ui"],
+        ):
+            self.assertTrue(tasks.allowed_command(argv), argv)
+        for argv in (
+            ["make", "deploy"],
+            ["make", "ui-smoke", "destroy"],
+            ["npm", "run", "deploy"],
+        ):
+            self.assertFalse(tasks.allowed_command(argv), argv)
+
     def test_review_status_gate_consumes_the_artifact(self) -> None:
         task = self.task(
             'Data shape: {"state":"idle"}\n'
