@@ -622,13 +622,28 @@ class QueueTests(unittest.TestCase):
         self.assertIn("handoff: OK", checked.stdout)
         self.assertIn("no task matching", self._bad_lookup())
 
-    def test_validate_rejects_an_incomplete_handoff(self) -> None:
+    def test_handoff_check_rejects_an_incomplete_edit(self) -> None:
         task = self.make_task("Broken handoff")
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
         task = tasks.find_task(self.root, task["meta"]["id"])
         task["sections"]["Handoff"] = "- **Next:** keep going"
         tasks.write_task(task)
-        self.assertEqual(tasks.validate(self.root), 1)
+        checked = subprocess.run(
+            [
+                sys.executable,
+                str(Path(tasks.__file__)),
+                "--root",
+                str(self.root),
+                "handoff",
+                task["meta"]["id"],
+                "--check",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        self.assertNotEqual(checked.returncode, 0)
+        self.assertIn("missing State", checked.stderr)
+        self.assertEqual(tasks.validate(self.root), 0)
 
     def _bad_lookup(self) -> str:
         try:

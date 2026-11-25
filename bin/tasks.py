@@ -1624,10 +1624,7 @@ def validate(root: Path) -> int:
             problems.append(f"{task_id}: active without owner")
         if meta.get("status") == "done" and not task["sections"].get("Evidence", "").strip():
             problems.append(f"{task_id}: done without Evidence")
-        handoff = task["sections"].get("Handoff", "").strip()
-        if meta.get("status") not in FINAL and handoff:
-            for problem in handoff_problems(handoff):
-                problems.append(f"{task_id}: handoff {problem}")
+
     for task_id, task in by_id.items():
         meta = task["meta"]
         parent = meta.get("parent", "")
