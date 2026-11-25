@@ -25,12 +25,12 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: ${{ matrix.node }}
-      - name: Python tests
-        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Node dependencies
         run: npm install --no-audit --no-fund --no-package-lock
-      - name: Node tests
-        run: npm run test:node
+      - name: Syntax
+        run: npm run check:syntax
+      - name: Tests
+        run: npm test
       - name: Package dry run
         run: npm pack --dry-run
 
@@ -38,40 +38,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
+      - name: Node dependencies
+        run: npm install --no-audit --no-fund --no-package-lock
       - name: Markdown
-        run: npx --yes markdownlint-cli2@0.18.1 '**/*.md'
+        run: npm run lint:md
       - name: Shell
-        run: |
-          if find . -name '*.sh' -not -path './node_modules/*' -print -quit | grep -q .; then
-            find . -name '*.sh' -not -path './node_modules/*' -print0 | xargs -0 shellcheck -x
-          else
-            echo "no shell scripts"
-          fi
+        run: npm run lint:shell
       - name: Workflows
-        run: docker run --rm -v "$PWD:/repo" --workdir /repo rhysd/actionlint:1.7.7 -color
+        run: npm run lint:workflows
 
   links:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Link check
-        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
-          args: --offline --include-fragments --no-progress --exclude-path node_modules --exclude-path .git "**/*.md"
-          fail: true
+          python-version: "3.12"
+      - name: Link check
+        run: python3 bin/devtool.py run lychee --offline --include-fragments --no-progress --exclude-path node_modules --exclude-path .git "**/*.md"
 
   secret-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
       - name: Secret scan
-        run: |
-          set -euo pipefail
-          version=8.30.1
-          curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz" -o /tmp/gitleaks.tar.gz
-          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  /tmp/gitleaks.tar.gz" | sha256sum -c -
-          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
-          /tmp/gitleaks detect --source . --config .gitleaks.toml --redact --verbose
+        run: python3 bin/devtool.py run gitleaks detect --source . --config .gitleaks.toml --redact --verbose

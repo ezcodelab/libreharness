@@ -5,8 +5,7 @@ description: Propose deletions and the portable AGENTS or skill patches you can 
 Tuning turn. Use this after a work wave, not as a task finish. Do not do
 feature work, and do not edit global config yet.
 
-1. Run the Markdown check:
-   `npx --yes markdownlint-cli2@0.18.1 '**/*.md'`.
+1. Run the Markdown check: `npm run lint:md`.
 2. Run the `state-audit` skill over the project or the area changed since the
    last tune. Update `docs/state-machines.md`, group confirmed invalid
    transitions by root cause, and propose the highest-impact group. Do not fix

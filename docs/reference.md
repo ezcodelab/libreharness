@@ -10,8 +10,10 @@ plugins load from the package.
 
 - Linux.
 - OpenCode 2.x.
-- Node 20 or newer.
-- Python 3.10 or newer.
+- [Node 20 or newer](https://nodejs.org/en/download).
+- [Python 3.10 or newer](https://www.python.org/downloads/).
+- [Git](https://git-scm.com/downloads) for the work queue and review artifacts.
+- [GitHub CLI](https://cli.github.com/), authenticated, to ship pull requests.
 - A model provider of your choice.
 
 ## Install
@@ -43,7 +45,12 @@ OpenCode loads global and project `AGENTS.md` files natively. The plugin registe
 no instruction-injection hook, so the LibreHarness contract stays scoped to this
 workspace.
 
-From a checkout, use the absolute path instead of the npm name:
+From a checkout or extracted GitHub release archive, install the runtime
+dependency and use the absolute path instead of the npm name:
+
+```sh
+npm install --omit=dev --no-audit --no-fund
+```
 
 ```jsonc
 "plugins": ["/path/to/libreharness"]
@@ -393,18 +400,31 @@ Never push to `main` or force-push a shared branch. A force-with-lease push is
 allowed only on the PR branch you own, after a rebase, followed by a new review
 artifact.
 
-The repository checks are native tools:
+Repository checks use pinned tools fetched by npm:
 
 | Check | Command |
 |---|---|
+| Full local set | `npm run check:local` |
+| Download pinned tools | `npm run tools:install` |
+| Syntax | `npm run check:syntax` |
 | Python tests | `python3 -m unittest discover -s tests -p 'test_*.py' -v` |
 | Node tests | `npm run test:node` |
 | Package contents | `npm pack --dry-run` |
-| Markdown correctness | `npx --yes markdownlint-cli2@0.18.1 '**/*.md'` |
-| Links | `lychee --offline --include-fragments '**/*.md'` |
-| Secrets | `gitleaks detect --source . --config .gitleaks.toml` |
-| Shell | `shellcheck -x` |
-| Workflows | `actionlint` |
+| Markdown correctness | `npm run lint:md` |
+| Links | `npm run lint:links` |
+| Secrets | `npm run lint:secrets` |
+| Shell | `npm run lint:shell` |
+| Workflows | `npm run lint:workflows` |
+
+The check scripts download checksum-verified lychee, gitleaks, actionlint, and
+shellcheck into `$XDG_CACHE_HOME/libreharness/tools` for Linux x64 and arm64.
+They do not change the plugin runtime or its install size. CI calls the same
+commands.
+
+A task's Verify command may use its own project tools such as pytest, Ruff,
+Cargo, Go, Make, or npm scripts. Those belong to the target project; LibreHarness
+does not bundle or install them. Git and the authenticated GitHub CLI are the
+only non-language runtime commands the harness calls itself.
 
 Release: bump `package.json`, add a `CHANGELOG.md` entry, tag `v<version>`, and
 let `.github/workflows/release.yml` publish the npm package and GitHub release.

@@ -54,6 +54,14 @@ reporter agrees.
 - State should be mode 700 and key files mode 600. The queue uses the process
   umask; set `umask 077` if your default is permissive.
 
+## Development tool downloads
+
+Repository checks use `npm run check:local`, which downloads pinned lychee,
+gitleaks, actionlint, and shellcheck release archives from their upstream
+projects. `bin/devtool.py` verifies each archive against a recorded SHA-256
+before extracting one executable into `$XDG_CACHE_HOME/libreharness/tools`.
+The plugin runtime never downloads or runs these tools.
+
 ## What is out of scope
 
 - A provider's logging, retention, or training policy. That is between you and

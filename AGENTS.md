@@ -8,26 +8,30 @@ must hold, and the checks that make the rest real.
 ## Commands
 
 ```sh
-python3 -m compileall -q bin tests
-python3 -m unittest discover -s tests -p 'test_*.py' -v
+npm run tools:install
+npm run check:local
+npm test
 python3 -m unittest tests.test_tasks -v          # one Python test file
 node tests/auto-intake.test.mjs                  # one Node test file
-npm run test:node
-npm test
-node --check src/plugin.js
-npm pack --dry-run
-npx --yes markdownlint-cli2@0.18.1 '**/*.md'
-lychee --offline --include-fragments --exclude-path node_modules '**/*.md'
-gitleaks detect --source . --config .gitleaks.toml
+npm run lint:md
+npm run lint:links
+npm run lint:secrets
+npm run lint:shell
+npm run lint:workflows
 ```
 
-`npm install` is required once for the Node tests, because `src/plugin.js`
-imports `@opencode/plugin`. The Python suite needs no third-party package.
+`npm install` and `npm run tools:install` are required once for contributor
+checks. The second command fetches checksum-verified lychee, gitleaks,
+actionlint, and shellcheck into `$XDG_CACHE_HOME/libreharness/tools` for Linux
+x64 and arm64. `npm run check:local` runs the same syntax, test, package, and
+lint set as CI. The Python suite needs no third-party package.
 
 ## Boundaries
 
 - Linux, Node 20 or newer, Python 3.10 or newer. Standard library and Node
-  built-ins; `@ast-grep/cli` is the one approved dependency, others need an operator decision.
+  built-ins; `@ast-grep/cli` is the one runtime dependency. Dev-only dependencies
+  stay pinned, and repository checks fetch checksum-verified upstream binaries
+  without bundling them into the plugin.
 - `src/plugin.js` registers commands, agents, and skills from `commands/`,
   `agents/`, and `skills/`. `plugins/` holds the hook modules.
 - `HARNESS_HOME` is the package root. `HARNESS_STATE` is mutable local state,
@@ -77,7 +81,7 @@ router picks the playbook.
 
 | Rule | Check |
 |---|---|
-| Secrets and private markers stay out of the tree | `gitleaks detect --source . --config .gitleaks.toml` |
+| Secrets and private markers stay out of the tree | `npm run lint:secrets` |
 | Tasks close only with a claim, checked acceptance, and real evidence | `python3 -m unittest tests.test_tasks -v` |
 | Skill structure, ASCII prose, and comment discipline hold | `node tests/harness-ratchets.test.mjs` |
 | Review artifacts, policy paths, and state audits stay wired | `node tests/harness-ratchets.test.mjs` |
