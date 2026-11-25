@@ -38,6 +38,8 @@ class QueueTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def make_task(self, title: str, *, tags: str = "", **kwargs) -> dict:
+        kwargs.setdefault("scope", "Test the task boundary.")
+        kwargs.setdefault("acceptance", "- [ ] test fixture passes")
         task = tasks.new_task(self.root, title, tags=tags, **kwargs)
         task["sections"]["Plan"] = (
             'Data shape: {"state":"idle|running"}\n'
@@ -60,6 +62,48 @@ class QueueTests(unittest.TestCase):
                     "checks": [{"command": verify, "exit": 0}],
                 }
             )
+        )
+
+    def test_claim_rejects_placeholder_scope_and_acceptance(self) -> None:
+        placeholder_scope = self.make_task("Placeholder scope", scope="")
+        with self.assertRaises(SystemExit) as caught:
+            tasks.claim_task(
+                self.root, placeholder_scope["meta"]["id"], owner="lane-a"
+            )
+        self.assertIn("concrete Scope", str(caught.exception))
+
+        auto_scope = self.make_task(
+            "Auto scope",
+            scope="Auto-captured prompt; confirm scope and acceptance.",
+        )
+        with self.assertRaises(SystemExit) as caught:
+            tasks.claim_task(self.root, auto_scope["meta"]["id"], owner="lane-a")
+        self.assertIn("concrete Scope", str(caught.exception))
+
+        placeholder_acceptance = self.make_task(
+            "Placeholder acceptance", acceptance="- [ ] TBD: confirm before claiming."
+        )
+        with self.assertRaises(SystemExit) as caught:
+            tasks.claim_task(
+                self.root, placeholder_acceptance["meta"]["id"], owner="lane-a"
+            )
+        self.assertIn("TBD", str(caught.exception))
+
+        missing_item = self.make_task(
+            "Missing item", acceptance="The widget works."
+        )
+        with self.assertRaises(SystemExit) as caught:
+            tasks.claim_task(self.root, missing_item["meta"]["id"], owner="lane-a")
+        self.assertIn("at least one", str(caught.exception))
+
+        concrete = self.make_task(
+            "Concrete", scope="Only the widget.", acceptance="- [ ] widget works"
+        )
+        self.assertEqual(
+            tasks.claim_task(self.root, concrete["meta"]["id"], owner="lane-a")[
+                "meta"
+            ]["status"],
+            "active",
         )
 
     def test_create_claim_review_done(self) -> None:
@@ -148,8 +192,11 @@ class QueueTests(unittest.TestCase):
         self.assertIn("widget works", str(caught.exception))
 
     def test_done_rejects_tbd_acceptance(self) -> None:
-        task = self.make_task("Placeholder", acceptance="- TBD")
+        task = self.make_task("Placeholder")
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
+        task = tasks.find_task(self.root, task["meta"]["id"])
+        task["sections"]["Acceptance"] = "- TBD"
+        tasks.write_task(task)
         with self.assertRaises(SystemExit) as caught:
             tasks.set_status(
                 self.root,
@@ -588,6 +635,7 @@ class PlanContractTests(unittest.TestCase):
             self.root,
             "Plan contract",
             tags=tags,
+            scope="Only the plan contract.",
             acceptance="- [x] contract holds",
         )
         task["sections"]["Plan"] = plan
@@ -724,6 +772,7 @@ class ReviewArtifactTests(unittest.TestCase):
             self.root,
             f"Review {verify}",
             project="demo",
+            scope="Only the review artifact.",
             acceptance="- [x] review runs",
         )
         task["sections"]["Plan"] = (

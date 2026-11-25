@@ -11,7 +11,7 @@ import {
 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -144,6 +144,24 @@ if (!mapping.includes('"session":"s1"') || !mapping.includes(id)) {
 if (task.includes("use /goal")) throw new Error("task scope still requires /goal");
 if (!task.includes("confirm scope and acceptance")) {
   throw new Error("task scope does not state the acceptance confirmation");
+}
+const prematureClaim = spawnSync(
+  "python3",
+  [join(root, "bin/tasks.py"), "claim", id, "--owner", "test", "--repo", repo],
+  {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      HARNESS_STATE: root,
+      PYTHONDONTWRITEBYTECODE: "1",
+    },
+  },
+);
+if (prematureClaim.status === 0) {
+  throw new Error("placeholder intake task was claimable");
+}
+if (!prematureClaim.stderr.includes("concrete Scope")) {
+  throw new Error("placeholder intake failure did not name the scope boundary");
 }
 
 
@@ -295,6 +313,7 @@ const taskPath = join(root, "work/tasks", `${id}.md`);
 writeFileSync(
   taskPath,
   readFileSync(taskPath, "utf8")
+    .replace(/^Auto-captured prompt;.*$/m, "Fix the login redirect.")
     .replace(/^- \[ \] TBD.*$/m, "- [x] login redirect is fixed")
     .replace(
       /## Plan\n\n/,

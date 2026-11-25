@@ -742,6 +742,32 @@ def normalized_path(value: str) -> str:
     return str(Path(value).expanduser().resolve()) if value else ""
 
 
+PLACEHOLDER_SCOPE = re.compile(
+    r"^(?:TBD\b|Auto-captured prompt;\s*confirm scope)", re.IGNORECASE
+)
+ACCEPTANCE_ITEM = re.compile(r"^-\s+\[[ xX]\]\s+\S")
+
+
+def validate_claimable_task(task: dict) -> None:
+    task_id = task["meta"].get("id")
+    scope = " ".join(task["sections"].get("Scope", "").split())
+    if not scope or PLACEHOLDER_SCOPE.match(scope):
+        raise SystemExit(
+            f"claim: {task_id} needs a concrete Scope before work starts"
+        )
+    acceptance = task["sections"].get("Acceptance", "").strip()
+    if not acceptance:
+        raise SystemExit(f"claim: {task_id} needs an Acceptance section")
+    if "TBD" in acceptance.upper():
+        raise SystemExit(
+            f"claim: {task_id} needs concrete acceptance, not a TBD placeholder"
+        )
+    if not any(ACCEPTANCE_ITEM.match(line.strip()) for line in acceptance.splitlines()):
+        raise SystemExit(
+            f"claim: {task_id} Acceptance needs at least one '- [ ]' or '- [x]' item"
+        )
+
+
 def claim_task(
     root: Path,
     key: str,
@@ -759,6 +785,7 @@ def claim_task(
             raise SystemExit(
                 f"error: {task['meta']['id']} is a goal; claim its child tasks"
             )
+        validate_claimable_task(task)
         planned_repo = repo or (Path(worktree) if worktree else None) or Path.cwd()
         validate_task_plan(task, planned_repo)
         status = task["meta"].get("status", "ready")

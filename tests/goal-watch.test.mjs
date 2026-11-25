@@ -149,6 +149,8 @@ const closeChild = tasks(
   "demo",
   "--parent",
   closeGoal,
+  "--scope",
+  "Close the demo child.",
   "--acceptance",
   "- [x] child done",
 );

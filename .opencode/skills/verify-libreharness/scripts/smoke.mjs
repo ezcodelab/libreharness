@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // One honest smoke path for the plugin and the queue. It owns its state
 // directory, drives the real hooks and CLI, and leaves a machine-readable report.
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -124,11 +124,31 @@ try {
   );
   const task = readFileSync(taskPath, "utf8");
   check(task.includes("status: inbox"), "task is not inbox");
-  const accepted = task.replace(
+  const premature = spawnSync(
+    "python3",
+    [TASKS, "claim", taskId, "--owner", "smoke", "--repo", ROOT],
+    {
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH ?? "/usr/bin:/bin",
+        HOME: process.env.HOME ?? "",
+        HARNESS_STATE: state,
+        PYTHONDONTWRITEBYTECODE: "1",
+      },
+    },
+  );
+  check(premature.status !== 0, "placeholder intake task was claimable");
+  check(
+    premature.stderr.includes("concrete Scope"),
+    "premature claim failure did not name the scope boundary",
+  );
+  const scoped = task.replace(/^Auto-captured prompt;.*$/m, "Fix the login redirect.");
+  check(scoped !== task, "scope placeholder missing");
+  const accepted = scoped.replace(
     /^- \[ \] TBD.*$/m,
     "- [x] review artifact records a PASS at HEAD",
   );
-  check(accepted !== task, "acceptance placeholder missing");
+  check(accepted !== scoped, "acceptance placeholder missing");
   const planned = accepted.replace(
     /## Plan\n\n/,
     `## Plan\n\nData shape: {"task":"string","status":"string"}\n` +
