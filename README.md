@@ -86,7 +86,9 @@ permissions. Add a model to a stub for per-agent routing, or set the optional
 
 Use exact models available in the operator's provider. Routing is applied only
 when the agent launches; the main session keeps its selected model. From a
-checkout, use the absolute path instead of the npm name.
+checkout or extracted GitHub release archive, run
+`npm install --omit=dev --no-audit --no-fund` and use the absolute path instead
+of the npm name.
 
 OpenCode loads global and project `AGENTS.md` files natively. The plugin does not
 inject instructions, so the LibreHarness contract stays scoped to this workspace.
@@ -133,8 +135,10 @@ in `.github/`.
 
 ## Requirements
 
-Linux, OpenCode 2.x, Node 20 or newer, and Python 3.10 or newer. A model
-provider of your choice.
+Linux, OpenCode 2.x, Node 20 or newer, Python 3.10 or newer, and Git. The
+authenticated GitHub CLI is required to ship pull requests. Repository
+contributors get the pinned check tools through npm without system installs; a
+model provider is still your choice.
 
 ## License
 

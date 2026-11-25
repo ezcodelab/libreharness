@@ -14,6 +14,10 @@
   stalled goal continuations send one stop notice that requires a handoff.
 - UI work routes through product tokens and runtime journey evidence; design
   review compares real artifacts and removes generic taste prose.
+- `npm run check:local` runs the full repository check set through pinned,
+  checksum-verified lychee, gitleaks, actionlint, shellcheck, and markdownlint
+  versions. Tools download to the user cache on Linux x64 or arm64; plugin users
+  do not need them.
 
 ### Rationale over numbers
 

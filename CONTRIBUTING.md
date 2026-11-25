@@ -8,9 +8,10 @@ Contributions are welcome.
 ## Development setup
 
 Requirements: Linux, Git, Python 3.10 or newer, and Node 20 or newer. No Python
-package is required. `npm install` is required for the Node tests because
-`src/plugin.js` imports `@opencode/plugin`; the Python suite runs without
-`node_modules`.
+package is required. `npm install` is required for the Node tests and pinned
+Markdown checker because `src/plugin.js` imports `@opencode/plugin`; the Python
+suite runs without `node_modules`. The GitHub CLI is only needed to ship a pull
+request.
 
 ```sh
 git clone https://github.com/ezcodelab/libreharness
@@ -34,22 +35,20 @@ about while developing.
 Run these before sending a change:
 
 ```sh
-python3 -m compileall -q bin tests
-python3 -m unittest discover -s tests -p 'test_*.py' -v
-npm run test:node
-node --check src/plugin.js
-node --check plugins/auto-intake.js
-node --check plugins/goal-watch.js
-node --check plugins/usage-ledger.js
-python3 -m json.tool package.json >/dev/null
-npm pack --dry-run
-npx --yes markdownlint-cli2@0.18.1 '**/*.md'
+npm install
+npm run check:local
 ```
 
-CI also runs `lychee` for offline links, `gitleaks` for secrets, `shellcheck`
-for shell files, and `actionlint` for workflows. The Markdown rule set is in
-`.markdownlint-cli2.jsonc`; it is correctness-only, so style preferences do not
-fail a pull request.
+`check:local` runs syntax checks, Python and Node tests, the package dry run,
+Markdown, links, secrets, shell, and workflow checks. It downloads pinned
+lychee, gitleaks, actionlint, and shellcheck binaries into
+`$XDG_CACHE_HOME/libreharness/tools` for Linux x64 or arm64. Run
+`npm run tools:install` to preload them. CI runs the same npm commands, so no
+system lychee, gitleaks, actionlint, shellcheck, or Docker install is required.
+
+Plugin users do not run these checks and do not download the extra binaries.
+The Markdown rule set is in `.markdownlint-cli2.jsonc`; it is correctness-only,
+so style preferences do not fail a pull request.
 
 The Python suite uses temporary state roots. The Node tests use temporary
 directories and mocks. No test makes a live model call or needs a key.
