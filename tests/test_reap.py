@@ -44,6 +44,8 @@ class ReapTests(unittest.TestCase):
         return result.stdout.strip()
 
     def make_task(self, title: str, **kwargs) -> dict:
+        kwargs.setdefault("scope", "Test the lane boundary.")
+        kwargs.setdefault("acceptance", "- [ ] lane fixture passes")
         task = tasks.new_task(self.root, title, **kwargs)
         task["sections"]["Plan"] = (
             'Data shape: {"state":"idle|running"}\n'
@@ -64,6 +66,7 @@ class ReapTests(unittest.TestCase):
                     "task": task["meta"]["id"],
                     "head": tasks.git_head(target),
                     "diff_sha256": tasks.review_diff(target),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [{"command": verify, "exit": 0}],
                 }
@@ -81,7 +84,7 @@ class ReapTests(unittest.TestCase):
             title,
             parent=parent,
             owns=owns,
-            acceptance="- lane works",
+            acceptance="- [ ] lane works",
         )
         return tasks.lane_task(
             self.root, task["meta"]["id"], repo=self.repo, owner="lane-a", quiet=True

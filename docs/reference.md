@@ -179,10 +179,11 @@ pointing Verify at an unrelated harness check.
 ### Review artifact
 
 `tasks.py review <id> --repo <repo> --run "<command>"` runs allowlisted argv
-without a shell, records the observed exits, the exact HEAD, and a digest of
-the reviewed diff in `work/reviews/<id>.json`, then validates the artifact.
-No-argument mode validates an existing artifact; `--unverify` downgrades it.
-Any commit or working-tree change makes the recorded diff stale.
+without a shell, records the observed exits, the exact HEAD, a digest of the
+reviewed diff, and a digest of Scope, Out of scope, Acceptance, Data shape, and
+Verify in `work/reviews/<id>.json`, then validates the artifact. No-argument
+mode validates an existing artifact; `--unverify` downgrades it. Any commit,
+working-tree change, or task contract change makes the artifact stale.
 
 PASS needs at least one check, every recorded exit zero, and the task's Verify
 command exactly once. A missing, malformed, stale, failed, or task-mismatched
@@ -205,9 +206,11 @@ full check after integration. A green lane is not a green integration.
 
 ### Handoff
 
-A handoff is a bounded state transfer for the next session: state, decisions,
-changed files, the exact next action, and any open verification. Put it in the
-task's Handoff section, not in a transcript.
+A handoff is a bounded state transfer for the next session. The Handoff section
+requires seven labels: State, Decisions, Files, Checks, Open, Next, and Context.
+`tasks.py handoff <id>` rejects an incomplete handoff and
+`tasks.py handoff <id> --check` validates an existing one. The packet carries
+the handoff together with scope, acceptance, plan, and evidence.
 
 ## Workflow
 
@@ -332,8 +335,9 @@ Three local plugins are bundled. They use Node built-ins and never call a model.
   queue note. It skips questions, delegation prompts, and secret-shaped text.
   Opt out with `AUTO_INTAKE=off`.
 - **goal-watch** reminds the owning session once when an active goal is closable,
-  and continues one `autorun` goal while it has ready children. It never
-  creates, closes, or marks work done.
+  and continues one `autorun` goal while it has ready children. When progress
+  stalls or the continuation budget is exhausted, it sends one stop notice that
+  requires a handoff. It never creates, closes, or marks work done.
 - **usage-ledger** records provider-reported cost, token classes, model steps,
   and retries per session. It stores no prompts, diffs, or model output. Opt out
   with `USAGE_LEDGER=off`.

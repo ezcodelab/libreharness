@@ -1,26 +1,29 @@
 ---
-description: Review a UI screenshot against references and the ui-design rules
+description: Compare UI evidence from the running product against references, tokens, and the ui-design rules
 ---
 <!-- SPDX-License-Identifier: MIT -->
-Review the UI shown in: $ARGUMENTS
+Review the UI for: $ARGUMENTS
 
-1. Load the `ui-design` skill.
-2. Read the approved references from `$UI_REFERENCES_DIR` when set, otherwise
-   from the project's `docs/ui/` directory. List what you are comparing against.
-3. If you can see the image(s), compare at the supplied widths and report only
-   deviations:
-   - developer identifiers or labels that explain the layout
-   - more than one primary action; weak hierarchy; inconsistent spacing,
-     type, radius, colour or icon set
-   - copy that is vague, marketing-like, or restates the label
-   - missing empty/loading/error/focus/long-content states
-   - contrast, focus visibility, keyboard path, touch target
-   - a generic-default look that does not answer the specific subject: warm
-     cream plus serif plus terracotta, acid green on near-black, broadsheet
-     hairline columns, identical rounded SaaS cards, all-caps eyebrows,
-     middle-dot metadata, or decorative entrance motion. Name the missing
-     subject-specific choice, not just the style.
-4. If you cannot see images, say so and run the text checklist instead
-   (labels, copy, states). Ask for the screenshot as an attachment or a DOM
-   snapshot; do not guess.
-5. Output: **Blocking**, **Quick wins**, **Keep**. No code edits in this turn.
+1. Load the `ui-design` skill. Read the project's tokens, components, design
+   docs, and the callers of the changed feature.
+2. Find the project's `verify-<app>` skill and feature map. Use its existing
+   evidence only when the artifact matches the current tree and affected
+   journey. Otherwise run the mapped journey and capture screenshots, a short
+   recording, or a trace from the real surface.
+3. Read approved references from `$UI_REFERENCES_DIR` when set, otherwise from
+   the project's `docs/ui/` directory. List what you compare against.
+4. If the surface cannot be driven or observed, mark the review UNVERIFIED and
+   report the missing launch, drive, or capture step. Use `verification` to
+   repair the path. Do not ask the operator for a manual screenshot as the
+   default bridge.
+5. For variants, compare the same viewport, content, and must-hold states side
+   by side. State the observable difference and ask the operator to choose.
+   For a contained change, compare before and after.
+6. Report only deviations the evidence shows:
+   - missing or invented tokens, components, spacing, type, radius, or icons
+   - hierarchy, state, focus, contrast, keyboard, touch, or long-content failure
+   - copy that names implementation details or does not name the user outcome
+   - a final-screen-only claim where the journey or failure path is unproven
+7. Output **Blocking**, **Evidence**, **Quick wins**, **Keep**, and the selected
+   variant when one exists. Name artifact paths for the task Evidence. No code
+   edits in this turn.

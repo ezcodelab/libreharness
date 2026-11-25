@@ -4,6 +4,17 @@
 
 ## Unreleased
 
+### Trust boundaries
+
+- Claim rejects placeholder scope, placeholder acceptance, and acceptance
+  without a checklist item.
+- Review artifacts bind Scope, Out of scope, Acceptance, Data shape, and Verify,
+  so a task contract change invalidates PASS.
+- Handoffs require State, Decisions, Files, Checks, Open, Next, and Context;
+  stalled goal continuations send one stop notice that requires a handoff.
+- UI work routes through product tokens and runtime journey evidence; design
+  review compares real artifacts and removes generic taste prose.
+
 ### Rationale over numbers
 
 - Replace the remaining fixed caps with the rule each encoded: continuations

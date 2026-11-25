@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // One honest smoke path for the plugin and the queue. It owns its state
 // directory, drives the real hooks and CLI, and leaves a machine-readable report.
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -124,11 +124,31 @@ try {
   );
   const task = readFileSync(taskPath, "utf8");
   check(task.includes("status: inbox"), "task is not inbox");
-  const accepted = task.replace(
+  const premature = spawnSync(
+    "python3",
+    [TASKS, "claim", taskId, "--owner", "smoke", "--repo", ROOT],
+    {
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH ?? "/usr/bin:/bin",
+        HOME: process.env.HOME ?? "",
+        HARNESS_STATE: state,
+        PYTHONDONTWRITEBYTECODE: "1",
+      },
+    },
+  );
+  check(premature.status !== 0, "placeholder intake task was claimable");
+  check(
+    premature.stderr.includes("concrete Scope"),
+    "premature claim failure did not name the scope boundary",
+  );
+  const scoped = task.replace(/^Auto-captured prompt;.*$/m, "Fix the login redirect.");
+  check(scoped !== task, "scope placeholder missing");
+  const accepted = scoped.replace(
     /^- \[ \] TBD.*$/m,
     "- [x] review artifact records a PASS at HEAD",
   );
-  check(accepted !== task, "acceptance placeholder missing");
+  check(accepted !== scoped, "acceptance placeholder missing");
   const planned = accepted.replace(
     /## Plan\n\n/,
     `## Plan\n\nData shape: {"task":"string","status":"string"}\n` +
@@ -158,6 +178,11 @@ try {
     typeof artifact.diff_sha256 === "string" && artifact.diff_sha256.length === 64,
     "review artifact has no diff fingerprint",
   );
+  check(
+    typeof artifact.contract_sha256 === "string" &&
+      artifact.contract_sha256.length === 64,
+    "review artifact has no contract fingerprint",
+  );
   check(artifact.verdict === "PASS", "review artifact is not PASS");
   check(
     Array.isArray(artifact.checks) && artifact.checks.length > 0,
@@ -173,6 +198,35 @@ try {
     "review artifact is missing the required ratchet check",
   );
   verified.push("review artifact at HEAD with observed checks");
+
+  const reviewedTask = readFileSync(taskPath, "utf8");
+  writeFileSync(
+    taskPath,
+    reviewedTask.replace(
+      "- [x] review artifact records a PASS at HEAD",
+      "- [x] review artifact records a PASS at HEAD\n- [x] acceptance changed after review",
+    ),
+  );
+  const staleContract = spawnSync(
+    "python3",
+    [TASKS, "review", taskId, "--repo", ROOT],
+    {
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH ?? "/usr/bin:/bin",
+        HOME: process.env.HOME ?? "",
+        HARNESS_STATE: state,
+        PYTHONDONTWRITEBYTECODE: "1",
+      },
+    },
+  );
+  check(staleContract.status !== 0, "changed acceptance kept a valid review");
+  check(
+    staleContract.stdout.includes("contract is stale"),
+    "changed acceptance failure did not name the contract",
+  );
+  writeFileSync(taskPath, reviewedTask);
+  verified.push("changed acceptance invalidates the review contract");
 
   queue(["status", taskId, "review", "--repo", ROOT]);
   queue(["validate"]);

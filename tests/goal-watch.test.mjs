@@ -134,12 +134,18 @@ for (let i = 0; i < 3; i += 1) {
 if (prompts.length !== 3) throw new Error("per-goal budget was not exhausted");
 emit({ type: "session.idle", data: { sessionID: "s1" } });
 await new Promise((r) => setTimeout(r, 300));
-if (prompts.length !== 3) throw new Error("nudged past max_continuations");
+if (prompts.length !== 4) throw new Error("budget exhaustion did not stop the goal");
+if (
+  !prompts[3].text.includes("continuation budget exhausted") ||
+  !prompts[3].text.includes("State, Decisions, Files, Checks, Open, Next, and Context")
+) {
+  throw new Error("budget stop notice is not actionable");
+}
 
 tasks("goal", "Second goal", "--project", "demo", "--session", "s1", "--unattended");
 emit({ type: "session.idle", data: { sessionID: "s1" } });
 await new Promise((r) => setTimeout(r, 250));
-if (prompts.length !== 3) throw new Error("nudged with two active goals");
+if (prompts.length !== 4) throw new Error("nudged with two active goals");
 
 const closeGoal = tasks("goal", "Close me", "--project", "demo", "--session", "s1");
 const closeChild = tasks(
@@ -149,6 +155,8 @@ const closeChild = tasks(
   "demo",
   "--parent",
   closeGoal,
+  "--scope",
+  "Close the demo child.",
   "--acceptance",
   "- [x] child done",
 );
@@ -173,20 +181,54 @@ tasks(
 );
 emit({ type: "session.idle", data: { sessionID: "s1" } });
 await new Promise((r) => setTimeout(r, 300));
-if (prompts.length !== 4) throw new Error("closable goal was not reminded");
-if (!prompts[3].text.includes(closeGoal) || !prompts[3].text.includes("ready to close")) {
+if (prompts.length !== 5) throw new Error("closable goal was not reminded");
+if (!prompts[4].text.includes(closeGoal) || !prompts[4].text.includes("ready to close")) {
   throw new Error("close reminder does not name the goal");
 }
-if (!prompts[3].text.includes("close now") || !prompts[3].text.includes("later")) {
+if (!prompts[4].text.includes("close now") || !prompts[4].text.includes("later")) {
   throw new Error("close reminder does not offer close now/later");
 }
 emit({ type: "session.idle", data: { sessionID: "s1" } });
 await new Promise((r) => setTimeout(r, 300));
-if (prompts.length !== 4) throw new Error("close reminder repeated in the same session");
+if (prompts.length !== 5) throw new Error("close reminder repeated in the same session");
 
 emit({ type: "session.idle", data: { sessionID: "s2" } });
 await new Promise((r) => setTimeout(r, 300));
-if (prompts.length !== 4) throw new Error("closable goal was reminded in another session");
+if (prompts.length !== 5) throw new Error("closable goal was reminded in another session");
+
+const stallGoal = tasks(
+  "goal",
+  "Progress stall",
+  "--project",
+  "demo",
+  "--session",
+  "s3",
+  "--unattended",
+);
+tasks(
+  "new",
+  "Stalled child",
+  "--project",
+  "demo",
+  "--parent",
+  stallGoal,
+  "--scope",
+  "Prove progress is visible.",
+  "--acceptance",
+  "- [ ] child advances",
+);
+emit({ type: "session.idle", data: { sessionID: "s3" } });
+await new Promise((r) => setTimeout(r, 300));
+if (prompts.length !== 6) throw new Error("stall goal was not continued once");
+emit({ type: "session.idle", data: { sessionID: "s3" } });
+await new Promise((r) => setTimeout(r, 300));
+if (prompts.length !== 7) throw new Error("no-progress stall was not reported");
+if (!prompts[6].text.includes("no progress since the previous continuation")) {
+  throw new Error("progress stop notice does not name the cause");
+}
+emit({ type: "session.idle", data: { sessionID: "s3" } });
+await new Promise((r) => setTimeout(r, 300));
+if (prompts.length !== 7) throw new Error("progress stop notice repeated");
 cleanup();
 
 if (!prompts[0].text.includes(`Continue the active goal ${goal}`)) {
@@ -194,6 +236,9 @@ if (!prompts[0].text.includes(`Continue the active goal ${goal}`)) {
 }
 if (!prompts[0].text.includes("Next ready child")) {
   throw new Error("continuation prompt does not name the next child");
+}
+if (!prompts[5].text.includes(`Continue the active goal ${stallGoal}`)) {
+  throw new Error("stall test did not receive the first continuation");
 }
 rmSync(root, { recursive: true, force: true });
 console.log("goal-watch: PASS");

@@ -69,10 +69,11 @@ The script writes `/tmp/opencode/verify-libreharness/latest.json` with exactly:
 ```
 
 `verdict` is `PASS` only when every step above ran and passed, and the review
-artifact's `head` equals `git rev-parse HEAD` with a current `diff_sha256`. The
-artifact has a non-empty `checks` list containing the ratchet command with exit
-0; the report carries the same `head`, `verdict`, and `checks`. The `unverified` list is required and names
-what this path cannot reach. Never mark a remote surface verified from here.
+artifact's `head` equals `git rev-parse HEAD` with current `diff_sha256` and
+`contract_sha256` values. The artifact has a non-empty `checks` list containing
+the ratchet command with exit 0; the report carries the same `head`, `verdict`,
+and `checks`. The `unverified` list is required and names what this path cannot
+reach. Never mark a remote surface verified from here.
 
 ## Cleanup
 

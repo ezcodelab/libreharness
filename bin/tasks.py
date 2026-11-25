@@ -321,6 +321,49 @@ def append_log(task: dict, text: str) -> None:
     task["sections"]["Log"] = (log + "\n" + line).strip()
 
 
+HANDOFF_FIELDS = (
+    "State",
+    "Decisions",
+    "Files",
+    "Checks",
+    "Open",
+    "Next",
+    "Context",
+)
+HANDOFF_FIELD = re.compile(r"^\s*-\s+\*\*([A-Za-z]+):\*\*\s*(.*)$")
+
+
+def handoff_problems(text: str) -> list[str]:
+    values: dict[str, list[str]] = {}
+    for line in text.splitlines():
+        match = HANDOFF_FIELD.match(line)
+        if match:
+            values.setdefault(match.group(1), []).append(match.group(2).strip())
+    problems = []
+    for field in HANDOFF_FIELDS:
+        found = values.get(field, [])
+        if not found:
+            problems.append(f"missing {field}")
+        elif len(found) > 1:
+            problems.append(f"duplicate {field}")
+        elif not found[0]:
+            problems.append(f"empty {field}")
+    return problems
+
+
+def write_handoff(root: Path, key: str, text: str) -> dict:
+    problems = handoff_problems(text)
+    if problems:
+        raise SystemExit("handoff: " + "; ".join(problems))
+    with locked(root):
+        task = find_task(root, key)
+        task["sections"]["Handoff"] = text.strip()
+        append_log(task, "handoff written")
+        write_task(task)
+    write_board(root)
+    return task
+
+
 def new_task(
     root: Path,
     title: str,
@@ -742,6 +785,32 @@ def normalized_path(value: str) -> str:
     return str(Path(value).expanduser().resolve()) if value else ""
 
 
+PLACEHOLDER_SCOPE = re.compile(
+    r"^(?:TBD\b|Auto-captured prompt;\s*confirm scope)", re.IGNORECASE
+)
+ACCEPTANCE_ITEM = re.compile(r"^-\s+\[[ xX]\]\s+\S")
+
+
+def validate_claimable_task(task: dict) -> None:
+    task_id = task["meta"].get("id")
+    scope = " ".join(task["sections"].get("Scope", "").split())
+    if not scope or PLACEHOLDER_SCOPE.match(scope):
+        raise SystemExit(
+            f"claim: {task_id} needs a concrete Scope before work starts"
+        )
+    acceptance = task["sections"].get("Acceptance", "").strip()
+    if not acceptance:
+        raise SystemExit(f"claim: {task_id} needs an Acceptance section")
+    if "TBD" in acceptance.upper():
+        raise SystemExit(
+            f"claim: {task_id} needs concrete acceptance, not a TBD placeholder"
+        )
+    if not any(ACCEPTANCE_ITEM.match(line.strip()) for line in acceptance.splitlines()):
+        raise SystemExit(
+            f"claim: {task_id} Acceptance needs at least one '- [ ]' or '- [x]' item"
+        )
+
+
 def claim_task(
     root: Path,
     key: str,
@@ -759,6 +828,7 @@ def claim_task(
             raise SystemExit(
                 f"error: {task['meta']['id']} is a goal; claim its child tasks"
             )
+        validate_claimable_task(task)
         planned_repo = repo or (Path(worktree) if worktree else None) or Path.cwd()
         validate_task_plan(task, planned_repo)
         status = task["meta"].get("status", "ready")
@@ -976,6 +1046,20 @@ def review_path(root: Path, task_id: str) -> Path:
     return root / "work/reviews" / f"{task_id}.json"
 
 
+CONTRACT_SECTIONS = ("Scope", "Out of scope", "Acceptance")
+
+
+def review_contract_digest(task: dict, label: str = "review") -> str:
+    contract = {
+        section: task["sections"].get(section, "").strip()
+        for section in CONTRACT_SECTIONS
+    }
+    contract["Data shape"] = plan_data_shape(task, label)
+    contract["Verify"] = plan_verify(task)
+    payload = json.dumps(contract, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def plan_verify(task: dict) -> str:
     values = [
         match.group(1).strip()
@@ -989,7 +1073,7 @@ def plan_verify(task: dict) -> str:
     return values[0]
 
 
-def plan_data_shape(task: dict) -> str:
+def plan_data_shape(task: dict, label: str = "claim") -> str:
     values = [
         match.group(1).strip()
         for line in task["sections"].get("Plan", "").splitlines()
@@ -997,7 +1081,7 @@ def plan_data_shape(task: dict) -> str:
     ]
     if len(values) != 1:
         raise SystemExit(
-            f"claim: {task['meta'].get('id')} needs exactly one 'Data shape:' line in its Plan"
+            f"{label}: {task['meta'].get('id')} needs exactly one 'Data shape:' line in its Plan"
         )
     return values[0]
 
@@ -1265,6 +1349,24 @@ def validate_review(root: Path, task_id: str, repo: Path) -> int:
             problems.append("artifact diff_sha256 must be a 64-character hex digest")
         elif diff_sha256 != review_diff(repo):
             problems.append("artifact diff is stale; the working diff changed")
+        contract_sha256 = data.get("contract_sha256")
+        if not isinstance(contract_sha256, str) or not SHA256.match(contract_sha256):
+            problems.append(
+                "artifact contract_sha256 must be a 64-character hex digest"
+            )
+        else:
+            try:
+                current_contract = review_contract_digest(
+                    find_task(root, task_id)
+                )
+            except SystemExit as exc:
+                problems.append(str(exc))
+            else:
+                if contract_sha256 != current_contract:
+                    problems.append(
+                        "artifact contract is stale; Scope, Out of scope, "
+                        "Acceptance, Data shape, or Verify changed"
+                    )
         verdict = data.get("verdict")
         if verdict not in REVIEW_VERDICTS:
             problems.append(f"unknown verdict {verdict!r}")
@@ -1326,6 +1428,7 @@ def review_task(
         raise SystemExit(f"review: not a git repository: {repo}")
     task = find_task(root, key)
     task_id = task["meta"]["id"]
+    contract_sha256 = review_contract_digest(task)
     if unverify:
         head = git_head(repo)
         checks: list[dict] = []
@@ -1343,6 +1446,7 @@ def review_task(
                     "task": task_id,
                     "head": head,
                     "diff_sha256": review_diff(repo),
+                    "contract_sha256": contract_sha256,
                     "recorded_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                     "verdict": "UNVERIFIED",
                     "checks": checks,
@@ -1382,6 +1486,7 @@ def review_task(
                 "task": task_id,
                 "head": head_after,
                 "diff_sha256": review_diff(repo),
+                "contract_sha256": contract_sha256,
                 "recorded_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                 "verdict": "PASS" if passed else "UNVERIFIED",
                 "checks": checks,
@@ -1519,6 +1624,7 @@ def validate(root: Path) -> int:
             problems.append(f"{task_id}: active without owner")
         if meta.get("status") == "done" and not task["sections"].get("Evidence", "").strip():
             problems.append(f"{task_id}: done without Evidence")
+
     for task_id, task in by_id.items():
         meta = task["meta"]
         parent = meta.get("parent", "")
@@ -2205,6 +2311,7 @@ def main() -> int:
     handoff.add_argument("task")
     handoff.add_argument("--file", help="file to read; default stdin")
     handoff.add_argument("--text", default="")
+    handoff.add_argument("--check", action="store_true")
 
     log = sub.add_parser("log")
     log.add_argument("task")
@@ -2380,17 +2487,22 @@ def main() -> int:
             unverify=args.unverify,
         )
     if args.command == "handoff":
+        if args.check:
+            task = find_task(root, args.task)
+            text = task["sections"].get("Handoff", "").strip()
+            if not text:
+                raise SystemExit("handoff: no handoff recorded")
+            problems = handoff_problems(text)
+            if problems:
+                raise SystemExit("handoff: " + "; ".join(problems))
+            print(f"handoff: OK {task['meta']['id']}")
+            return 0
         text = args.text
         if not text:
             text = Path(args.file).read_text() if args.file else sys.stdin.read()
         if not text.strip():
             raise SystemExit("error: empty handoff")
-        with locked(root):
-            task = find_task(root, args.task)
-            task["sections"]["Handoff"] = text.strip()
-            append_log(task, "handoff written")
-            write_task(task)
-        write_board(root)
+        task = write_handoff(root, args.task, text)
         print(f"handoff: {task['meta']['id']}")
         return 0
     if args.command == "log":

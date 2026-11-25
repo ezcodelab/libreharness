@@ -38,6 +38,8 @@ class QueueTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def make_task(self, title: str, *, tags: str = "", **kwargs) -> dict:
+        kwargs.setdefault("scope", "Test the task boundary.")
+        kwargs.setdefault("acceptance", "- [ ] test fixture passes")
         task = tasks.new_task(self.root, title, tags=tags, **kwargs)
         task["sections"]["Plan"] = (
             'Data shape: {"state":"idle|running"}\n'
@@ -56,10 +58,53 @@ class QueueTests(unittest.TestCase):
                     "task": task["meta"]["id"],
                     "head": tasks.git_head(repo or self.repo),
                     "diff_sha256": tasks.review_diff(repo or self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [{"command": verify, "exit": 0}],
                 }
             )
+        )
+
+    def test_claim_rejects_placeholder_scope_and_acceptance(self) -> None:
+        placeholder_scope = self.make_task("Placeholder scope", scope="")
+        with self.assertRaises(SystemExit) as caught:
+            tasks.claim_task(
+                self.root, placeholder_scope["meta"]["id"], owner="lane-a"
+            )
+        self.assertIn("concrete Scope", str(caught.exception))
+
+        auto_scope = self.make_task(
+            "Auto scope",
+            scope="Auto-captured prompt; confirm scope and acceptance.",
+        )
+        with self.assertRaises(SystemExit) as caught:
+            tasks.claim_task(self.root, auto_scope["meta"]["id"], owner="lane-a")
+        self.assertIn("concrete Scope", str(caught.exception))
+
+        placeholder_acceptance = self.make_task(
+            "Placeholder acceptance", acceptance="- [ ] TBD: confirm before claiming."
+        )
+        with self.assertRaises(SystemExit) as caught:
+            tasks.claim_task(
+                self.root, placeholder_acceptance["meta"]["id"], owner="lane-a"
+            )
+        self.assertIn("TBD", str(caught.exception))
+
+        missing_item = self.make_task(
+            "Missing item", acceptance="The widget works."
+        )
+        with self.assertRaises(SystemExit) as caught:
+            tasks.claim_task(self.root, missing_item["meta"]["id"], owner="lane-a")
+        self.assertIn("at least one", str(caught.exception))
+
+        concrete = self.make_task(
+            "Concrete", scope="Only the widget.", acceptance="- [ ] widget works"
+        )
+        self.assertEqual(
+            tasks.claim_task(self.root, concrete["meta"]["id"], owner="lane-a")[
+                "meta"
+            ]["status"],
+            "active",
         )
 
     def test_create_claim_review_done(self) -> None:
@@ -148,8 +193,11 @@ class QueueTests(unittest.TestCase):
         self.assertIn("widget works", str(caught.exception))
 
     def test_done_rejects_tbd_acceptance(self) -> None:
-        task = self.make_task("Placeholder", acceptance="- TBD")
+        task = self.make_task("Placeholder")
         tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
+        task = tasks.find_task(self.root, task["meta"]["id"])
+        task["sections"]["Acceptance"] = "- TBD"
+        tasks.write_task(task)
         with self.assertRaises(SystemExit) as caught:
             tasks.set_status(
                 self.root,
@@ -524,13 +572,78 @@ class QueueTests(unittest.TestCase):
         self.assertNotEqual(empty_hash.returncode, 0)
         self.assertEqual(list((self.root / "work/tasks").glob("*.md")), [])
 
-    def test_handoff_and_summary(self) -> None:
-        task = tasks.new_task(self.root, "Handoff", scope="Do the thing")
-        task["sections"]["Handoff"] = "Next: run the live check."
-        tasks.write_task(task)
-        shown = tasks.summary(tasks.find_task(self.root, task["meta"]["id"]))
+    def test_handoff_requires_structured_fields_and_packet_context(self) -> None:
+        task = tasks.new_task(
+            self.root,
+            "Handoff",
+            scope="Do the thing",
+            acceptance="- [ ] thing works",
+        )
+        with self.assertRaises(SystemExit) as caught:
+            tasks.write_handoff(
+                self.root,
+                task["meta"]["id"],
+                "- **State:** active\n- **Next:** run the live check.",
+            )
+        self.assertIn("missing Decisions", str(caught.exception))
+
+        text = "\n".join(
+            [
+                "- **State:** in progress",
+                "- **Decisions:** keep the queue boundary",
+                "- **Files:** bin/tasks.py",
+                "- **Checks:** python3 -m unittest tests.test_tasks -v: PASS",
+                "- **Open:** none",
+                "- **Next:** run the live check",
+                "- **Context:** task packet",
+            ]
+        )
+        written = tasks.write_handoff(self.root, task["meta"]["id"], text)
+        self.assertEqual(written["meta"]["id"], task["meta"]["id"])
+        shown = tasks.packet(tasks.find_task(self.root, task["meta"]["id"]))
         self.assertIn("Do the thing", shown)
+        self.assertIn("- [ ] thing works", shown)
+        self.assertIn("run the live check", shown)
+        self.assertEqual(tasks.validate(self.root), 0)
+        checked = subprocess.run(
+            [
+                sys.executable,
+                str(Path(tasks.__file__)),
+                "--root",
+                str(self.root),
+                "handoff",
+                task["meta"]["id"],
+                "--check",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(checked.returncode, 0, checked.stderr)
+        self.assertIn("handoff: OK", checked.stdout)
         self.assertIn("no task matching", self._bad_lookup())
+
+    def test_handoff_check_rejects_an_incomplete_edit(self) -> None:
+        task = self.make_task("Broken handoff")
+        tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
+        task = tasks.find_task(self.root, task["meta"]["id"])
+        task["sections"]["Handoff"] = "- **Next:** keep going"
+        tasks.write_task(task)
+        checked = subprocess.run(
+            [
+                sys.executable,
+                str(Path(tasks.__file__)),
+                "--root",
+                str(self.root),
+                "handoff",
+                task["meta"]["id"],
+                "--check",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        self.assertNotEqual(checked.returncode, 0)
+        self.assertIn("missing State", checked.stderr)
+        self.assertEqual(tasks.validate(self.root), 0)
 
     def _bad_lookup(self) -> str:
         try:
@@ -588,6 +701,7 @@ class PlanContractTests(unittest.TestCase):
             self.root,
             "Plan contract",
             tags=tags,
+            scope="Only the plan contract.",
             acceptance="- [x] contract holds",
         )
         task["sections"]["Plan"] = plan
@@ -658,6 +772,7 @@ class PlanContractTests(unittest.TestCase):
                     "task": task["meta"]["id"],
                     "head": tasks.git_head(self.repo),
                     "diff_sha256": tasks.review_diff(self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [
                         {
@@ -724,6 +839,7 @@ class ReviewArtifactTests(unittest.TestCase):
             self.root,
             f"Review {verify}",
             project="demo",
+            scope="Only the review artifact.",
             acceptance="- [x] review runs",
         )
         task["sections"]["Plan"] = (
@@ -776,6 +892,41 @@ class ReviewArtifactTests(unittest.TestCase):
         )
         self.assertEqual(
             tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+
+    def test_contract_change_invalidates_pass(self) -> None:
+        verify = "python3 -m unittest tests.test_ok -v"
+        task = self.make_task(verify)
+        task_id = task["meta"]["id"]
+        self.assertEqual(
+            tasks.review_task(
+                self.root, task_id, repo=self.repo, runs=[verify]
+            ),
+            0,
+        )
+        stored = tasks.find_task(self.root, task_id)
+        original_scope = stored["sections"]["Scope"]
+        original_acceptance = stored["sections"]["Acceptance"]
+
+        stored["sections"]["Acceptance"] = (
+            original_acceptance + "\n- [x] a newly claimed outcome"
+        )
+        tasks.write_task(stored)
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+
+        stored["sections"]["Acceptance"] = original_acceptance
+        stored["sections"]["Scope"] = original_scope + " Also another surface."
+        tasks.write_task(stored)
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+
+        stored["sections"]["Scope"] = original_scope
+        tasks.write_task(stored)
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 0
         )
 
     def test_second_verify_command_passes_only_when_it_ran(self) -> None:
@@ -851,6 +1002,7 @@ class ReviewArtifactTests(unittest.TestCase):
                     "task": task_id,
                     "head": tasks.git_head(self.repo),
                     "diff_sha256": tasks.review_diff(self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [],
                 }
@@ -866,6 +1018,7 @@ class ReviewArtifactTests(unittest.TestCase):
                     "task": task_id,
                     "head": tasks.git_head(self.repo),
                     "diff_sha256": tasks.review_diff(self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [{"command": verify, "exit": 1}],
                 }
@@ -881,6 +1034,7 @@ class ReviewArtifactTests(unittest.TestCase):
                     "task": task_id,
                     "head": tasks.git_head(self.repo),
                     "diff_sha256": tasks.review_diff(self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [
                         {

@@ -4,10 +4,10 @@ description: Take over a queued or paused task from its packet and handoff
 <!-- SPDX-License-Identifier: MIT -->
 Takeover: $ARGUMENTS
 
-Use the work-queue skill and the handoff section in `engineering-loop`. Do not
-edit code until the state is clear.
+Use the work-queue skill. Do not edit code until the state is clear.
 
-1. Require a task id. `tasks.py show <id> --packet`.
+1. Require a task id. `tasks.py show <id> --packet`. When the task has a
+   Handoff, run `tasks.py handoff <id> --check` and stop if it is incomplete.
 2. If the task is `ready` and unowned, claim it for this session's lane. If it
    is `active` under another owner, stop and ask before dual-writing.
 3. Read the task's Handoff, the project `AGENTS.md`, the relevant
