@@ -26,6 +26,8 @@ Mermaid statechart from the user's point of view, and a findings table.
   - dependencies must be final unless `--force`;
   - one owner and one lane per active task;
   - `done` requires recorded evidence;
+  - a non-empty Handoff on a non-final task carries State, Decisions, Files,
+    Checks, Open, Next, and Context;
   - `review` means the review passed and the task awaits integration or close.
 - Transitions:
 

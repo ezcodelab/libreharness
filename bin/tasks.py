@@ -321,6 +321,49 @@ def append_log(task: dict, text: str) -> None:
     task["sections"]["Log"] = (log + "\n" + line).strip()
 
 
+HANDOFF_FIELDS = (
+    "State",
+    "Decisions",
+    "Files",
+    "Checks",
+    "Open",
+    "Next",
+    "Context",
+)
+HANDOFF_FIELD = re.compile(r"^\s*-\s+\*\*([A-Za-z]+):\*\*\s*(.*)$")
+
+
+def handoff_problems(text: str) -> list[str]:
+    values: dict[str, list[str]] = {}
+    for line in text.splitlines():
+        match = HANDOFF_FIELD.match(line)
+        if match:
+            values.setdefault(match.group(1), []).append(match.group(2).strip())
+    problems = []
+    for field in HANDOFF_FIELDS:
+        found = values.get(field, [])
+        if not found:
+            problems.append(f"missing {field}")
+        elif len(found) > 1:
+            problems.append(f"duplicate {field}")
+        elif not found[0]:
+            problems.append(f"empty {field}")
+    return problems
+
+
+def write_handoff(root: Path, key: str, text: str) -> dict:
+    problems = handoff_problems(text)
+    if problems:
+        raise SystemExit("handoff: " + "; ".join(problems))
+    with locked(root):
+        task = find_task(root, key)
+        task["sections"]["Handoff"] = text.strip()
+        append_log(task, "handoff written")
+        write_task(task)
+    write_board(root)
+    return task
+
+
 def new_task(
     root: Path,
     title: str,
@@ -1581,6 +1624,10 @@ def validate(root: Path) -> int:
             problems.append(f"{task_id}: active without owner")
         if meta.get("status") == "done" and not task["sections"].get("Evidence", "").strip():
             problems.append(f"{task_id}: done without Evidence")
+        handoff = task["sections"].get("Handoff", "").strip()
+        if meta.get("status") not in FINAL and handoff:
+            for problem in handoff_problems(handoff):
+                problems.append(f"{task_id}: handoff {problem}")
     for task_id, task in by_id.items():
         meta = task["meta"]
         parent = meta.get("parent", "")
@@ -2267,6 +2314,7 @@ def main() -> int:
     handoff.add_argument("task")
     handoff.add_argument("--file", help="file to read; default stdin")
     handoff.add_argument("--text", default="")
+    handoff.add_argument("--check", action="store_true")
 
     log = sub.add_parser("log")
     log.add_argument("task")
@@ -2442,17 +2490,22 @@ def main() -> int:
             unverify=args.unverify,
         )
     if args.command == "handoff":
+        if args.check:
+            task = find_task(root, args.task)
+            text = task["sections"].get("Handoff", "").strip()
+            if not text:
+                raise SystemExit("handoff: no handoff recorded")
+            problems = handoff_problems(text)
+            if problems:
+                raise SystemExit("handoff: " + "; ".join(problems))
+            print(f"handoff: OK {task['meta']['id']}")
+            return 0
         text = args.text
         if not text:
             text = Path(args.file).read_text() if args.file else sys.stdin.read()
         if not text.strip():
             raise SystemExit("error: empty handoff")
-        with locked(root):
-            task = find_task(root, args.task)
-            task["sections"]["Handoff"] = text.strip()
-            append_log(task, "handoff written")
-            write_task(task)
-        write_board(root)
+        task = write_handoff(root, args.task, text)
         print(f"handoff: {task['meta']['id']}")
         return 0
     if args.command == "log":

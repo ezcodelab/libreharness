@@ -65,12 +65,34 @@ function closeReminder(goal) {
   );
 }
 
+function stopReminder(goal, reason, state) {
+  const counts = state?.counts ?? {};
+  const summary = Object.entries(counts)
+    .filter(([, value]) => value > 0)
+    .map(([status, value]) => `${status}=${value}`)
+    .join(" ");
+  const ready = Array.isArray(state?.ready) && state.ready.length > 0
+    ? state.ready.join(", ")
+    : "none";
+  const open = Array.isArray(state?.open) && state.open.length > 0
+    ? state.open.join(", ")
+    : "none";
+  return (
+    `Stopped goal ${goal.id}: ${reason}. Current state: ${summary || "empty"}; ` +
+    `ready: ${ready}; open: ${open}. Do not start another implementation pass. ` +
+    `Record the best current evidence, the blocker, and one bounded next action ` +
+    `in the task Handoff with State, Decisions, Files, Checks, Open, Next, and ` +
+    `Context, then stop.`
+  );
+}
+
 export default {
   id: "goal-watch",
   async setup(ctx) {
     if (!ctx?.event?.subscribe || !ctx?.session?.prompt) return;
     const counts = new Map();
     const reminded = new Set();
+    const stopped = new Set();
     const seen = new Map();
     const controller = new AbortController();
 
@@ -125,7 +147,6 @@ export default {
           if (!id) continue;
           const max = maxContinuations(goal.max_continuations);
           const used = counts.get(id) ?? 0;
-          if (max !== null && used >= max) continue;
           let state;
           try {
             state = JSON.parse(await run(["goal-status", id, "--json"]));
@@ -134,8 +155,36 @@ export default {
           }
           if (state.closable) continue; // the close reminder owns this case
           const next = continuationChild(state);
-          if (!next) continue;
-          if (!continuationAllowed({ max, used, previous: seen.get(id), state })) continue;
+          let reason = "";
+          if (max !== null && used >= max) {
+            reason = "continuation budget exhausted";
+          } else if (
+            !continuationAllowed({ max, used, previous: seen.get(id), state })
+          ) {
+            reason = "no progress since the previous continuation";
+          } else if (!next) {
+            reason = "no ready child to continue";
+          }
+          if (reason) {
+            const key = [
+              sessionID,
+              id,
+              reason,
+              progressSignature(state),
+            ].join(":");
+            if (!stopped.has(key)) {
+              stopped.add(key);
+              try {
+                await ctx.session.prompt({
+                  sessionID,
+                  text: stopReminder(goal, reason, state),
+                });
+              } catch {
+                // The session may be closing; a missed stop notice is safe.
+              }
+            }
+            continue;
+          }
           seen.set(id, progressSignature(state));
           counts.set(id, used + 1);
           try {

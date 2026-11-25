@@ -206,9 +206,11 @@ full check after integration. A green lane is not a green integration.
 
 ### Handoff
 
-A handoff is a bounded state transfer for the next session: state, decisions,
-changed files, the exact next action, and any open verification. Put it in the
-task's Handoff section, not in a transcript.
+A handoff is a bounded state transfer for the next session. The Handoff section
+requires seven labels: State, Decisions, Files, Checks, Open, Next, and Context.
+`tasks.py handoff <id>` rejects an incomplete handoff and
+`tasks.py handoff <id> --check` validates an existing one. The packet carries
+the handoff together with scope, acceptance, plan, and evidence.
 
 ## Workflow
 
@@ -333,8 +335,9 @@ Three local plugins are bundled. They use Node built-ins and never call a model.
   queue note. It skips questions, delegation prompts, and secret-shaped text.
   Opt out with `AUTO_INTAKE=off`.
 - **goal-watch** reminds the owning session once when an active goal is closable,
-  and continues one `autorun` goal while it has ready children. It never
-  creates, closes, or marks work done.
+  and continues one `autorun` goal while it has ready children. When progress
+  stalls or the continuation budget is exhausted, it sends one stop notice that
+  requires a handoff. It never creates, closes, or marks work done.
 - **usage-ledger** records provider-reported cost, token classes, model steps,
   and retries per session. It stores no prompts, diffs, or model output. Opt out
   with `USAGE_LEDGER=off`.

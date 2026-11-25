@@ -572,13 +572,63 @@ class QueueTests(unittest.TestCase):
         self.assertNotEqual(empty_hash.returncode, 0)
         self.assertEqual(list((self.root / "work/tasks").glob("*.md")), [])
 
-    def test_handoff_and_summary(self) -> None:
-        task = tasks.new_task(self.root, "Handoff", scope="Do the thing")
-        task["sections"]["Handoff"] = "Next: run the live check."
-        tasks.write_task(task)
-        shown = tasks.summary(tasks.find_task(self.root, task["meta"]["id"]))
+    def test_handoff_requires_structured_fields_and_packet_context(self) -> None:
+        task = tasks.new_task(
+            self.root,
+            "Handoff",
+            scope="Do the thing",
+            acceptance="- [ ] thing works",
+        )
+        with self.assertRaises(SystemExit) as caught:
+            tasks.write_handoff(
+                self.root,
+                task["meta"]["id"],
+                "- **State:** active\n- **Next:** run the live check.",
+            )
+        self.assertIn("missing Decisions", str(caught.exception))
+
+        text = "\n".join(
+            [
+                "- **State:** in progress",
+                "- **Decisions:** keep the queue boundary",
+                "- **Files:** bin/tasks.py",
+                "- **Checks:** python3 -m unittest tests.test_tasks -v: PASS",
+                "- **Open:** none",
+                "- **Next:** run the live check",
+                "- **Context:** task packet",
+            ]
+        )
+        written = tasks.write_handoff(self.root, task["meta"]["id"], text)
+        self.assertEqual(written["meta"]["id"], task["meta"]["id"])
+        shown = tasks.packet(tasks.find_task(self.root, task["meta"]["id"]))
         self.assertIn("Do the thing", shown)
+        self.assertIn("- [ ] thing works", shown)
+        self.assertIn("run the live check", shown)
+        self.assertEqual(tasks.validate(self.root), 0)
+        checked = subprocess.run(
+            [
+                sys.executable,
+                str(Path(tasks.__file__)),
+                "--root",
+                str(self.root),
+                "handoff",
+                task["meta"]["id"],
+                "--check",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(checked.returncode, 0, checked.stderr)
+        self.assertIn("handoff: OK", checked.stdout)
         self.assertIn("no task matching", self._bad_lookup())
+
+    def test_validate_rejects_an_incomplete_handoff(self) -> None:
+        task = self.make_task("Broken handoff")
+        tasks.claim_task(self.root, task["meta"]["id"], owner="lane-a")
+        task = tasks.find_task(self.root, task["meta"]["id"])
+        task["sections"]["Handoff"] = "- **Next:** keep going"
+        tasks.write_task(task)
+        self.assertEqual(tasks.validate(self.root), 1)
 
     def _bad_lookup(self) -> str:
         try:
