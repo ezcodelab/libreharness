@@ -179,10 +179,11 @@ pointing Verify at an unrelated harness check.
 ### Review artifact
 
 `tasks.py review <id> --repo <repo> --run "<command>"` runs allowlisted argv
-without a shell, records the observed exits, the exact HEAD, and a digest of
-the reviewed diff in `work/reviews/<id>.json`, then validates the artifact.
-No-argument mode validates an existing artifact; `--unverify` downgrades it.
-Any commit or working-tree change makes the recorded diff stale.
+without a shell, records the observed exits, the exact HEAD, a digest of the
+reviewed diff, and a digest of Scope, Out of scope, Acceptance, Data shape, and
+Verify in `work/reviews/<id>.json`, then validates the artifact. No-argument
+mode validates an existing artifact; `--unverify` downgrades it. Any commit,
+working-tree change, or task contract change makes the artifact stale.
 
 PASS needs at least one check, every recorded exit zero, and the task's Verify
 command exactly once. A missing, malformed, stale, failed, or task-mismatched

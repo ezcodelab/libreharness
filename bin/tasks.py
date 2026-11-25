@@ -1003,6 +1003,20 @@ def review_path(root: Path, task_id: str) -> Path:
     return root / "work/reviews" / f"{task_id}.json"
 
 
+CONTRACT_SECTIONS = ("Scope", "Out of scope", "Acceptance")
+
+
+def review_contract_digest(task: dict, label: str = "review") -> str:
+    contract = {
+        section: task["sections"].get(section, "").strip()
+        for section in CONTRACT_SECTIONS
+    }
+    contract["Data shape"] = plan_data_shape(task, label)
+    contract["Verify"] = plan_verify(task)
+    payload = json.dumps(contract, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def plan_verify(task: dict) -> str:
     values = [
         match.group(1).strip()
@@ -1016,7 +1030,7 @@ def plan_verify(task: dict) -> str:
     return values[0]
 
 
-def plan_data_shape(task: dict) -> str:
+def plan_data_shape(task: dict, label: str = "claim") -> str:
     values = [
         match.group(1).strip()
         for line in task["sections"].get("Plan", "").splitlines()
@@ -1024,7 +1038,7 @@ def plan_data_shape(task: dict) -> str:
     ]
     if len(values) != 1:
         raise SystemExit(
-            f"claim: {task['meta'].get('id')} needs exactly one 'Data shape:' line in its Plan"
+            f"{label}: {task['meta'].get('id')} needs exactly one 'Data shape:' line in its Plan"
         )
     return values[0]
 
@@ -1292,6 +1306,24 @@ def validate_review(root: Path, task_id: str, repo: Path) -> int:
             problems.append("artifact diff_sha256 must be a 64-character hex digest")
         elif diff_sha256 != review_diff(repo):
             problems.append("artifact diff is stale; the working diff changed")
+        contract_sha256 = data.get("contract_sha256")
+        if not isinstance(contract_sha256, str) or not SHA256.match(contract_sha256):
+            problems.append(
+                "artifact contract_sha256 must be a 64-character hex digest"
+            )
+        else:
+            try:
+                current_contract = review_contract_digest(
+                    find_task(root, task_id)
+                )
+            except SystemExit as exc:
+                problems.append(str(exc))
+            else:
+                if contract_sha256 != current_contract:
+                    problems.append(
+                        "artifact contract is stale; Scope, Out of scope, "
+                        "Acceptance, Data shape, or Verify changed"
+                    )
         verdict = data.get("verdict")
         if verdict not in REVIEW_VERDICTS:
             problems.append(f"unknown verdict {verdict!r}")
@@ -1353,6 +1385,7 @@ def review_task(
         raise SystemExit(f"review: not a git repository: {repo}")
     task = find_task(root, key)
     task_id = task["meta"]["id"]
+    contract_sha256 = review_contract_digest(task)
     if unverify:
         head = git_head(repo)
         checks: list[dict] = []
@@ -1370,6 +1403,7 @@ def review_task(
                     "task": task_id,
                     "head": head,
                     "diff_sha256": review_diff(repo),
+                    "contract_sha256": contract_sha256,
                     "recorded_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                     "verdict": "UNVERIFIED",
                     "checks": checks,
@@ -1409,6 +1443,7 @@ def review_task(
                 "task": task_id,
                 "head": head_after,
                 "diff_sha256": review_diff(repo),
+                "contract_sha256": contract_sha256,
                 "recorded_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                 "verdict": "PASS" if passed else "UNVERIFIED",
                 "checks": checks,

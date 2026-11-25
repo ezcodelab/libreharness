@@ -58,6 +58,7 @@ class QueueTests(unittest.TestCase):
                     "task": task["meta"]["id"],
                     "head": tasks.git_head(repo or self.repo),
                     "diff_sha256": tasks.review_diff(repo or self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [{"command": verify, "exit": 0}],
                 }
@@ -706,6 +707,7 @@ class PlanContractTests(unittest.TestCase):
                     "task": task["meta"]["id"],
                     "head": tasks.git_head(self.repo),
                     "diff_sha256": tasks.review_diff(self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [
                         {
@@ -827,6 +829,41 @@ class ReviewArtifactTests(unittest.TestCase):
             tasks.review_task(self.root, task_id, repo=self.repo), 1
         )
 
+    def test_contract_change_invalidates_pass(self) -> None:
+        verify = "python3 -m unittest tests.test_ok -v"
+        task = self.make_task(verify)
+        task_id = task["meta"]["id"]
+        self.assertEqual(
+            tasks.review_task(
+                self.root, task_id, repo=self.repo, runs=[verify]
+            ),
+            0,
+        )
+        stored = tasks.find_task(self.root, task_id)
+        original_scope = stored["sections"]["Scope"]
+        original_acceptance = stored["sections"]["Acceptance"]
+
+        stored["sections"]["Acceptance"] = (
+            original_acceptance + "\n- [x] a newly claimed outcome"
+        )
+        tasks.write_task(stored)
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+
+        stored["sections"]["Acceptance"] = original_acceptance
+        stored["sections"]["Scope"] = original_scope + " Also another surface."
+        tasks.write_task(stored)
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 1
+        )
+
+        stored["sections"]["Scope"] = original_scope
+        tasks.write_task(stored)
+        self.assertEqual(
+            tasks.review_task(self.root, task_id, repo=self.repo), 0
+        )
+
     def test_second_verify_command_passes_only_when_it_ran(self) -> None:
         verify = "python3 -m unittest tests.test_goal_start -v"
         task = self.make_task(verify)
@@ -900,6 +937,7 @@ class ReviewArtifactTests(unittest.TestCase):
                     "task": task_id,
                     "head": tasks.git_head(self.repo),
                     "diff_sha256": tasks.review_diff(self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [],
                 }
@@ -915,6 +953,7 @@ class ReviewArtifactTests(unittest.TestCase):
                     "task": task_id,
                     "head": tasks.git_head(self.repo),
                     "diff_sha256": tasks.review_diff(self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [{"command": verify, "exit": 1}],
                 }
@@ -930,6 +969,7 @@ class ReviewArtifactTests(unittest.TestCase):
                     "task": task_id,
                     "head": tasks.git_head(self.repo),
                     "diff_sha256": tasks.review_diff(self.repo),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [
                         {

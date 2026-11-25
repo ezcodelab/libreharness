@@ -66,6 +66,7 @@ class ReapTests(unittest.TestCase):
                     "task": task["meta"]["id"],
                     "head": tasks.git_head(target),
                     "diff_sha256": tasks.review_diff(target),
+                    "contract_sha256": tasks.review_contract_digest(task),
                     "verdict": "PASS",
                     "checks": [{"command": verify, "exit": 0}],
                 }

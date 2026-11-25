@@ -178,6 +178,11 @@ try {
     typeof artifact.diff_sha256 === "string" && artifact.diff_sha256.length === 64,
     "review artifact has no diff fingerprint",
   );
+  check(
+    typeof artifact.contract_sha256 === "string" &&
+      artifact.contract_sha256.length === 64,
+    "review artifact has no contract fingerprint",
+  );
   check(artifact.verdict === "PASS", "review artifact is not PASS");
   check(
     Array.isArray(artifact.checks) && artifact.checks.length > 0,
@@ -193,6 +198,35 @@ try {
     "review artifact is missing the required ratchet check",
   );
   verified.push("review artifact at HEAD with observed checks");
+
+  const reviewedTask = readFileSync(taskPath, "utf8");
+  writeFileSync(
+    taskPath,
+    reviewedTask.replace(
+      "- [x] review artifact records a PASS at HEAD",
+      "- [x] review artifact records a PASS at HEAD\n- [x] acceptance changed after review",
+    ),
+  );
+  const staleContract = spawnSync(
+    "python3",
+    [TASKS, "review", taskId, "--repo", ROOT],
+    {
+      encoding: "utf8",
+      env: {
+        PATH: process.env.PATH ?? "/usr/bin:/bin",
+        HOME: process.env.HOME ?? "",
+        HARNESS_STATE: state,
+        PYTHONDONTWRITEBYTECODE: "1",
+      },
+    },
+  );
+  check(staleContract.status !== 0, "changed acceptance kept a valid review");
+  check(
+    staleContract.stdout.includes("contract is stale"),
+    "changed acceptance failure did not name the contract",
+  );
+  writeFileSync(taskPath, reviewedTask);
+  verified.push("changed acceptance invalidates the review contract");
 
   queue(["status", taskId, "review", "--repo", ROOT]);
   queue(["validate"]);
