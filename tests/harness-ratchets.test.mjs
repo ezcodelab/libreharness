@@ -381,6 +381,40 @@ export function checkIntakeWiring(root) {
   return problems;
 }
 
+export function checkCommentAuditWiring(root) {
+  const problems = [];
+  const reusable = ".github/workflows/comment-audit.yml";
+  const path = join(root, reusable);
+  if (!existsSync(path)) {
+    push(problems, "comment-audit-wiring", reusable, "missing reusable comment audit workflow");
+  } else {
+    const text = readFileSync(path, "utf8");
+    for (const [needle, message] of [
+      ["workflow_call", "missing workflow_call trigger"],
+      ["harness_ref", "missing pinned harness_ref input"],
+      ["bin/comment_audit.py --diff", "missing the diff audit command"],
+    ]) {
+      if (!text.includes(needle)) push(problems, "comment-audit-wiring", reusable, message);
+    }
+  }
+  for (const [file, needle, message] of [
+    [".github/workflows/ci.yml", "bin/comment_audit.py --diff", "CI must audit the PR diff"],
+    [
+      ".github/workflows/auto-merge.yml",
+      "base/bin/comment_audit.py --diff",
+      "auto-merge must run the trusted base audit on the PR diff",
+    ],
+  ]) {
+    const target = join(root, file);
+    if (!existsSync(target)) {
+      push(problems, "comment-audit-wiring", file, "missing workflow");
+    } else if (!readFileSync(target, "utf8").includes(needle)) {
+      push(problems, "comment-audit-wiring", file, message);
+    }
+  }
+  return problems;
+}
+
 export function checkPrContract(root) {
   const problems = [];
   const workflow = join(root, ".github/workflows/auto-merge.yml");
@@ -420,6 +454,7 @@ const CHECKS = [
   checkRouterWiring,
   checkIntakeWiring,
   checkPolicyWiring,
+  checkCommentAuditWiring,
   checkPrContract,
 ];
 
@@ -494,13 +529,28 @@ function selfTests() {
     mkdirSync(join(tmp, "bin"), { recursive: true });
     writeFileSync(
       join(tmp, ".github/workflows/auto-merge.yml"),
-      "(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)\nWhy|What changed|Scope|Blast Radius|Verification\n",
+      "(feat|fix|docs|refactor|perf|test|build|ci|chore|revert)\nWhy|What changed|Scope|Blast Radius|Verification\nbase/bin/comment_audit.py --diff\n",
+    );
+    writeFileSync(
+      join(tmp, ".github/workflows/ci.yml"),
+      "run: bin/comment_audit.py --diff /tmp/comment-audit.diff\n",
+    );
+    writeFileSync(
+      join(tmp, ".github/workflows/comment-audit.yml"),
+      "on:\n  workflow_call:\n    inputs:\n      harness_ref:\n        type: string\nrun: bin/comment_audit.py --diff /tmp/comment-audit.diff\n",
     );
     writeFileSync(
       join(tmp, "bin/pr_guard.py"),
       "def body_problems(body):\n    return []\n",
     );
     assert.deepEqual(checkWorkflowWiring(tmp), [], "complete wiring must pass");
+    assert.deepEqual(checkCommentAuditWiring(tmp), [], "the audit must be wired into both merge paths");
+
+    writeFileSync(join(tmp, ".github/workflows/ci.yml"), "run: npm test\n");
+    assert.ok(
+      checkCommentAuditWiring(tmp).some((problem) => problem.file === ".github/workflows/ci.yml"),
+      "CI without the diff audit must fail",
+    );
 
     writeFileSync(join(tmp, "skills/engineering-loop/references/playbooks/perf.md"), "prose only\n");
     assert.ok(

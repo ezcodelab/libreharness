@@ -8,8 +8,19 @@
 
 - Restore `bin/comment_audit.py` as the single comment-debt check, with diff and
   baseline modes. `/review` runs it on the saved diff in every repository.
-- `skills/no-comments` now covers docs: one owner per fact, no unsolicited or
-  duplicated prose, and ADRs only for decisions that still bind.
+- Add `suppression-debt`: `eslint-disable`, `@ts-ignore`, `type: ignore`,
+  `noqa`, `nosec`, `shellcheck disable`, `nolint`, and equivalents fail unless a
+  scoped allow marker or external reference proves the exception.
+- Baseline records gain a context anchor, so a line shift passes and a move to
+  another code context fails; the old four-column format is rejected.
+- Add `--strict` and `.comment-audit-strict` for clean repositories. Every new
+  comment needs a keep or an allow marker, while brownfield inventories remain
+  baseline-driven.
+- Add `.github/workflows/comment-audit.yml` as the pinned reusable entrypoint,
+  and run the trusted script on the PR diff in this repository's CI and
+  auto-merge gate.
+- `skills/no-comments` now covers docs and suppressions, requires delete,
+  smallest root-cause fix, or encode-then-delete, and rejects scope escapes.
 - `npm run lint:comments` joins `check:local`; the duplicate check in
   `tests/harness-ratchets.test.mjs` is gone.
 
