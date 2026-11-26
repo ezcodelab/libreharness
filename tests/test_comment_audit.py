@@ -71,7 +71,7 @@ class CommentAuditTests(unittest.TestCase):
 
     def git(self, *args: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            ["git", *args],
+            ["git", "-c", "user.name=Test", "-c", "user.email=test@example.test", *args],
             text=True,
             capture_output=True,
             cwd=self.root,
