@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: MIT
+name: comment-audit
+
+on:
+  workflow_call:
+    inputs:
+      harness_ref:
+        description: Pinned LibreHarness ref that owns bin/comment_audit.py
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Require a pull request
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          : "${PR:?comment-audit must run on a pull request event}"
+
+      - name: Check out the caller PR merge ref
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: ${{ github.repository }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          path: repo
+          fetch-depth: 0
+
+      - name: Check out the pinned audit owner
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: ezcodelab/libreharness
+          ref: ${{ inputs.harness_ref }}
+          path: harness
+
+      - name: Audit added lines
+        working-directory: repo
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          git diff --binary "$BASE...$HEAD" > /tmp/comment-audit.diff
+          strict=()
+          if git cat-file -e "$BASE:.comment-audit-strict" 2>/dev/null; then
+            strict=(--strict)
+          fi
+          python3 ../harness/bin/comment_audit.py --diff /tmp/comment-audit.diff "${strict[@]}"

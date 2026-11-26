@@ -127,6 +127,13 @@ jobs:
           done
           test "$fail" -eq 0
 
+          strict=()
+          if git -C base cat-file -e "$BASE_SHA:.comment-audit-strict" 2>/dev/null; then
+            strict=(--strict)
+          fi
+          git -C pr diff --binary "$BASE_SHA...$HEAD" > /tmp/pr-comment.diff
+          (cd pr && python3 ../base/bin/comment_audit.py --diff /tmp/pr-comment.diff "${strict[@]}")
+
           /tmp/gitleaks detect --source pr --config base/.gitleaks.toml --redact --verbose
           git -C pr diff --check "$BASE_SHA...$HEAD"
 

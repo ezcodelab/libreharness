@@ -84,7 +84,7 @@ router picks the playbook.
 | Secrets and private markers stay out of the tree | `npm run lint:secrets` |
 | Tasks close only with a claim, checked acceptance, and real evidence | `python3 -m unittest tests.test_tasks -v` |
 | Skill structure and ASCII prose hold | `node tests/harness-ratchets.test.mjs` |
-| Comment debt fails closed | `npm run lint:comments` |
+| Comment and suppression debt fails closed | `npm run lint:comments` |
 | Review artifacts, policy paths, and state audits stay wired | `node tests/harness-ratchets.test.mjs` |
 
 Per-rule history and new encodings live in

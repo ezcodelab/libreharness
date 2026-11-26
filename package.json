@@ -53,7 +53,7 @@
     "lint:secrets": "python3 bin/devtool.py run gitleaks detect --source . --config .gitleaks.toml --redact --verbose",
     "lint:shell": "find . -name '*.sh' -not -path './node_modules/*' -print0 | xargs -0 -r python3 bin/devtool.py run shellcheck -x",
     "lint:workflows": "python3 bin/devtool.py run actionlint",
-    "lint:comments": "python3 bin/comment_audit.py .",
+    "lint:comments": "python3 bin/comment_audit.py --baseline .comment-audit-baseline .",
     "check:local": "npm run tools:install && npm run check:syntax && npm test && npm run lint:comments && npm pack --dry-run && npm run lint:md && npm run lint:links && npm run lint:secrets && npm run lint:shell && npm run lint:workflows"
   },
   "dependencies": {

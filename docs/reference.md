@@ -413,7 +413,8 @@ Repository checks use pinned tools fetched by npm:
 | Syntax | `npm run check:syntax` |
 | Python tests | `python3 -m unittest discover -s tests -p 'test_*.py' -v` |
 | Node tests | `npm run test:node` |
-| Comment debt | `npm run lint:comments` |
+| Comment debt inventory | `npm run lint:comments` |
+| Comment debt on a diff | `python3 bin/comment_audit.py --diff <patch>` |
 | Package contents | `npm pack --dry-run` |
 | Markdown correctness | `npm run lint:md` |
 | Links | `npm run lint:links` |
@@ -425,6 +426,22 @@ The check scripts download checksum-verified lychee, gitleaks, actionlint, and
 shellcheck into `$XDG_CACHE_HOME/libreharness/tools` for Linux x64 and arm64.
 They do not change the plugin runtime or its install size. CI calls the same
 commands.
+
+`bin/comment_audit.py` owns comment and suppression rules.
+`.comment-audit-baseline` records the inventory with context anchors, so line
+shifts pass and context swaps fail. `.comment-audit-strict` makes `--diff`
+reject every new comment outside the keep list. GitHub callers use the pinned
+reusable workflow:
+
+```yaml
+jobs:
+  comment-audit:
+    uses: ezcodelab/libreharness/.github/workflows/comment-audit.yml@<pinned-ref>
+    with:
+      harness_ref: <pinned-ref>
+```
+
+Use the same ref for both lines and do not copy the script into a repository.
 
 A task's Verify command may use its own project tools such as pytest, Ruff,
 Cargo, Go, Make, or npm scripts. Those belong to the target project; LibreHarness

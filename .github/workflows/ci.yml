@@ -72,3 +72,24 @@ jobs:
           python-version: "3.12"
       - name: Secret scan
         run: python3 bin/devtool.py run gitleaks detect --source . --config .gitleaks.toml --redact --verbose
+
+  comment-audit:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - name: Audit added lines
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          git diff --binary "$BASE...$HEAD" > /tmp/comment-audit.diff
+          strict=()
+          if git cat-file -e "$BASE:.comment-audit-strict" 2>/dev/null; then
+            strict=(--strict)
+          fi
+          python3 bin/comment_audit.py --diff /tmp/comment-audit.diff "${strict[@]}"

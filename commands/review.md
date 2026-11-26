@@ -32,10 +32,15 @@ work-queue skills. Do not edit code in this turn.
    linked issue accepts a deliberate case. Run
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/comment_audit.py" --diff /tmp/opencode/review-$TASK.diff`
    and `git ls-files -z --others --exclude-standard | xargs -0 -r python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/comment_audit.py"`
-   for new files. Treat a finding as a send-back. When the repo has
+   for new files. Add `--strict` when `.comment-audit-strict` exists. Treat a
+   finding as a send-back. The fix is delete, the smallest root-cause change, or
+   encode-then-delete; reject a diff that rewrites unrelated application logic
+   or adds a guard so a comment can stay. When the repo has
    `tests/harness-ratchets.test.mjs`, run it too. Docs are blocking on the same
    terms: delete unsolicited or duplicated prose, one owner per fact, and stale
-   commands, versions, or links.
+   commands, versions, or links. The repository merge path runs the same audit
+   through `.github/workflows/comment-audit.yml`; do not accept a per-repo fork
+   of the script.
 4. Deterministic checks first. Read the task Plan's `Data shape:` and `Verify:`
    lines, then record the real exits:
    `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" review <id> --repo "$PWD" --run "<Verify>" --run "<focused check>"`
