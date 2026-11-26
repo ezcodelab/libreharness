@@ -23,9 +23,9 @@ work-queue skills. Do not edit code in this turn.
      (the merge target, not the lane's own tip);
    - if all are empty, ask what to review. Never review an unrelated leftover
      change from another lane.
-3. Comment discipline (blocking): read the changed files for narration, stale
-   comments, commented-out code, and workaround justifications without an
-   external reference. A new unreferenced `workaround`, `do not remove/change`,
+3. Comment discipline (blocking): load `skills/no-comments` and read the changed
+   files for narration, stale comments, commented-out code, unproven
+   suppressions, and workaround justifications without an external reference. A new unreferenced `workaround`, `do not remove/change`,
    `TODO`/`FIXME`, or correctness lint or type suppression is a send-back. The fix
    is the smallest root-cause reshape, or a type, lint, test, or runtime check,
    not a shorter comment. An inline `comment-discipline: allow <reason>` or a
