@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### Comment and doc ratchet
+
+- Restore `bin/comment_audit.py` as the single comment-debt check, with diff and
+  baseline modes. `/review` runs it on the saved diff in every repository.
+- `skills/no-comments` now covers docs: one owner per fact, no unsolicited or
+  duplicated prose, and ADRs only for decisions that still bind.
+- `npm run lint:comments` joins `check:local`; the duplicate check in
+  `tests/harness-ratchets.test.mjs` is gone.
+
 ### Trust boundaries
 
 - Claim rejects placeholder scope, placeholder acceptance, and acceptance

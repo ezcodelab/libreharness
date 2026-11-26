@@ -13,7 +13,7 @@ entry point and picks the playbook.
 | `state-audit` | States, invariants, transitions, regression tests |
 | `ui-design` | UI and UX work |
 | `unslop` | Prose only: replies, PR bodies, docs, commit messages |
-| `no-comments` | Remove comment alibis before review |
+| `no-comments` | Remove comment and doc alibis before review |
 | `correct` | Repeated mistake classes become checks |
 | `verification` | Prove real app behavior |
 | `work-queue` | Durable tasks with scope, acceptance, and evidence |

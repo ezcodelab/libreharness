@@ -413,6 +413,7 @@ Repository checks use pinned tools fetched by npm:
 | Syntax | `npm run check:syntax` |
 | Python tests | `python3 -m unittest discover -s tests -p 'test_*.py' -v` |
 | Node tests | `npm run test:node` |
+| Comment debt | `npm run lint:comments` |
 | Package contents | `npm pack --dry-run` |
 | Markdown correctness | `npm run lint:md` |
 | Links | `npm run lint:links` |

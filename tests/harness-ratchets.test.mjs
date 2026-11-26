@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: MIT
-// Structural ratchets for the harness's own instructions. Each check is a pure
-// function of a root directory so the self-tests at the bottom exercise the same
-// code the repository scan runs.
 import assert from "node:assert/strict";
 import {
   existsSync,
@@ -27,14 +24,6 @@ export const ASCII_IGNORE_GLOBS = [
   ".opencode/node_modules/**",
 ];
 
-export const COMMENT_IGNORE_GLOBS = [
-  "node_modules/**",
-  ".git/**",
-  "tests/**",
-  "src/generated/**",
-  "plugins/generated/**",
-];
-
 const ASCII_SCOPE_FILES = [
   "AGENTS.md",
   "README.md",
@@ -52,14 +41,6 @@ const FORBIDDEN_CHARACTERS = [
   ["\u201c", "curly double quote (U+201C)"],
   ["\u201d", "curly double quote (U+201D)"],
 ];
-
-const FORBIDDEN_COMMENTS = [
-  [/\bwork[-\s]?around\b/i, "workaround justification"],
-  [/\bdo not (remove|delete|change|edit|modify|rename)\b/i, "do-not-change constraint"],
-  [/\b(TODO|FIXME|XXX)\b/, "unresolved marker"],
-];
-const COMMENT_ALLOW = /comment-discipline:\s*allow\s+\S/i;
-const COMMENT_REFERENCE = /(https?:\/\/|#\d+|\bCVE-\d{4}-\d{1,}|\bRFC\s?\d+)/i;
 
 const PLAYBOOKS = [
   "investigation",
@@ -177,93 +158,6 @@ export function checkAsciiProse(root) {
         break;
       }
     });
-  }
-  return problems;
-}
-
-function balancedQuotes(prefix) {
-  let quote = null;
-  for (let index = 0; index < prefix.length; index += 1) {
-    const character = prefix[index];
-    if (quote) {
-      if (character === "\\") index += 1;
-      else if (character === quote) quote = null;
-    } else if (character === '"' || character === "'" || character === "`") {
-      quote = character;
-    }
-  }
-  return quote === null;
-}
-
-function commentText(line, extension, state) {
-  const chunks = [];
-  let rest = line;
-
-  if (state.block) {
-    const end = rest.indexOf("*/");
-    if (end < 0) return [rest];
-    chunks.push(rest.slice(0, end));
-    rest = rest.slice(end + 2);
-    state.block = false;
-  }
-
-  if (extension !== ".py") {
-    let start = rest.indexOf("/*");
-    while (start >= 0 && balancedQuotes(rest.slice(0, start))) {
-      const end = rest.indexOf("*/", start + 2);
-      if (end < 0) {
-        chunks.push(rest.slice(start));
-        state.block = true;
-        return chunks;
-      }
-      chunks.push(rest.slice(start, end + 2));
-      rest = rest.slice(end + 2);
-      start = rest.indexOf("/*");
-    }
-  }
-
-  if (extension === ".py") {
-    const index = rest.indexOf("#");
-    if (index >= 0 && balancedQuotes(rest.slice(0, index))) chunks.push(rest.slice(index));
-  } else {
-    const index = rest.indexOf("//");
-    if (index >= 0 && (index === 0 || /\s/.test(rest[index - 1])) && balancedQuotes(rest.slice(0, index))) {
-      chunks.push(rest.slice(index));
-    }
-  }
-  return chunks.length > 0 ? chunks : null;
-}
-
-export function checkCommentDiscipline(root) {
-  const problems = [];
-  for (const name of ["src", "plugins", "bin"]) {
-    for (const path of walk(join(root, name))) {
-      const extension = path.slice(path.lastIndexOf("."));
-      if (![".js", ".mjs", ".py"].includes(extension)) continue;
-      const relPath = rel(root, path);
-      if (ignored(relPath, COMMENT_IGNORE_GLOBS)) continue;
-      const lines = readFileSync(path, "utf8").split("\n");
-      const state = { block: false };
-      lines.forEach((line, index) => {
-        const chunks = commentText(line, extension, state);
-        if (chunks === null) return;
-        if (COMMENT_ALLOW.test(line) || COMMENT_REFERENCE.test(line)) return;
-        for (const chunk of chunks) {
-          const trimmed = chunk.trim();
-          if (trimmed.startsWith("#!") || /SPDX-License-Identifier/.test(trimmed)) continue;
-          const hit = FORBIDDEN_COMMENTS.find(([pattern]) => pattern.test(trimmed));
-          if (!hit) continue;
-          push(
-            problems,
-            "comment-discipline",
-            relPath,
-            `${hit[1]}; encode the constraint in a type, lint, or test, or add an external reference. See skills/no-comments/SKILL.md`,
-            index + 1,
-          );
-          break;
-        }
-      });
-    }
   }
   return problems;
 }
@@ -520,7 +414,6 @@ export function checkWorkflowWiring(root) {
 const CHECKS = [
   checkSkillStructure,
   checkAsciiProse,
-  checkCommentDiscipline,
   checkAgentsContract,
   checkInstructionOwners,
   checkRelativeLinks,
@@ -562,46 +455,6 @@ function selfTests() {
     writeFileSync(join(tmp, "CHANGELOG.md"), "artifact \u2014 allowed\n");
     assert.deepEqual(checkAsciiProse(tmp), [], "ignored history must pass");
 
-    mkdirSync(join(tmp, "src"), { recursive: true });
-    writeFileSync(join(tmp, "src/bad.js"), "// workaround: do not remove this\nconst x = 1;\n");
-    assert.ok(
-      checkCommentDiscipline(tmp).some((problem) => problem.rule === "comment-discipline" && problem.file === "src/bad.js"),
-      "an unreferenced workaround comment must fail",
-    );
-    writeFileSync(join(tmp, "src/bad.js"), "// Workaround required by https://example.com/issue/1\nconst x = 1;\n");
-    assert.deepEqual(checkCommentDiscipline(tmp), [], "an external reference must pass");
-    writeFileSync(join(tmp, "src/bad.js"), "// comment-discipline: allow vendor quirk\n// TODO later\nconst x = 1;\n");
-    assert.ok(
-      checkCommentDiscipline(tmp).some((problem) => problem.line === 2),
-      "an allow marker must be evaluated per line, not per file",
-    );
-    writeFileSync(join(tmp, "src/bad.js"), "const x = 1; // workaround for the retry loop\n");
-    assert.ok(
-      checkCommentDiscipline(tmp).some((problem) => problem.message.includes("workaround")),
-      "an inline workaround comment must fail",
-    );
-    writeFileSync(join(tmp, "src/bad.js"), 'const s = "don\'t touch"; // workaround: do not remove\n');
-    assert.ok(
-      checkCommentDiscipline(tmp).some((problem) => problem.message.includes("workaround")),
-      "an apostrophe inside a double-quoted string must not hide the comment",
-    );
-    writeFileSync(join(tmp, "src/bad.js"), "const x = 1;\n");
-    writeFileSync(join(tmp, "src/url.js"), 'const url = "https://example.com";\n');
-    assert.deepEqual(checkCommentDiscipline(tmp), [], "a URL inside a string is not a comment");
-    writeFileSync(join(tmp, "src/ok.py"), "value = 'a # b'  # SPDX-License-Identifier: MIT\n");
-    assert.deepEqual(checkCommentDiscipline(tmp), [], "a hash inside a string is not a comment");
-    writeFileSync(join(tmp, "src/bad.js"), "const x = 1;\n/* workaround: do not remove */\n");
-    assert.ok(
-      checkCommentDiscipline(tmp).some((problem) => problem.line === 2),
-      "a single-line block comment must be scanned",
-    );
-    writeFileSync(join(tmp, "src/bad.js"), "/*\n * workaround: do not remove\n */\nconst x = 1;\n");
-    assert.ok(
-      checkCommentDiscipline(tmp).some((problem) => problem.line === 2),
-      "a multi-line block comment must be scanned",
-    );
-    writeFileSync(join(tmp, "src/bad.js"), "const x = 1;\n");
-
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n");
     assert.deepEqual(checkAgentsContract(tmp), [], "a small enforced AGENTS.md must pass");
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Task scale\n\nlong prose\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n");
@@ -634,16 +487,6 @@ function selfTests() {
         "1. one\n2. two\n3. three\n",
       );
     }
-    mkdirSync(join(tmp, "skills/no-comments"), { recursive: true });
-    writeFileSync(join(tmp, "skills/no-comments/SKILL.md"), "# No comments\n\n## Keep exceptions\n\nMUST KILL workarounds.\n");
-    mkdirSync(join(tmp, "skills/correct"), { recursive: true });
-    writeFileSync(join(tmp, "skills/correct/SKILL.md"), "# Correct\n\n## Inverted pyramid\n\nSee references/rule-ledger.md.\n");
-    mkdirSync(join(tmp, "skills/unslop"), { recursive: true });
-    writeFileSync(join(tmp, "skills/unslop/SKILL.md"), "# Unslop\n\n## Prose rules\n\nCut filler.\n");
-    writeFileSync(join(tmp, "commands/brief.md"), "- **Playbook** x\n- **Data shape** y\n");
-    writeFileSync(join(tmp, "agents/implementer.md"), "Name the Data shape, then run no-comments.\n");
-    writeFileSync(join(tmp, "commands/review.md"), "review\n");
-    writeFileSync(join(tmp, "agents/devils-advocate.md"), "review\n");
     mkdirSync(join(tmp, "plugins"), { recursive: true });
     writeFileSync(join(tmp, "plugins/auto-intake.js"), `export const PLAYBOOK_IDS = ${JSON.stringify(PLAYBOOKS)};\nexport function routePrompt(text) { return text; }\n`);
     writeFileSync(join(tmp, "AGENTS.md"), "# Rules\n\n## Commands\n\nnpm test\n\n## Boundaries\n\nno secrets\n\n## Rule enforcement\n\n| Rule | Check |\n|---|---|\n| one | `npm test` |\n");
