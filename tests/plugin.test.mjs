@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: MIT
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
-  lstatSync,
   mkdtempSync,
-  readlinkSync,
   rmSync,
   statSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const state = mkdtempSync(join(tmpdir(), "libreharness-plugin-"));
-const configHome = mkdtempSync(join(tmpdir(), "libreharness-config-"));
+const work = mkdtempSync(join(tmpdir(), "libreharness-tools-"));
 chmodSync(state, 0o755);
-process.env.XDG_CONFIG_HOME = configHome;
 const commands = [];
 const skills = [];
+const tools = [];
 const prompts = [];
 const hooks = [];
 const subscriptions = [];
@@ -45,6 +45,10 @@ const ctx = {
   options: {
     state,
     agentModels: { explore: "example/workhorse#high" },
+  },
+  location: { directory: process.cwd() },
+  tool: {
+    transform: (callback) => callback({ add: (tool) => tools.push(tool) }),
   },
   command: {
     transform: (callback) => callback({ add: (command) => commands.push(command) }),
@@ -108,14 +112,28 @@ assert.equal(statePath("~/custom"), join(process.env.HOME, "custom"));
 if (previousState === undefined) delete process.env.HARNESS_STATE;
 else process.env.HARNESS_STATE = previousState;
 const cleanup = await plugin.setup(ctx);
-const entrypoint = join(configHome, "opencode", "bin", "comment-audit");
-assert.ok(existsSync(entrypoint), "setup must install comment-audit");
-assert.ok(lstatSync(entrypoint).isSymbolicLink(), "comment-audit must be a symlink");
-assert.equal(
-  readlinkSync(entrypoint),
-  join(process.env.HARNESS_HOME, "bin", "comment-audit"),
-  "comment-audit must point at the installed wrapper",
-);
+for (const name of ["comment_audit", "tasks", "pr_guard"]) {
+  assert.ok(tools.some((tool) => tool.name === name), `missing tool ${name}`);
+}
+
+const audit = tools.find((tool) => tool.name === "comment_audit");
+writeFileSync(join(work, "dirty.py"), "# TODO: remove\n");
+await assert.rejects(() => audit.execute({ paths: ["dirty.py"], cwd: work }));
+writeFileSync(join(work, "clean.py"), "# SPDX-License-Identifier: MIT\n");
+const clean = await audit.execute({ paths: ["clean.py"], cwd: work });
+assert.match(clean.content, /PASS/);
+execFileSync("git", ["init", "-q"], { cwd: work });
+execFileSync("git", ["add", "clean.py", "dirty.py"], { cwd: work });
+writeFileSync(join(work, "new.py"), "# TODO: new\n");
+await assert.rejects(() => audit.execute({ untracked: true, cwd: work }));
+
+const taskTool = tools.find((tool) => tool.name === "tasks");
+const listed = await taskTool.execute({ args: ["list"], cwd: process.cwd() });
+assert.equal(typeof listed.content, "string");
+
+const guard = tools.find((tool) => tool.name === "pr_guard");
+const help = await guard.execute({ args: ["--help"], cwd: process.cwd() });
+assert.match(help.content, /usage/i);
 
 const commandNames = commands.map((command) => command.name);
 for (const name of ["goal", "review", "state-audit", "tune", "close", "unslop-ui"]) {
@@ -261,5 +279,5 @@ assert.ok(
 
 cleanup();
 rmSync(state, { recursive: true, force: true });
-rmSync(configHome, { recursive: true, force: true });
+rmSync(work, { recursive: true, force: true });
 console.log("plugin: PASS");
