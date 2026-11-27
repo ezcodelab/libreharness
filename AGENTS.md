@@ -90,5 +90,5 @@ router picks the playbook.
 | Review artifacts, policy paths, and state audits stay wired | `node tests/harness-ratchets.test.mjs` |
 
 Per-rule history and new encodings live in
-`skills/correct/references/rule-ledger.md`. `/close` and `/tune` append there and
-never add rows to this table.
+`skills/correct/references/rule-ledger.md`. `/close` and the periodic tune in
+`correct` append there and never add rows to this table.

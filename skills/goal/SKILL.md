@@ -35,12 +35,12 @@ lane map is used by `goal-start`; the operator does not create lanes by hand.
 After creating or resuming a goal, run `tasks goal-start <goal> --repo
 <repo>` once. It creates lanes for ready children with disjoint `owns`; use
 `--max-lanes` only as an explicit operator budget. If it reports serial, work in
-the current tree. The manual `/lane` command is only for a worktree you
-deliberately want outside the goal.
+the current tree. Use `tasks lane` only for a worktree you deliberately want
+outside the goal.
 
 For each stable, unblocked child in priority order:
 
-1. Brief the child (the `/brief` command is its manual form); confirm
+1. Brief the child with the `work-queue` brief reference; confirm
    scope/acceptance.
 2. Implement in the assigned lane, or directly when `goal-start` reported
    serial.

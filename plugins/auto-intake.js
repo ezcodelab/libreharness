@@ -172,7 +172,7 @@ function queueNotice(id, decision) {
     `skills/engineering-loop/references/playbooks/${decision.playbook}.md). ` +
     `For one reviewable diff, write concrete ` +
     `acceptance plus the Data shape and Verify lines, claim it, then work in ` +
-    `this turn. Use /brief only for a multi-deliverable or ambiguous request. ` +
+    `this turn. Use the work-queue brief only for a multi-deliverable or ambiguous request. ` +
     `Implement, verify, review, close, and ship. Honor a playbook the user ` +
     `named. Stop only at the contract's human gates. Do not ask the operator ` +
     `to retype a command.`
@@ -185,7 +185,7 @@ function reusedNotice(id, decision) {
     `a duplicate. ${routeLine(decision)} (playbook: ${decision.playbook}; read ` +
     `only skills/engineering-loop/references/playbooks/${decision.playbook}.md). ` +
     `For one reviewable diff, complete the acceptance, Data shape, and Verify ` +
-    `lines, claim it, then work in this turn; use /brief only when scope is ` +
+    `lines, claim it, then work in this turn; use the work-queue brief only when scope is ` +
     `still ambiguous. Then implement, verify, review, close, and ship.`
   );
 }

@@ -2,7 +2,7 @@
 # Rule ledger
 
 One row per encoded rule: the correction, the level that makes it impossible, the
-check, and the past mistake the check fails on. `/close` and `/tune` append here.
+check, and the past mistake the check fails on. `/close` and the periodic tune append here.
 `AGENTS.md` keeps only suite-level rows.
 
 | Date | Rule | Level | Check | Past mistake |

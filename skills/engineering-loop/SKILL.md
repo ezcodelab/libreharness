@@ -39,7 +39,8 @@ Routing rules:
 - A user-named playbook wins. Ignore an unknown playbook name and route by
   content.
 - `correct` is never selected from free text. Enter it only when the operator
-  names it, or from `/close` and `/tune` after a mistake class repeats twice.
+  names it, or from `/close` or the periodic tune in `correct` after a mistake
+  class repeats twice.
   Never divert an in-flight `bug-fix`, `feature`, or `refactoring` into it.
 - Multi-deliverable or unattended work also loads the `goal` skill. A single task
   does not.
@@ -80,6 +81,6 @@ Stop and report instead of claiming done when:
 - the next action would deploy, delete data, force-push, or message a customer.
 
 Otherwise continue. When a human-only step blocks the work, hand over a script from `references/wizard-template.sh`; do not run it for them. For one reviewable diff, write the task acceptance, Data
-shape, and Verify lines, then implement in the same turn. Use `/brief` when the
-scope spans several deliverables or remains ambiguous. Verify, `/review`,
-`/close`, and ship through `shipping`.
+shape, and Verify lines, then implement in the same turn. Use the `work-queue`
+brief reference when the scope spans several deliverables or remains ambiguous.
+Verify, `/review`, `/close`, and ship through `shipping`.

@@ -10,8 +10,8 @@ Read the project's tokens, primitives, components, design docs, and the callers
 of the feature before choosing a layout or style. Those files win where they
 are more specific.
 
-For an end-to-end run with one A/B selection gate, use
-`/unslop-ui <surface>`.
+For an end-to-end run with one A/B selection gate, use the `unslop-ui` skill.
+For the review agenda, use `references/review.md`.
 
 ## Principles
 
