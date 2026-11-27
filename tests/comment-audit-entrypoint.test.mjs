@@ -34,9 +34,14 @@ function markdownFiles(directory) {
 
 test("the comment-audit wrapper is executable and answers --help", () => {
   assert.ok(existsSync(WRAPPER), "bin/comment-audit is missing");
-  assert.ok(statSync(WRAPPER).mode & 0o111, "bin/comment-audit is not executable");
+  if (process.platform !== "win32") {
+    assert.ok(statSync(WRAPPER).mode & 0o111, "bin/comment-audit is not executable");
+  }
 
-  const result = run(WRAPPER, ["--help"]);
+  const result =
+    process.platform === "win32"
+      ? run(process.execPath, [WRAPPER, "--help"])
+      : run(WRAPPER, ["--help"]);
 
   assert.equal(result.status, 0, result.stderr);
   for (const flag of ["--diff", "--baseline", "--strict"]) {

@@ -225,13 +225,14 @@ class QueueTests(unittest.TestCase):
     def test_claim_records_base_and_rejects_equivalent_worktree(self) -> None:
         first = self.make_task("First lane")
         second = self.make_task("Second lane")
+        lane = Path(self.tmp.name) / "lane-a"
         claimed = tasks.claim_task(
             self.root,
             first["meta"]["id"],
             owner="lane-a",
             branch="feature/a",
             base="main",
-            worktree="/tmp/lane-a",
+            worktree=str(lane),
         )
         self.assertEqual(claimed["meta"]["base"], "main")
         with self.assertRaises(SystemExit):
@@ -239,7 +240,7 @@ class QueueTests(unittest.TestCase):
                 self.root,
                 second["meta"]["id"],
                 owner="lane-b",
-                worktree="/tmp/../tmp/lane-a",
+                worktree=str(Path(self.tmp.name) / ".." / Path(self.tmp.name).name / "lane-a"),
             )
 
     def test_metrics_not_duplicated_on_reopen(self) -> None:

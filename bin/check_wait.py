@@ -40,6 +40,10 @@ def gh_json(
             capture_output=True,
             timeout=30,
         )
+    except FileNotFoundError as exc:
+        raise CheckWaitError(
+            "GitHub CLI (gh) is required to read required checks"
+        ) from exc
     except subprocess.TimeoutExpired as exc:
         raise CheckWaitError(f"gh {' '.join(args)} timed out") from exc
     allowed = allow if allow is not None else {0}

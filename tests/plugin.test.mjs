@@ -103,11 +103,17 @@ assert.equal(modelRef("model-only"), null);
 assert.equal(modelRef("provider/"), null);
 assert.equal(modelRef("provider/model#"), null);
 
+const expectedDefaultState =
+  process.platform === "win32"
+    ? join(process.env.LOCALAPPDATA ?? join(process.env.HOME, "AppData/Local"), "libreharness")
+    : process.platform === "darwin"
+      ? join(process.env.HOME, "Library/Application Support/libreharness")
+      : join(process.env.XDG_STATE_HOME ?? join(process.env.HOME, ".local/state"), "libreharness");
 const previousState = process.env.HARNESS_STATE;
 process.env.HARNESS_STATE = "/tmp/ignored-by-default";
 assert.equal(
   statePath(undefined),
-  join(process.env.HOME, ".local/state/libreharness"),
+  expectedDefaultState,
   "the plugin must default to a normal state directory, not HARNESS_STATE",
 );
 assert.equal(statePath("~/custom"), join(process.env.HOME, "custom"));
@@ -307,11 +313,13 @@ for (const resource of [
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 assert.equal(process.env.HARNESS_HOME, root);
 assert.equal(process.env.HARNESS_STATE, state);
-assert.equal(
-  statSync(state).mode & 0o777,
-  0o700,
-  "setup must tighten an existing state directory to mode 700",
-);
+if (process.platform !== "win32") {
+  assert.equal(
+    statSync(state).mode & 0o777,
+    0o700,
+    "setup must tighten an existing state directory to mode 700",
+  );
+}
 
 assert.ok(
   !hooks.includes("context"),

@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
-import { spawn } from "node:child_process";
-import { chmodSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
-import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { Plugin } from "@opencode/plugin";
+import {
+  ROOT,
+  ensureStateDirectory,
+  statePath,
+} from "./runtime.js";
+import { TOOLS } from "./tools.js";
 
-const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+export { statePath };
+
 const COMMANDS = join(ROOT, "commands");
 const AGENTS = join(ROOT, "agents");
 const SKILLS = join(ROOT, "skills");
@@ -112,11 +116,6 @@ function skillFiles() {
     });
 }
 
-export function statePath(value) {
-  const chosen = value ?? join(homedir(), ".local/state/libreharness");
-  return resolve(chosen.replace(/^~/, homedir()));
-}
-
 export function modelRef(value) {
   if (typeof value !== "string" || !value.trim()) return null;
   const text = value.trim();
@@ -148,126 +147,6 @@ function applyAgentModels(agent, agentModels) {
   agent.model = model;
 }
 
-function runProcess(command, args, cwd, env, signal) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd,
-      env,
-      signal,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.setEncoding("utf8");
-    child.stderr.setEncoding("utf8");
-    child.stdout.on("data", (chunk) => {
-      stdout += chunk;
-    });
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk;
-    });
-    child.on("error", reject);
-    child.on("close", (code, signalName) => {
-      const output = [stdout, stderr].filter(Boolean).join("\n").trim();
-      if (code === 0) {
-        resolve(output);
-        return;
-      }
-      reject(
-        new Error(
-          `${command} exited ${code ?? signalName}${output ? `:\n${output}` : ""}`,
-        ),
-      );
-    });
-  });
-}
-
-async function packageTool(script, args, cwd, env, signal) {
-  const childEnv = { ...process.env, ...env };
-  delete childEnv.HARNESS_HOME;
-  return runProcess(
-    "python3",
-    [join(ROOT, "bin", script), ...args],
-    cwd,
-    childEnv,
-    signal,
-  );
-}
-
-async function untracked(cwd, signal) {
-  const output = await runProcess(
-    "git",
-    ["ls-files", "-z", "--others", "--exclude-standard"],
-    cwd,
-    process.env,
-    signal,
-  );
-  return output.split("\0").filter(Boolean);
-}
-
-const ARGS_INPUT = {
-  type: "object",
-  properties: {
-    args: { type: "array", items: { type: "string" } },
-    cwd: { type: "string" },
-  },
-  required: ["args"],
-  additionalProperties: false,
-};
-
-const AUDIT_INPUT = {
-  type: "object",
-  properties: {
-    diff: { type: "string" },
-    paths: { type: "array", items: { type: "string" } },
-    untracked: { type: "boolean" },
-    strict: { type: "boolean" },
-    baseline: { type: "string" },
-    write_baseline: { type: "string" },
-    cwd: { type: "string" },
-  },
-  additionalProperties: false,
-};
-
-async function runAudit(input, state, defaultCwd, signal) {
-  const cwd = input.cwd ?? defaultCwd;
-  const flags = [];
-  if (input.strict) flags.push("--strict");
-  if (input.baseline) flags.push("--baseline", input.baseline);
-  if (input.write_baseline) flags.push("--write-baseline", input.write_baseline);
-  const runs = [];
-  if (input.diff) runs.push(["--diff", input.diff, ...flags]);
-  const paths = [...(input.paths ?? [])];
-  if (input.untracked) paths.push(...(await untracked(cwd, signal)));
-  if (paths.length) runs.push([...paths, ...flags]);
-  const requested =
-    Boolean(input.diff) || Boolean(input.paths?.length) || Boolean(input.untracked);
-  if (!runs.length && !requested) runs.push([".", ...flags]);
-  const outputs = [];
-  for (const args of runs) {
-    const output = await packageTool(
-      "comment_audit.py",
-      args,
-      cwd,
-      { HARNESS_STATE: state },
-      signal,
-    );
-    if (output) outputs.push(output);
-  }
-  return outputs.join("\n") || "comment audit: PASS";
-}
-
-async function runArgs(script, input, state, defaultCwd, signal) {
-  const output = await packageTool(
-    script,
-    input.args,
-    input.cwd ?? defaultCwd,
-    { HARNESS_STATE: state },
-    signal,
-  );
-  return output || `${script}: PASS`;
-}
-
 const plugin = Plugin.define({
   id: "libreharness",
   async setup(ctx) {
@@ -275,49 +154,23 @@ const plugin = Plugin.define({
     const state = statePath(ctx.options?.state);
     process.env.HARNESS_HOME = home;
     process.env.HARNESS_STATE = state;
-    mkdirSync(state, { recursive: true, mode: 0o700 });
-    // mkdir's mode only applies to a new directory; fix an existing one too.
-    chmodSync(state, 0o700);
+    ensureStateDirectory(state);
     const defaultCwd = ctx.location?.directory ?? process.cwd();
     await ctx.tool.transform((editor) => {
-      editor.add({
-        name: "comment_audit",
-        description:
-          "Run the deterministic LibreHarness comment audit on a diff, paths, or untracked files.",
-        input: AUDIT_INPUT,
-        execute: async (input, context) => ({
-          content: await runAudit(input, state, defaultCwd, context?.signal),
-        }),
-      });
-      editor.add({
-        name: "tasks",
-        description:
-          "Run the LibreHarness task queue CLI against the current repository.",
-        input: ARGS_INPUT,
-        execute: async (input, context) => ({
-          content: await runArgs(
-            "tasks.py",
-            input,
-            state,
-            defaultCwd,
-            context?.signal,
-          ),
-        }),
-      });
-      editor.add({
-        name: "pr_guard",
-        description: "Run the LibreHarness PR guard for shipping.",
-        input: ARGS_INPUT,
-        execute: async (input, context) => ({
-          content: await runArgs(
-            "pr_guard.py",
-            input,
-            state,
-            defaultCwd,
-            context?.signal,
-          ),
-        }),
-      });
+      for (const tool of TOOLS) {
+        editor.add({
+          name: tool.name,
+          description: tool.description,
+          input: tool.input,
+          execute: async (input, context) => ({
+            content: await tool.execute(input, {
+              state,
+              cwd: defaultCwd,
+              signal: context?.signal,
+            }),
+          }),
+        });
+      }
     });
 
     const commands = commandFiles();

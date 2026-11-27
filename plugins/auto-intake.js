@@ -5,6 +5,7 @@
 import { execFileSync } from "node:child_process";
 import { appendFileSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
+import { resolvePython, statePath } from "../src/runtime.js";
 
 function homeDir() {
   return process.env.HARNESS_HOME ?? `${process.env.HOME}/.config/opencode`;
@@ -14,7 +15,7 @@ function stateDir() {
   return (
     process.env.AUTO_INTAKE_ROOT ??
     process.env.HARNESS_STATE ??
-    `${process.env.HOME}/.local/state/libreharness`
+    statePath()
   );
 }
 
@@ -262,9 +263,17 @@ function recordSessionTask(sessionID, taskID) {
 function createTask(text, directory, sessionID) {
   const title = titleOf(text);
   const project = basename(directory || "") || "general";
+  const env = {
+    PATH: process.env.PATH ?? "/usr/bin:/bin",
+    HOME: process.env.HOME ?? "",
+    HARNESS_STATE: stateDir(),
+    PYTHONDONTWRITEBYTECODE: "1",
+  };
+  const python = resolvePython({ env });
   const output = execFileSync(
-    "python3",
+    python.command,
     [
+      ...python.prefixArgs,
       tasksCli(),
       "new",
       "--project",
@@ -284,13 +293,7 @@ function createTask(text, directory, sessionID) {
       encoding: "utf8",
       timeout: 2500,
       stdio: ["ignore", "pipe", "pipe"],
-      // Do not hand the queue helper the provider/session environment.
-      env: {
-        PATH: process.env.PATH ?? "/usr/bin:/bin",
-        HOME: process.env.HOME ?? "",
-        HARNESS_STATE: stateDir(),
-        PYTHONDONTWRITEBYTECODE: "1",
-      },
+      env,
     },
   );
   return output.trim().split("\n").pop();

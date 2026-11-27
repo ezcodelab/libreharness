@@ -1,4 +1,22 @@
-#!/bin/sh
-# SPDX-License-Identifier: MIT
-SELF=$(readlink -f "$0")
-exec python3 "$(dirname "$SELF")/comment_audit.py" "$@"
+#!/usr/bin/env node
+// SPDX-License-Identifier: MIT
+import { spawn } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { resolvePython } from "../src/runtime.js";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const python = resolvePython();
+const child = spawn(
+  python.command,
+  [...python.prefixArgs, join(here, "comment_audit.py"), ...process.argv.slice(2)],
+  { stdio: "inherit", env: process.env },
+);
+child.on("error", (error) => {
+  console.error(`comment-audit: ${error.message}`);
+  process.exitCode = 1;
+});
+child.on("close", (code, signal) => {
+  if (code !== null) process.exitCode = code;
+  else console.error(`comment-audit: python stopped by ${signal}`);
+});

@@ -13,11 +13,12 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { python, pythonArgs } from "./python.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(tmpdir(), `auto-intake-${process.pid}`);
 const taskCli = (...args) =>
-  execFileSync("python3", [join(root, "bin/tasks.py"), ...args], {
+  execFileSync(python.command, pythonArgs(join(root, "bin/tasks.py"), ...args), {
     encoding: "utf8",
     env: {
       ...process.env,
@@ -43,6 +44,10 @@ execFileSync("git", ["-C", repo, "commit", "-q", "-m", "base"]);
 copyFileSync(
   join(here, "..", "bin", "tasks.py"),
   join(root, "bin/tasks.py"),
+);
+copyFileSync(
+  join(here, "..", "bin", "harness_runtime.py"),
+  join(root, "bin", "harness_runtime.py"),
 );
 
 process.env.HARNESS_HOME = join(here, "..");
@@ -146,8 +151,16 @@ if (!task.includes("confirm scope and acceptance")) {
   throw new Error("task scope does not state the acceptance confirmation");
 }
 const prematureClaim = spawnSync(
-  "python3",
-  [join(root, "bin/tasks.py"), "claim", id, "--owner", "test", "--repo", repo],
+  python.command,
+  pythonArgs(
+    join(root, "bin/tasks.py"),
+    "claim",
+    id,
+    "--owner",
+    "test",
+    "--repo",
+    repo,
+  ),
   {
     encoding: "utf8",
     env: {

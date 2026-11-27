@@ -84,6 +84,23 @@ class PrGuardTests(unittest.TestCase):
         self.assertEqual(result["files"], 1)
         self.assertEqual(result["next"], "open")
 
+    def test_github_failures_are_explicit(self) -> None:
+        with mock.patch.object(pr_guard.shutil, "which", return_value=None):
+            with self.assertRaises(pr_guard.GuardError) as caught:
+                pr_guard.require_github(self.repo)
+        self.assertIn("GitHub CLI (gh) is required", str(caught.exception))
+        self.assertIn("shipping inapplicable", str(caught.exception))
+
+        failed = subprocess.CompletedProcess(
+            ["gh", "auth", "status"], 1, "", "not logged in"
+        )
+        with mock.patch.object(pr_guard.shutil, "which", return_value="/usr/bin/gh"):
+            with mock.patch.object(pr_guard.subprocess, "run", return_value=failed):
+                with self.assertRaises(pr_guard.GuardError) as caught:
+                    pr_guard.require_github(self.repo)
+        self.assertIn("not authenticated", str(caught.exception))
+        self.assertIn("not logged in", str(caught.exception))
+
     def test_large_diff_and_many_files_pass(self) -> None:
         self.commit("widget.py", "\n".join(f"line_{i} = {i}" for i in range(601)))
         for index in range(21):
