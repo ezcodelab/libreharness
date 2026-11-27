@@ -3,13 +3,14 @@
 # Reference
 
 LibreHarness is a durable work queue and a risk-scaled engineering workflow for
-OpenCode. It ships as a plugin: commands, agents, skills, and two small local
-plugins load from the package.
+coding agents. One canonical skills tree and one queue implementation serve
+OpenCode and the Agent Plugins 1.0 hosts through thin adapters.
 
 ## Requirements
 
-- Linux.
-- OpenCode 2.x.
+- Linux, macOS, or Windows.
+- A host with a passing certificate in
+  [certification/SUPPORT.md](certification/SUPPORT.md).
 - [Node 20 or newer](https://nodejs.org/en/download).
 - [Python 3.10 or newer](https://www.python.org/downloads/).
 - [Git](https://git-scm.com/downloads) for the work queue and review artifacts.
@@ -18,13 +19,50 @@ plugins load from the package.
 
 ## Install
 
+### Native plugins
+
+Claude Code:
+
+```sh
+claude plugin marketplace add ezcodelab/libreharness
+claude plugin install libreharness@libreharness
+```
+
+Codex:
+
+```sh
+codex plugin marketplace add ezcodelab/libreharness
+codex plugin add libreharness@libreharness
+```
+
+GitHub Copilot CLI:
+
+```sh
+copilot plugin marketplace add ezcodelab/libreharness
+copilot plugin install libreharness@libreharness
+```
+
+Cursor installs the same repository marketplace from **Customize**.
+
+The root `plugin.json` follows Agent Plugins 1.0. The Claude manifest lives in
+`.claude-plugin/`. The native MCP server starts through `npx` from the exact
+released package version, not from the installed plugin tree. Its first start
+needs network access to the npm registry. For an air-gapped machine, preinstall
+that exact package from an approved registry mirror and keep `npx` pointed at
+that registry.
+
+Native hosts load only the canonical skills and MCP tools. OpenCode owns the
+pre-prompt auto-intake, goal watcher, usage ledger, and custom agents.
+
+### OpenCode
+
 Add the package to the global `plugins` array in
 `~/.config/opencode/opencode.json`:
 
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["libreharness@2.0.0"],
+  "plugins": ["libreharness@2.1.0"],
   "agents": {
     "devils-advocate": {},
     "explore": {},
@@ -56,17 +94,33 @@ npm install --omit=dev --no-audit --no-fund
 "plugins": ["/path/to/libreharness"]
 ```
 
-The state directory defaults to `~/.local/state/libreharness`, created with mode
-700. Override it with an options object:
+The state directory defaults to `%LOCALAPPDATA%\libreharness` on Windows,
+`~/Library/Application Support/libreharness` on macOS, and the XDG state
+directory on Linux. OpenCode overrides it with an options object. Native MCP
+hosts override it with `HARNESS_STATE`.
 
 ```jsonc
 "plugins": [
-  { "package": "libreharness@2.0.0", "options": { "state": "/your/state" } }
+  { "package": "libreharness@2.1.0", "options": { "state": "/your/state" } }
 ]
 ```
 
 Upgrade by changing the version and reloading OpenCode. No files are copied into
 the config directory.
+
+## MCP runtime
+
+The native adapters run `libreharness mcp` from the exact released npm package.
+An explicit tool `cwd` wins; otherwise the server uses the host-provided
+workspace directory, never the package directory. `HARNESS_STATE` selects the
+queue state. Without it, the server uses the platform state directory.
+
+Python discovery checks `LIBREHARNESS_PYTHON`, then `python3`, Windows `py -3`,
+and `python`. The MCP server reports expected tool failures with `isError: true`;
+cancellation aborts the child process for that tool call.
+
+The first `npx` start needs network access. An air-gapped machine must preinstall
+`libreharness@2.1.0` and its dependencies from an approved registry mirror.
 
 ## Two roots
 
@@ -319,6 +373,10 @@ encodings live in `skills/correct/references/rule-ledger.md`.
 | `integrator` | Bounded merge in a declared order |
 | `devils-advocate` | Independent read-only review |
 
+These agents are OpenCode adapters. Native hosts use their built-in subagent
+mechanisms and the canonical skills; LibreHarness does not ship per-host agent
+copies.
+
 Per-agent routing is configuration, not an ambient model call. A normal setup
 uses a cheap workhorse for `explore`, routine `implementer` work, and
 `integrator`, while reserving a stronger planner or challenger model for
@@ -328,7 +386,9 @@ model.
 
 ## Plugins
 
-Three local plugins are bundled. They use Node built-ins and never call a model.
+Three OpenCode event plugins are bundled. They use Node built-ins and never call
+a model. Native hosts get the same queue and workflow through MCP and the
+canonical skills, without pretending these OpenCode events exist elsewhere.
 
 - **auto-intake** turns a nontrivial prompt into one inbox task and appends a
   queue note. It skips questions, delegation prompts, and secret-shaped text.
@@ -347,8 +407,8 @@ Protect secret files in one layer rather than in every agent: install
 ## Security and privacy
 
 - Task files, the board, metrics, and review artifacts live under
-  `$HARNESS_STATE`. The directory is mode 700; use disk encryption if the work is
-  sensitive.
+  `$HARNESS_STATE`. The directory is mode 700 on POSIX and inherits the user's
+  private profile on Windows. Use disk encryption if the work is sensitive.
 - `auto-intake` refuses to store a prompt that matches its secret patterns and
   redacts secret-shaped and PII-shaped text in titles.
 - Review checks run local commands and record their exits; the artifact contains
@@ -373,9 +433,14 @@ Validate the review artifact on the head that will land, check the local PR
 contract, then stay through required checks and merge that exact head:
 
 Call `tasks` with `args: ["review", "<id>"]`, then `pr_guard`
-with `args: ["check", "--base", "main", "--title", "type(scope): subject", "--body-file", "/tmp/opencode/pr-body.md"]`.
+with `args: ["check", "--base", "main", "--title", "type(scope): subject", "--body-file", "<os-temp>/pr-body.md"]`.
 After the head is pinned, call `pr_guard` with
 `args: ["land", "--pr", "<number>", "--head", "$HEAD", "--base", "main"]`.
+
+`pr_guard` requires an installed and authenticated GitHub CLI for GitHub
+operations. A missing CLI, failed authentication, or unavailable GitHub returns
+a clear error and never a PASS. Shipping can be skipped only when the task's
+accepted scope explicitly marks it inapplicable and records why.
 
 A missing, stale, failed, or UNVERIFIED artifact, a malformed PR, a pending or
 failed required check, a conflict, a draft, or a secret in the diff stops the
@@ -398,8 +463,11 @@ Repository checks use pinned tools fetched by npm:
 | Full local set | `npm run check:local` |
 | Download pinned tools | `npm run tools:install` |
 | Syntax | `npm run check:syntax` |
-| Python tests | `python3 -m unittest discover -s tests -p 'test_*.py' -v` |
+| Python tests | `npm run test:python` |
 | Node tests | `npm run test:node` |
+| Manifest and version checks | `npm run test:manifests` |
+| Packed npm and MCP smoke | `npm run test:package` |
+| Host support matrix | `node tests/support-matrix.test.mjs` |
 | Comment debt inventory (repo baseline) | `npm run lint:comments` |
 | Comment debt inventory (plugin) | `comment_audit` with `{ "paths": ["."] }` |
 | Comment debt on a diff | `comment_audit` with `{ "diff": "<patch>", "untracked": true }` |
@@ -441,8 +509,10 @@ Cargo, Go, Make, or npm scripts. Those belong to the target project; LibreHarnes
 does not bundle or install them. Git and the authenticated GitHub CLI are the
 only non-language runtime commands the harness calls itself.
 
-Release: bump `package.json`, add a `CHANGELOG.md` entry, tag `v<version>`, and
-let `.github/workflows/release.yml` publish the npm package and GitHub release.
+Release: bump `package.json`, run `npm run sync:version`, add a `CHANGELOG.md`
+entry, tag `v<version>`, and let `.github/workflows/release.yml` publish the npm
+package and GitHub release. The release fails if any native manifest or MCP
+package pin drifts from `package.json`.
 
 ## License
 

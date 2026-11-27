@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "host": "opencode",
+  "hostVersion": "2.4.1",
+  "client": "headless CLI",
+  "os": "linux",
+  "libreharnessVersion": "2.1.0",
+  "commit": "1181117b0a50e62a3aa967365b3803f5895da7f6",
+  "install": "PASS",
+  "discovery": {
+    "skills": "PASS",
+    "tools": "PASS"
+  },
+  "toolRoundTrip": "PASS",
+  "journey": "PASS",
+  "limitations": [
+    "Certified through the OpenCode headless CLI. The interactive TUI transport was not exercised."
+  ]
+}

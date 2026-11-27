@@ -6,6 +6,7 @@ import {
   chmodSync,
   existsSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -103,11 +104,17 @@ assert.equal(modelRef("model-only"), null);
 assert.equal(modelRef("provider/"), null);
 assert.equal(modelRef("provider/model#"), null);
 
+const expectedDefaultState =
+  process.platform === "win32"
+    ? join(process.env.LOCALAPPDATA ?? join(process.env.HOME, "AppData/Local"), "libreharness")
+    : process.platform === "darwin"
+      ? join(process.env.HOME, "Library/Application Support/libreharness")
+      : join(process.env.XDG_STATE_HOME ?? join(process.env.HOME, ".local/state"), "libreharness");
 const previousState = process.env.HARNESS_STATE;
 process.env.HARNESS_STATE = "/tmp/ignored-by-default";
 assert.equal(
   statePath(undefined),
-  join(process.env.HOME, ".local/state/libreharness"),
+  expectedDefaultState,
   "the plugin must default to a normal state directory, not HARNESS_STATE",
 );
 assert.equal(statePath("~/custom"), join(process.env.HOME, "custom"));
@@ -196,6 +203,25 @@ await assert.rejects(
 
 const commandNames = commands.map((command) => command.name);
 assert.deepEqual(commandNames.sort(), ["close", "goal", "review"]);
+for (const name of commandNames) {
+  const command = commands.find((item) => item.name === name);
+  const source = readFileSync(
+    join(process.cwd(), "skills", name, "SKILL.md"),
+    "utf8",
+  );
+  const end = source.indexOf("\n---", 4);
+  const canonical = source.slice(end + 4).replace(/^\r?\n/, "");
+  await command.execute({
+    sessionID: `ses_${name}`,
+    prompt: { text: "" },
+    delivery: "steer",
+  });
+  assert.equal(
+    prompts.at(-1).text,
+    canonical,
+    `${name} command diverged from its skill`,
+  );
+}
 assert.ok(skills.some((skill) => skill.id === "unslop-ui"), "missing unslop-ui skill");
 
 const goal = commands.find((command) => command.name === "goal");
@@ -204,14 +230,12 @@ await goal.execute({
   prompt: { text: "task-1" },
   delivery: "steer",
 });
-assert.equal(prompts.length, 1);
-assert.equal(prompts[0].sessionID, "ses_test");
-assert.match(prompts[0].text, /task-1/);
-assert.match(prompts[0].text, /goal/);
-// SessionApi.prompt takes SessionPromptInput: a flat { sessionID, text,
-// delivery }, not a nested { prompt } object.
-assert.equal(prompts[0].prompt, undefined);
-assert.equal(prompts[0].delivery, "steer");
+const goalPrompt = prompts.find((prompt) => prompt.sessionID === "ses_test");
+assert.ok(goalPrompt, "goal command did not prompt the session");
+assert.match(goalPrompt.text, /task-1/);
+assert.match(goalPrompt.text, /goal/);
+assert.equal(goalPrompt.prompt, undefined);
+assert.equal(goalPrompt.delivery, "steer");
 
 for (const id of agentIds) {
   assert.ok(updatedAgents.has(id), `agent was not updated: ${id}`);
@@ -307,11 +331,13 @@ for (const resource of [
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 assert.equal(process.env.HARNESS_HOME, root);
 assert.equal(process.env.HARNESS_STATE, state);
-assert.equal(
-  statSync(state).mode & 0o777,
-  0o700,
-  "setup must tighten an existing state directory to mode 700",
-);
+if (process.platform !== "win32") {
+  assert.equal(
+    statSync(state).mode & 0o777,
+    0o700,
+    "setup must tighten an existing state directory to mode 700",
+  );
+}
 
 assert.ok(
   !hooks.includes("context"),

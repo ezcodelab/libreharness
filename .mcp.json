@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "libreharness": {
+      "command": "npx",
+      "args": [
+        "--yes",
+        "--package",
+        "libreharness@2.1.0",
+        "libreharness",
+        "mcp"
+      ]
+    }
+  }
+}

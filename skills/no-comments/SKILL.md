@@ -83,7 +83,7 @@ deliberate cleanup.
    reshape it: a branded type, a narrow API, a lint whose error names the fix, a
    runtime check, or a failing test.
 5. Call `comment_audit` with
-   `{ diff: "/tmp/opencode/review-$TASK.diff", untracked: true }`; add
+   `{ diff: "<os-temp>/review-$TASK.diff", untracked: true }`; add
    `strict: true` when `.comment-audit-strict` exists in the repo, so every new
    comment needs a keep or an allow marker. A tool error is a finding. A finding
    is deleted, reshaped, or kept with an external reference. Add

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { python, pythonArgs } from "./python.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(tmpdir(), `goal-watch-${process.pid}`);
@@ -26,9 +27,13 @@ copyFileSync(
   join(here, "..", "bin", "tasks.py"),
   join(root, "bin/tasks.py"),
 );
+copyFileSync(
+  join(here, "..", "bin", "harness_runtime.py"),
+  join(root, "bin/harness_runtime.py"),
+);
 process.env.GOAL_WATCH_TASKS = join(root, "bin/tasks.py");
 const tasks = (...args) =>
-  execFileSync("python3", [join(root, "bin/tasks.py"), ...args], {
+  execFileSync(python.command, pythonArgs(join(root, "bin/tasks.py"), ...args), {
     encoding: "utf8",
     env: {
       ...process.env,

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Shipping"
+  short_description: "Open one ready PR, validate the review artifact and required CI on the exact head, and stay until it merges"

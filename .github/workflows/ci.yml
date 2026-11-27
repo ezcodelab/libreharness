@@ -34,6 +34,32 @@ jobs:
       - name: Package dry run
         run: npm pack --dry-run
 
+  portable:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ["20", "22"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Node dependencies
+        run: npm install --no-audit --no-fund --no-package-lock
+      - name: Syntax
+        run: npm run check:syntax
+      - name: Tests
+        run: npm test
+      - name: Packed package
+        run: npm run test:package
+      - name: Package dry run
+        run: npm pack --dry-run
+
   lint:
     runs-on: ubuntu-latest
     steps:

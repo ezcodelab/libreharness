@@ -1,0 +1,3 @@
+interface:
+  display_name: "State Audit"
+  short_description: "Audit explicit and implicit state machines, document states, invariants, and transitions in one file, and fix confirmed "

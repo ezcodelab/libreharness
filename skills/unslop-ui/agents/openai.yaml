@@ -1,0 +1,3 @@
+interface:
+  display_name: "Unslop Ui"
+  short_description: "Run one UI surface through baseline evidence, two variants, one A/B operator choice, implementation, verification, revie"

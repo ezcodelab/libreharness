@@ -13,28 +13,24 @@ the project repository is the source of truth for the work itself.
 from __future__ import annotations
 
 import argparse
-import contextlib
 import csv
 import datetime as dt
-import fcntl
 import hashlib
 import json
 import os
 import posixpath
 import re
 import shlex
+import shutil
 import statistics
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(
-    os.environ.get(
-        "HARNESS_STATE",
-        Path.home() / ".local/state/libreharness",
-    )
-).expanduser()
+import harness_runtime
+
+ROOT = harness_runtime.state_root()
 WORK = ROOT / "work"
 TASKS = WORK / "tasks"
 LOCK = WORK / ".lock"
@@ -303,16 +299,8 @@ def is_unblocked(root: Path, task: dict) -> tuple[bool, list[str]]:
     return not open_deps, open_deps
 
 
-@contextlib.contextmanager
 def locked(root: Path, filename: str = ".lock"):
-    lock_path = root / "work" / filename
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
-    with lock_path.open("a+") as handle:
-        fcntl.flock(handle, fcntl.LOCK_EX)
-        try:
-            yield
-        finally:
-            fcntl.flock(handle, fcntl.LOCK_UN)
+    return harness_runtime.locked(root / "work" / filename)
 
 
 def append_log(task: dict, text: str) -> None:
@@ -1228,6 +1216,19 @@ def allowed_command(argv: list[str]) -> bool:
     return False
 
 
+def execution_argv(argv: list[str]) -> list[str]:
+    if argv[0] in {"python", "python3", "py"}:
+        return [*harness_runtime.python_argv(), *argv[1:]]
+    if os.name != "nt":
+        return argv
+    executable = shutil.which(argv[0])
+    if executable is None:
+        return argv
+    if executable.lower().endswith((".cmd", ".bat")):
+        return [os.environ.get("COMSPEC", "cmd.exe"), "/d", "/c", executable, *argv[1:]]
+    return [executable, *argv[1:]]
+
+
 def inside(path: Path, root: Path) -> bool:
     try:
         path.relative_to(root)
@@ -1476,7 +1477,7 @@ def review_task(
     head_before = git_head(repo)
     checks = []
     for command, argv in validated:
-        result = subprocess.run(argv, cwd=repo)
+        result = subprocess.run(execution_argv(argv), cwd=repo)
         checks.append({"command": command, "exit": result.returncode})
         print(f"review: {command} -> exit {result.returncode}")
     head_after = git_head(repo)

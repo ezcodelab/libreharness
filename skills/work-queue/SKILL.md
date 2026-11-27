@@ -30,7 +30,7 @@ Call the `tasks` tool with `args`; it runs the queue in the session directory.
 - `claim <id> --owner lane-a --branch <branch> --base <base> --worktree <path>`
 - `status <id> review --note "..."`
 - `status <id> done --evidence "make check: 42 passed"`
-- `handoff <id> --file /tmp/handoff.md`
+- `handoff <id> --file <os-temp>/handoff.md`
 - `validate`
 - `report`
 

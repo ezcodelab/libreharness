@@ -2,6 +2,34 @@
 
 # Changelog
 
+## 2.1.0
+
+### Multi-host distribution
+
+- Add an Agent Plugins 1.0 package with one canonical skills tree, native Claude
+  Code and Cursor marketplace manifests, and an MCP server for hosted tools.
+- Share the `tasks`, `comment_audit`, and `pr_guard` handlers between the
+  OpenCode adapter and the MCP adapter. Native hosts start the exact released
+  npm package through `npx`.
+- Move the `/goal`, `/review`, and `/close` procedures into canonical skills.
+  OpenCode commands load those bodies, so there is one procedure source.
+- Require a recorded host certificate before a host appears as supported.
+  Discovery, a host-driven tool call, and the documented journey limits are
+  recorded per host and operating system. The initial certificate covers
+  OpenCode on Linux through its headless CLI; Claude Code, Codex, Cursor,
+  Copilot, macOS, and Windows remain unlisted until their certificates exist.
+- Fail `pr_guard` closed when the GitHub CLI, authentication, or GitHub is
+  unavailable. Shipping can be marked inapplicable only in task scope.
+
+### Portable runtime
+
+- Replace POSIX-only queue locking with Linux, macOS, and Windows locking.
+- Resolve `python3`, Windows `py -3`, `python`, or `LIBREHARNESS_PYTHON`.
+- Use platform state directories while preserving `HARNESS_STATE`.
+- Add portable npm scripts, a Node CLI entry point, and an isolated packed
+  package MCP smoke test.
+- Run portable checks on Ubuntu, macOS, and Windows in CI.
+
 ## Unreleased
 
 ### Command surface

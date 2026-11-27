@@ -8,6 +8,8 @@ entry point and picks the playbook.
 |---|---|
 | `engineering-loop` | Entry point and playbook router for non-trivial work |
 | `goal` | Multi-deliverable goal planning and execution |
+| `review` | Record checks and inspect reach and state impact |
+| `close` | Validate evidence, integrate lanes, and ship |
 | `parallel-lanes` | Independent lanes with disjoint ownership |
 | `shipping` | Ready PR, review artifact, exact-head CI, merge |
 | `state-audit` | States, invariants, transitions, regression tests |

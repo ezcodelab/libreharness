@@ -1,9 +1,10 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Agent rules
 
-This repository ships one OpenCode plugin. Procedure lives in `skills/`; this
-file is the always-on contract: the commands that must run, the boundaries that
-must hold, and the checks that make the rest real.
+This repository ships one portable Agent Skills package with OpenCode and MCP
+adapters. Procedure lives in `skills/`; this file is the always-on contract: the
+commands that must run, the boundaries that must hold, and the checks that make
+the rest real.
 
 ## Commands
 
@@ -11,8 +12,11 @@ must hold, and the checks that make the rest real.
 npm run tools:install
 npm run check:local
 npm test
-python3 -m unittest tests.test_tasks -v          # one Python test file
-node tests/auto-intake.test.mjs                  # one Node test file
+npm run test:manifests
+npm run test:package
+node bin/run-python.mjs -m unittest tests.test_tasks -v   # one Python test file
+node tests/auto-intake.test.mjs                           # one Node test file
+node tests/support-matrix.test.mjs
 npm run lint:md
 npm run lint:links
 npm run lint:secrets
@@ -28,16 +32,20 @@ lint set as CI. The Python suite needs no third-party package.
 
 ## Boundaries
 
-- Linux, Node 20 or newer, Python 3.10 or newer. Standard library, Node
-  built-ins, and the OpenCode plugin runtime. Dev-only dependencies stay pinned,
-  and repository checks fetch checksum-verified upstream binaries without
-  bundling them into the plugin.
-- `src/plugin.js` registers commands, agents, and skills from `commands/`,
-  `agents/`, and `skills/`. `plugins/` holds the hook modules.
+- Linux, macOS, Windows, Node 20 or newer, Python 3.10 or newer. Standard
+  library, Node built-ins, the OpenCode plugin runtime, and the exact
+  `@modelcontextprotocol/server` pin for the MCP adapter. Dev-only dependencies
+  stay pinned, and repository checks fetch checksum-verified upstream binaries
+  without bundling them into the plugin.
+- `src/plugin.js` is the OpenCode adapter. `src/mcp.js` is the MCP adapter.
+  Both call `src/tools.js`. Native manifests load the canonical `skills/` tree;
+  there are no per-host skill copies.
 - `HARNESS_HOME` is the package root. `HARNESS_STATE` is mutable local state,
-  defaulting to `~/.local/state/libreharness` with mode 700.
-- Harness operations come from the plugin tools `tasks`, `comment_audit`, and
-  `pr_guard`; never call a clone path or a config-bin fallback.
+  defaulting to the platform state directory with mode 700 on POSIX.
+- Harness operations come from the `tasks`, `comment_audit`, and `pr_guard`
+  tools in the active host; never call a clone path or a config-bin fallback.
+- A host is supported only with a certificate under `docs/certification/`.
+  Standards compatibility without that file is not a support claim.
 - Never commit, log, print, or embed secrets, tokens, keys, or PII.
 - Never mutate production systems, live data, or shared infrastructure without
   explicit approval in the current turn.
@@ -84,7 +92,7 @@ router picks the playbook.
 | Rule | Check |
 |---|---|
 | Secrets and private markers stay out of the tree | `npm run lint:secrets` |
-| Tasks close only with a claim, checked acceptance, and real evidence | `python3 -m unittest tests.test_tasks -v` |
+| Tasks close only with a claim, checked acceptance, and real evidence | `node bin/run-python.mjs -m unittest tests.test_tasks -v` |
 | Skill structure and ASCII prose hold | `node tests/harness-ratchets.test.mjs` |
 | Comment and suppression debt fails closed | `npm run lint:comments` |
 | Review artifacts, policy paths, and state audits stay wired | `node tests/harness-ratchets.test.mjs` |

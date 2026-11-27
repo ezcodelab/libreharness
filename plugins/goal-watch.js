@@ -4,6 +4,7 @@
 // closes a goal, or marks anything done.
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { minimalEnv, resolvePython, statePath } from "../src/runtime.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -12,7 +13,7 @@ const HOME =
 const ROOT =
   process.env.GOAL_WATCH_ROOT ??
   process.env.HARNESS_STATE ??
-  `${process.env.HOME}/.local/state/libreharness`;
+  statePath();
 const TASKS = process.env.GOAL_WATCH_TASKS ?? `${HOME}/bin/tasks.py`;
 
 export function maxContinuations(value) {
@@ -41,17 +42,20 @@ export function continuationChild(state) {
 }
 
 async function run(args) {
-  const { stdout } = await execFileAsync("python3", [TASKS, ...args], {
-    encoding: "utf8",
-    timeout: 2500,
-    // Do not hand the queue helper the provider/session environment.
-    env: {
-      PATH: process.env.PATH ?? "/usr/bin:/bin",
-      HOME: process.env.HOME ?? "",
-      HARNESS_STATE: ROOT,
-      PYTHONDONTWRITEBYTECODE: "1",
-    },
+  const env = minimalEnv({
+    HARNESS_STATE: ROOT,
+    PYTHONDONTWRITEBYTECODE: "1",
   });
+  const python = resolvePython({ env });
+  const { stdout } = await execFileAsync(
+    python.command,
+    [...python.prefixArgs, TASKS, ...args],
+    {
+      encoding: "utf8",
+      timeout: 2500,
+      env,
+    },
+  );
   return stdout.trim();
 }
 

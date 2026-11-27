@@ -35,7 +35,8 @@ jobs:
         run: npm install --no-audit --no-fund --no-package-lock
       - name: Verify package version
         run: |
-          version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
+          node bin/sync-plugin-version.mjs --check
+          version=$(node -p 'require("./package.json").version')
           test "$GITHUB_REF_NAME" = "v$version"
       - name: Package dry run
         run: npm pack --dry-run

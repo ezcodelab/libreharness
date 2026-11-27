@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { appendFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { statePath } from "../src/runtime.js";
 
 const DISABLED = process.env.USAGE_LEDGER === "off";
 
@@ -8,7 +9,7 @@ function stateDir() {
   return (
     process.env.USAGE_LEDGER_ROOT ??
     process.env.HARNESS_STATE ??
-    `${process.env.HOME}/.local/state/libreharness`
+    statePath()
   );
 }
 

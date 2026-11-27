@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -34,6 +35,26 @@ def run(argv: list[str], repo: Path | None = None) -> subprocess.CompletedProces
         detail = (result.stderr or result.stdout).strip()
         raise GuardError(detail or f"{' '.join(argv)} failed")
     return result
+
+
+def require_github(repo: Path | None = None) -> None:
+    if shutil.which("gh") is None:
+        raise GuardError(
+            "GitHub CLI (gh) is required for this operation; install gh and authenticate, "
+            "or mark shipping inapplicable in the task scope"
+        )
+    result = subprocess.run(
+        ["gh", "auth", "status"],
+        cwd=repo,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        raise GuardError(
+            "GitHub CLI is not authenticated; run gh auth login or mark shipping "
+            f"inapplicable in the task scope{': ' + detail if detail else ''}"
+        )
 
 
 def body_problems(body: str) -> list[str]:
@@ -311,6 +332,7 @@ def main() -> int:
         print(json.dumps(data, indent=2))
         return 0 if data["ok"] else 1
     try:
+        require_github(repo)
         if args.command == "check-pr":
             view = pr_view(args.pr, repo)
             problems, next_action = pr_checks(
