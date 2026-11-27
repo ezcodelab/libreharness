@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import {
+  appendFileSync,
   chmodSync,
   existsSync,
   mkdtempSync,
@@ -15,6 +16,7 @@ import { fileURLToPath } from "node:url";
 
 const state = mkdtempSync(join(tmpdir(), "libreharness-plugin-"));
 const work = mkdtempSync(join(tmpdir(), "libreharness-tools-"));
+const slowRepo = mkdtempSync(join(tmpdir(), "libreharness-slow-"));
 chmodSync(state, 0o755);
 const commands = [];
 const skills = [];
@@ -134,6 +136,63 @@ assert.equal(typeof listed.content, "string");
 const guard = tools.find((tool) => tool.name === "pr_guard");
 const help = await guard.execute({ args: ["--help"], cwd: process.cwd() });
 assert.match(help.content, /usage/i);
+
+writeFileSync(
+  join(slowRepo, "slow_test.py"),
+  "import time\nimport unittest\n\nclass Slow(unittest.TestCase):\n    def test_slow(self):\n        time.sleep(1)\n        self.assertTrue(True)\n",
+);
+execFileSync("git", ["init", "-q"], { cwd: slowRepo });
+execFileSync("git", ["add", "slow_test.py"], { cwd: slowRepo });
+execFileSync(
+  "git",
+  ["-c", "user.name=Test", "-c", "user.email=test@example.test", "commit", "-qm", "base"],
+  { cwd: slowRepo },
+);
+const created = await taskTool.execute({
+  args: [
+    "new",
+    "Slow check",
+    "--project",
+    "demo",
+    "--status",
+    "ready",
+    "--scope",
+    "Prove the tool does not block the event loop.",
+    "--acceptance",
+    "- [ ] slow check",
+  ],
+  cwd: slowRepo,
+});
+const slowId = created.content.trim();
+appendFileSync(
+  join(state, "work", "tasks", `${slowId}.md`),
+  '\n## Plan\n\nData shape: {"slow":"string"}\nVerify: python3 -m unittest slow_test\n',
+);
+await taskTool.execute({ args: ["claim", slowId, "--owner", "test"], cwd: slowRepo });
+let ticks = 0;
+const timer = setInterval(() => {
+  ticks += 1;
+}, 20);
+const started = Date.now();
+const reviewed = await taskTool.execute({
+  args: ["review", slowId, "--run", "python3 -m unittest slow_test"],
+  cwd: slowRepo,
+});
+const elapsed = Date.now() - started;
+clearInterval(timer);
+assert.ok(elapsed >= 900, `slow review returned too quickly: ${elapsed}ms`);
+assert.ok(ticks >= 5, `tool call blocked the event loop (${ticks} ticks in ${elapsed}ms)`);
+assert.match(reviewed.content, /PASS/);
+
+const controller = new AbortController();
+setTimeout(() => controller.abort(), 100);
+await assert.rejects(
+  taskTool.execute(
+    { args: ["review", slowId, "--run", "python3 -m unittest slow_test"], cwd: slowRepo },
+    { signal: controller.signal },
+  ),
+  /abort/i,
+);
 
 const commandNames = commands.map((command) => command.name);
 for (const name of ["goal", "review", "state-audit", "tune", "close", "unslop-ui"]) {
@@ -280,4 +339,5 @@ assert.ok(
 cleanup();
 rmSync(state, { recursive: true, force: true });
 rmSync(work, { recursive: true, force: true });
+rmSync(slowRepo, { recursive: true, force: true });
 console.log("plugin: PASS");

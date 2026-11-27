@@ -25,6 +25,8 @@
   session directory as cwd. `/review` and `no-comments` call the tools; the
   config-bin and `HARNESS_HOME` fallbacks are gone. `bin/comment-audit` remains
   the package CLI for human and CI use.
+- Run tool subprocesses asynchronously and honor the call abort signal, so a
+  long verification no longer blocks the OpenCode server.
 - `npm run lint:comments` joins `check:local`; the duplicate check in
   `tests/harness-ratchets.test.mjs` is gone.
 
