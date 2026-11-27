@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "libreharness",
+  "version": "2.1.0",
+  "description": "A durable task queue and risk-scaled engineering workflow for coding agents.",
+  "author": {
+    "name": "LibreHarness contributors"
+  },
+  "homepage": "https://github.com/ezcodelab/libreharness#readme",
+  "repository": "https://github.com/ezcodelab/libreharness",
+  "license": "MIT",
+  "keywords": [
+    "engineering",
+    "work-queue",
+    "code-review",
+    "verification",
+    "mcp"
+  ]
+}

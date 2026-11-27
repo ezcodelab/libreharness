@@ -1,0 +1,16 @@
+{
+  "name": "libreharness",
+  "owner": {
+    "name": "LibreHarness contributors"
+  },
+  "metadata": {
+    "description": "Native LibreHarness distribution for coding agents."
+  },
+  "plugins": [
+    {
+      "name": "libreharness",
+      "source": ".",
+      "description": "A durable task queue and risk-scaled engineering workflow for coding agents."
+    }
+  ]
+}

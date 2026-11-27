@@ -16,6 +16,7 @@ const scripts = [
   "plugins/goal-watch.js",
   "plugins/usage-ledger.js",
   "bin/libreharness.js",
+  "bin/sync-plugin-version.mjs",
 ];
 const pythonCheck = spawnSync(
   python.command,

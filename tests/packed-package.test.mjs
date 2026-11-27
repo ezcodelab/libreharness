@@ -48,6 +48,14 @@ try {
     "src/runtime.js",
     "src/tools.js",
     "src/mcp.js",
+    "plugin.json",
+    "mcp.json",
+    ".mcp.json",
+    ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
+    ".cursor-plugin/marketplace.json",
+    "skills/review/SKILL.md",
+    "skills/close/SKILL.md",
   ]) {
     assert.ok(existsSync(join(packageRoot, path)), `packed package is missing ${path}`);
   }

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Close"
+  short_description: "Finish a task or goal by validating the review artifact, integrating lanes, reaping worktrees, recording evidence, and s"

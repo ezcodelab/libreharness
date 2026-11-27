@@ -60,10 +60,17 @@ function commandFiles() {
       const { data, body } = frontmatter(
         readFileSync(join(COMMANDS, name), "utf8"),
       );
+      const skillPath =
+        typeof data.skill === "string"
+          ? join(SKILLS, data.skill, "SKILL.md")
+          : null;
+      const template = skillPath
+        ? frontmatter(readFileSync(skillPath, "utf8")).body
+        : body;
       return {
         name: name.slice(0, -3),
         description: data.description ?? "",
-        template: body,
+        template,
       };
     });
 }

@@ -78,7 +78,7 @@ test("commands and skills call plugin tools, not filesystem paths", () => {
     );
   }
   assert.match(
-    readFileSync(join(ROOT, "commands", "review.md"), "utf8"),
+    readFileSync(join(ROOT, "skills", "review", "SKILL.md"), "utf8"),
     /comment_audit/,
   );
   assert.match(

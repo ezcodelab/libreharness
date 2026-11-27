@@ -1,0 +1,3 @@
+interface:
+  display_name: "Goal"
+  short_description: "the operator sets a multi-step outcome and wants the agent to work through it, optionally unattended"

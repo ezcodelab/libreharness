@@ -1,0 +1,3 @@
+interface:
+  display_name: "Parallel Lanes"
+  short_description: "splitting work across multiple agents or sessions"

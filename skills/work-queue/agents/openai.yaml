@@ -1,0 +1,3 @@
+interface:
+  display_name: "Work Queue"
+  short_description: "work is nontrivial, spans more than one session, or will run in parallel"

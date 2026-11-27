@@ -1,0 +1,3 @@
+interface:
+  display_name: "Review"
+  short_description: "Review a working diff against task acceptance, record observed checks, and inspect reach and state impact"

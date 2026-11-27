@@ -1,0 +1,3 @@
+interface:
+  display_name: "Verification"
+  short_description: "Create, maintain, or formally check a project-local proof"

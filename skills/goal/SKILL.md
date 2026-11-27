@@ -20,9 +20,20 @@ goal <id>                  kind: goal, active, owner: goal, autorun: true|false
 A goal is done only when every child is `done` or `abandoned` and the goal's
 own acceptance is checked. A goal is never claimed or laned; its children are.
 
+## Entry
+
+This skill is the manual goal entry and the execution procedure. When the
+request names an existing task or goal id, read its packet. For a goal, call
+`tasks` with `goal-status`, then `goal-start`. Execute each ready child with the
+`work-queue` brief, implement, review, and close. Use `tasks lane` only when the
+operator explicitly wants a manual worktree.
+
+When the request is new, brief it with the `work-queue` brief reference, plan it
+here, show the plan, and stop for approval before creating it.
+
 ## Create
 
-The goal flow plans first (manual form `/goal`): it writes a validated
+The goal flow plans first: it writes a validated
 goal/child/lane JSON and stops. Review or revise it, then create and execute it;
 the manual form is `/goal go`, and `--unattended` sets the per-goal continuation
 flag. Each child has one scope, testable acceptance, dependencies, and a review
