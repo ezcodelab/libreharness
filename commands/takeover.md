@@ -6,8 +6,8 @@ Takeover: $ARGUMENTS
 
 Use the work-queue skill. Do not edit code until the state is clear.
 
-1. Require a task id. `tasks.py show <id> --packet`. When the task has a
-   Handoff, run `tasks.py handoff <id> --check` and stop if it is incomplete.
+1. Require a task id. `tasks show <id> --packet`. When the task has a
+   Handoff, run `tasks handoff <id> --check` and stop if it is incomplete.
 2. If the task is `ready` and unowned, claim it for this session's lane. If it
    is `active` under another owner, stop and ask before dual-writing.
 3. Read the task's Handoff, the project `AGENTS.md`, the relevant

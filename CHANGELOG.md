@@ -21,9 +21,10 @@
   auto-merge gate.
 - `skills/no-comments` now covers docs and suppressions, requires delete,
   smallest root-cause fix, or encode-then-delete, and rejects scope escapes.
-- Expose `comment-audit` at `$XDG_CONFIG_HOME/opencode/bin/comment-audit` through
-  plugin setup and the package `bin`; `/review` and `no-comments` use it instead
-  of `HARNESS_HOME` or a clone path.
+- Register `comment_audit`, `tasks`, and `pr_guard` as plugin tools with the
+  session directory as cwd. `/review` and `no-comments` call the tools; the
+  config-bin and `HARNESS_HOME` fallbacks are gone. `bin/comment-audit` remains
+  the package CLI for human and CI use.
 - `npm run lint:comments` joins `check:local`; the duplicate check in
   `tests/harness-ratchets.test.mjs` is gone.
 

@@ -21,8 +21,8 @@ capture, and smoke commands.
 
 Reuse an inbox or active task for the same surface. Otherwise create one:
 
-```sh
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" new \
+```text
+tasks new \
   "Unslop <surface> UI" --project "<project>" --tags ui \
   --scope "Change one UI surface using the product system and runtime evidence." \
   --acceptance "- [ ] Baseline evidence covers the required states and widths.
@@ -57,7 +57,7 @@ gaps. Do not edit UI code in this stage.
 ## 3. Review the baseline and choose one problem
 
 Follow the procedure in
-`${HARNESS_HOME:-$HOME/.config/opencode}/commands/design-review.md` against the
+the `design-review` command against the
 baseline artifacts. This is an internal analysis step, not a stop. Report only
 observed deviations. Identify the single highest impact structural or system
 defect. Do not turn the whole screen into a redesign list.
@@ -127,11 +127,11 @@ results in the task Evidence. Check acceptance only where the evidence supports
 it.
 
 Follow the review procedure in
-`${HARNESS_HOME:-$HOME/.config/opencode}/commands/review.md`. Run the task Verify
-and the real UI check through `tasks.py review`, then move the task to `review`.
+the `review` command. Run the task Verify
+and the real UI check through the `tasks` tool, then move the task to `review`.
 These are internal steps; do not ask the operator to invoke another command.
 
-Write the structured handoff, run `tasks.py validate`, and follow the close
+Write the structured handoff, call `tasks` with `validate`, and follow the close
 procedure in `commands/close.md`. Open one ready PR, wait for required CI on the
 exact head, and merge only the reviewed head through the `shipping` skill.
 

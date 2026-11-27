@@ -12,7 +12,7 @@ and runs the same flow without the operator typing `/goal`.
 ## Existing goal or single task
 
 1. If `$ARGUMENTS` is an existing `kind: goal` task id, execute it:
-   `goal-status`, then `tasks.py goal-start <goal-id> --repo "$PWD"` once. It
+   `goal-status`, then `tasks goal-start <goal-id>` once. It
    creates lanes for ready children with disjoint `owns`; `--max-lanes` is an
    optional operator budget. If it reports serial, work in the current tree.
    Then `/brief <child>`, implement, test, `/review`, `/close`. Do not ask the
@@ -28,8 +28,8 @@ and runs the same flow without the operator typing `/goal`.
    "superseded by goal <id>"` only after the plan is created.
    Otherwise this is the **small-task fast path**:
    - read the packet; if Scope/Acceptance are placeholders, fill them from the
-     request or ask one question; run `tasks.py status <id> ready --note "goal confirmed"`;
-   - claim it: `tasks.py claim <id> --owner <session-or-lane>`; if another owner
+     request or ask one question; run `tasks status <id> ready --note "goal confirmed"`;
+   - claim it: `tasks claim <id> --owner <session-or-lane>`; if another owner
      holds it, stop;
    - execute: `/brief`, implement, run checks, `/review`, `/close`. Use `/lane`
      only when you deliberately want a manual worktree for this one task.
@@ -44,7 +44,7 @@ and runs the same flow without the operator typing `/goal`.
    `docs/reference.md` if present, the relevant tree/tests, and the lessons that
    change the next action.
 2. If this is actually one bounded change, create a single task directly with
-   `tasks.py new "<title>" --project <name> --scope "<scope>" --acceptance "<checks>"`,
+   `tasks new "<title>" --project <name> --scope "<scope>" --acceptance "<checks>"`,
    then execute it as the small-task path. Do not create a goal. Otherwise split
    by deliverable/review boundary into children. A one-way door is a
    decision-memo child (`owns: []`), not an implementation.
@@ -81,7 +81,7 @@ and runs the same flow without the operator typing `/goal`.
 
 Set `autorun: true` only when the operator asks to leave it alone.
 5. Validate and bind:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" plan --file /tmp/opencode/goal-plan.json --dry-run --json`
+   `tasks plan --file /tmp/opencode/goal-plan.json --dry-run --json`
    Fix every validator error; save the returned `hash` to
    `/tmp/opencode/goal-plan.sha256`.
 6. Show goal, children, lanes, dependencies, owns, one-way doors, autorun, and
@@ -96,7 +96,7 @@ If `$ARGUMENTS` starts with `go`:
 3. Create with `plan --file /tmp/opencode/goal-plan.json --expect-hash
    "$(cat /tmp/opencode/goal-plan.sha256)"` (add `--unattended` for `go
    --unattended`); show the goal id.
-4. Run `tasks.py goal-start <goal-id> --repo "$PWD"` once. It uses the reviewed
+4. Run `tasks goal-start <goal-id>` once. It uses the reviewed
    lane map and creates lanes for ready children with disjoint `owns`; use
    `--max-lanes` only as an explicit budget. If it reports serial, work the ready
    children in the current tree. Then execute as in section 1.

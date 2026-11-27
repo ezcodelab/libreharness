@@ -11,7 +11,7 @@ feature work, and do not edit global config yet.
    transitions by root cause, and propose the highest-impact group. Do not fix
    feature code in this turn.
 3. Read the queue report and metrics:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" report`
+   `tasks report`
    and `${HARNESS_STATE:-$HOME/.local/state/libreharness}/metrics/workflow-log.csv`.
    Look for rework, stale active tasks, blocked work, and lanes that did not pay
    off.
@@ -25,9 +25,8 @@ feature work, and do not edit global config yet.
 5. Propose deletions first: obsolete paths, docs, options, or steps that did not
    pay off. Leaner beats more rules.
 6. Propose the patches you can prove and review to `AGENTS.md`, the
-   `engineering-loop` skill, the `ui-design` skill, another skill under
-   `${HARNESS_HOME}/skills/`, or the named principles in `AGENTS.md`, as a
-   unified diff. Write each with `skills/correct/references/skill-writing.md`.
+   `engineering-loop` skill, the `ui-design` skill, another injected skill, or
+   the named principles in `AGENTS.md`, as a unified diff. Write each with `skills/correct/references/skill-writing.md`.
    For each, quote the evidence, name the target, and say what it replaces or
    deletes.
 7. Prefer folding a rule into an existing bullet over adding a new one. For a

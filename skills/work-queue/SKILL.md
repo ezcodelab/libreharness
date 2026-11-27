@@ -20,25 +20,22 @@ Create a task before editing when any of these is true:
 
 Trivial fixes do not need a task. Do not create a task for a typo.
 
-## Commands
+## Tools
 
-```sh
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" new "Title" \
-  --project demo --priority 1 \
-  --scope "One sentence." --acceptance "- [ ] testable claim"
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" ready
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" show <id> --packet
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" claim <id> --owner lane-a \
-  --branch <branch> --base <base> --worktree <path>
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> review --note "..."
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> done --evidence "make check: 42 passed"
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" handoff <id> --file /tmp/handoff.md
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" validate
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" report
-```
+Call the `tasks` tool with `args`; it runs the queue in the session directory.
+
+- `new "Title" --project demo --priority 1 --scope "One sentence." --acceptance "- [ ] testable claim"`
+- `ready`
+- `show <id> --packet`
+- `claim <id> --owner lane-a --branch <branch> --base <base> --worktree <path>`
+- `status <id> review --note "..."`
+- `status <id> done --evidence "make check: 42 passed"`
+- `handoff <id> --file /tmp/handoff.md`
+- `validate`
+- `report`
 
 `/goal`, `/queue`, `/lane`, `/takeover`, and `/handoff` wrap these commands.
-Use the CLI, not hand edits, for status, ownership, dependencies, and evidence.
+Use the tool, not hand edits, for status, ownership, dependencies, and evidence.
 
 ## Goals
 

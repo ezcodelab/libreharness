@@ -77,6 +77,7 @@ let cleanup = null;
 try {
   state = mkdtempSync(join(tmpdir(), "verify-libreharness-"));
   const hooks = [];
+  const tools = [];
   let promptHook = null;
   const ctx = {
     options: { state },
@@ -86,6 +87,9 @@ try {
       transform: (callback) => callback({ get: () => undefined, update: () => {} }),
     },
     skill: { transform: (callback) => callback({ add: () => {} }) },
+    tool: {
+      transform: (callback) => callback({ add: (tool) => tools.push(tool) }),
+    },
     session: {
       hook: async (name, callback) => {
         hooks.push(name);
@@ -104,7 +108,15 @@ try {
   check((statSync(state).mode & 0o777) === 0o700, "state directory is not mode 0700");
   check(hooks.includes("prompt"), "prompt hook is not registered");
   check(!hooks.includes("context"), "the plugin must not inject instructions");
-  verified.push("plugin.setup", "state mode 0700", "native instruction ownership");
+  for (const name of ["comment_audit", "tasks", "pr_guard"]) {
+    check(tools.some((tool) => tool.name === name), `missing tool ${name}`);
+  }
+  verified.push(
+    "plugin.setup",
+    "state mode 0700",
+    "native instruction ownership",
+    "comment_audit, tasks, pr_guard tools",
+  );
 
   const event = {
     sessionID: "smoke",

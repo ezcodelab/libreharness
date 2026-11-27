@@ -32,7 +32,7 @@ lane map is used by `goal-start`; the operator does not create lanes by hand.
 
 ## Run
 
-After creating or resuming a goal, run `tasks.py goal-start <goal> --repo
+After creating or resuming a goal, run `tasks goal-start <goal> --repo
 <repo>` once. It creates lanes for ready children with disjoint `owns`; use
 `--max-lanes` only as an explicit operator budget. If it reports serial, work in
 the current tree. The manual `/lane` command is only for a worktree you

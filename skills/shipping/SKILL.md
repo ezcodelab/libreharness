@@ -41,35 +41,28 @@ refactor, docs change, or separate capability gets its own PR when it can land
 alone. Split by behavior and review boundary, not file count. If a split grows
 into many follow-ups, split the task before opening anything.
 
-Write the body first, then run:
-
-```sh
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/pr_guard.py" check \
-  --repo "$PWD" --base main --title "<title>" --body-file /tmp/opencode/pr-body.md
-```
+Write the body first, then call `pr_guard` with
+`args: ["check", "--base", "main", "--title", "<title>", "--body-file", "/tmp/opencode/pr-body.md"]`.
 
 It must return `"ok": true` and `"next": "open"` on a clean committed head.
 Commit with `-s` and run the project checks before the first push and after any
 invalidating change.
 
-Validate the artifact on the tree that will land:
-
-```sh
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" review <id> --repo "$PWD"
-```
+Validate the artifact on the tree that will land: call `tasks` with
+`args: ["review", "<id>"]`.
 
 Then open the PR ready. Never open a draft. Keep the URL.
 
 ## 2. Land
 
-Pin the head, run the guard in the foreground with a timeout long enough for CI,
-and act on its JSON:
+Pin the head, then call `pr_guard` in the foreground with a timeout long enough
+for CI and act on its JSON:
 
 ```sh
 HEAD=$(gh pr view <number> --json headRefOid --jq .headRefOid)
-python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/pr_guard.py" land \
-  --pr <number> --head "$HEAD" --base main --repo "$PWD"
 ```
+
+`pr_guard` args: `["land", "--pr", "<number>", "--head", "$HEAD", "--base", "main"]`.
 
 - `fix`: fix the failed required check, commit, record a new artifact, push, and
   run `land` again. Classify it first with `references/ci-failure-classes.md`; a

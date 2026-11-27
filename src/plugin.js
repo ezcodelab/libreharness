@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: MIT
-import {
-  chmodSync,
-  lstatSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  readlinkSync,
-  symlinkSync,
-  unlinkSync,
-} from "node:fs";
+import { spawnSync } from "node:child_process";
+import { chmodSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -156,45 +148,92 @@ function applyAgentModels(agent, agentModels) {
   agent.model = model;
 }
 
-function configHome(value) {
-  const base = value ?? process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config");
-  return resolve(base.replace(/^~/, homedir()));
+function packageTool(script, args, cwd, env) {
+  const childEnv = { ...process.env, ...env };
+  delete childEnv.HARNESS_HOME;
+  const result = spawnSync("python3", [join(ROOT, "bin", script), ...args], {
+    cwd,
+    encoding: "utf8",
+    env: childEnv,
+  });
+  if (result.error) throw result.error;
+  const output = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
+  if (result.status !== 0) {
+    throw new Error(
+      `${script} exited ${result.status}${output ? `:\n${output}` : ""}`,
+    );
+  }
+  return output;
 }
 
-export function installCommentAuditEntrypoint(home = configHome()) {
-  const wrapper = join(ROOT, "bin", "comment-audit");
-  const bin = join(home, "opencode", "bin");
-  const target = join(bin, "comment-audit");
-  try {
-    mkdirSync(bin, { recursive: true, mode: 0o755 });
-    try {
-      chmodSync(wrapper, 0o755);
-    } catch (error) {
-      if (error?.code !== "EPERM" && error?.code !== "EACCES") throw error;
-    }
-    let existing = null;
-    try {
-      existing = lstatSync(target);
-    } catch (error) {
-      if (error?.code !== "ENOENT") throw error;
-    }
-    if (existing?.isSymbolicLink()) {
-      if (readlinkSync(target) === wrapper) return target;
-      unlinkSync(target);
-    } else if (existing) {
-      console.warn(
-        `libreharness: ${target} exists and is not a symlink; leaving it alone`,
-      );
-      return null;
-    }
-    symlinkSync(wrapper, target);
-    return target;
-  } catch (error) {
-    console.warn(
-      `libreharness: cannot expose comment-audit at ${target}: ${error?.message ?? error}`,
+function untracked(cwd) {
+  const result = spawnSync(
+    "git",
+    ["ls-files", "-z", "--others", "--exclude-standard"],
+    { cwd, encoding: "buffer" },
+  );
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(
+      `git ls-files exited ${result.status}: ${result.stderr.toString("utf8")}`,
     );
-    return null;
   }
+  return result.stdout.toString("utf8").split("\0").filter(Boolean);
+}
+
+const ARGS_INPUT = {
+  type: "object",
+  properties: {
+    args: { type: "array", items: { type: "string" } },
+    cwd: { type: "string" },
+  },
+  required: ["args"],
+  additionalProperties: false,
+};
+
+const AUDIT_INPUT = {
+  type: "object",
+  properties: {
+    diff: { type: "string" },
+    paths: { type: "array", items: { type: "string" } },
+    untracked: { type: "boolean" },
+    strict: { type: "boolean" },
+    baseline: { type: "string" },
+    write_baseline: { type: "string" },
+    cwd: { type: "string" },
+  },
+  additionalProperties: false,
+};
+
+async function runAudit(input, state, defaultCwd) {
+  const cwd = input.cwd ?? defaultCwd;
+  const flags = [];
+  if (input.strict) flags.push("--strict");
+  if (input.baseline) flags.push("--baseline", input.baseline);
+  if (input.write_baseline) flags.push("--write-baseline", input.write_baseline);
+  const runs = [];
+  if (input.diff) runs.push(["--diff", input.diff, ...flags]);
+  const paths = [...(input.paths ?? [])];
+  if (input.untracked) paths.push(...untracked(cwd));
+  if (paths.length) runs.push([...paths, ...flags]);
+  const requested =
+    Boolean(input.diff) || Boolean(input.paths?.length) || Boolean(input.untracked);
+  if (!runs.length && !requested) runs.push([".", ...flags]);
+  const outputs = [];
+  for (const args of runs) {
+    const output = packageTool("comment_audit.py", args, cwd, {
+      HARNESS_STATE: state,
+    });
+    if (output) outputs.push(output);
+  }
+  return outputs.join("\n") || "comment audit: PASS";
+}
+
+function runArgs(script, input, state, defaultCwd) {
+  const output = packageTool(script, input.args, input.cwd ?? defaultCwd, {
+    HARNESS_STATE: state,
+  });
+  return output || `${script}: PASS`;
 }
 
 const plugin = Plugin.define({
@@ -207,7 +246,35 @@ const plugin = Plugin.define({
     mkdirSync(state, { recursive: true, mode: 0o700 });
     // mkdir's mode only applies to a new directory; fix an existing one too.
     chmodSync(state, 0o700);
-    installCommentAuditEntrypoint();
+    const defaultCwd = ctx.location?.directory ?? process.cwd();
+    await ctx.tool.transform((editor) => {
+      editor.add({
+        name: "comment_audit",
+        description:
+          "Run the deterministic LibreHarness comment audit on a diff, paths, or untracked files.",
+        input: AUDIT_INPUT,
+        execute: async (input) => ({
+          content: await runAudit(input, state, defaultCwd),
+        }),
+      });
+      editor.add({
+        name: "tasks",
+        description:
+          "Run the LibreHarness task queue CLI against the current repository.",
+        input: ARGS_INPUT,
+        execute: async (input) => ({
+          content: runArgs("tasks.py", input, state, defaultCwd),
+        }),
+      });
+      editor.add({
+        name: "pr_guard",
+        description: "Run the LibreHarness PR guard for shipping.",
+        input: ARGS_INPUT,
+        execute: async (input) => ({
+          content: runArgs("pr_guard.py", input, state, defaultCwd),
+        }),
+      });
+    });
 
     const commands = commandFiles();
     await ctx.command.transform((editor) => {

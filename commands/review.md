@@ -29,12 +29,10 @@ work-queue skills. Do not edit code in this turn.
    `TODO`/`FIXME`, or correctness lint or type suppression is a send-back. The fix
    is the smallest root-cause reshape, or a type, lint, test, or runtime check,
    not a shorter comment. An inline `comment-discipline: allow <reason>` or a
-   linked issue accepts a deliberate case. Run
-   `"${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit" --diff /tmp/opencode/review-$TASK.diff`
-   and
-   `git ls-files -z --others --exclude-standard | xargs -0 -r "${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit"`
-   for new files. Add `--strict` when `.comment-audit-strict` exists. Treat a
-   finding as a send-back. The fix is delete, the smallest root-cause change, or
+   linked issue accepts a deliberate case. Call the `comment_audit` tool with
+   `{ diff: "/tmp/opencode/review-$TASK.diff", untracked: true }`; add
+   `strict: true` when `.comment-audit-strict` exists. A tool error is a
+   send-back. The fix is delete, the smallest root-cause change, or
    encode-then-delete; reject a diff that rewrites unrelated application logic
    or adds a guard so a comment can stay. When the repo has
    `tests/harness-ratchets.test.mjs`, run it too. Docs are blocking on the same
@@ -43,11 +41,10 @@ work-queue skills. Do not edit code in this turn.
    through `.github/workflows/comment-audit.yml`; do not accept a per-repo fork
    of the script.
 4. Deterministic checks first. Read the task Plan's `Data shape:` and `Verify:`
-   lines, then record the real exits:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" review <id> --repo "$PWD" --run "<Verify>" --run "<focused check>"`
-   The command runs argv without a shell and writes
-   `$HARNESS_STATE/work/reviews/<id>.json` with the exact HEAD and a digest of
-   the reviewed diff, including untracked files. A missing or stale head or
+   lines, then record the real exits with the `tasks` tool:
+   `args: ["review", "<id>", "--run", "<Verify>", "--run", "<focused check>"]`.
+   The tool runs argv without a shell and writes the review artifact with the
+   exact HEAD and a digest of the reviewed diff, including untracked files. A missing or stale head or
    diff, an unreachable check, a non-zero exit, a different Verify command, or
    an empty list blocks. If there is no task id, run the same
    commands directly and say they are not recorded. A product task whose real
@@ -74,12 +71,12 @@ work-queue skills. Do not edit code in this turn.
    for one in this turn; it cannot add checks or PASS. Use
    `skills/shipping/references/review-axes.md` to keep Spec and Standards
    separate. If it is incomplete,
-   failed, truncated, or unproven, run
-   `tasks.py review <id> --repo "$PWD" --unverify` and keep the task open.
+   failed, truncated, or unproven, call `tasks` with
+   `args: ["review", "<id>", "--unverify"]` and keep the task open.
    There is no second abstract pass. A green artifact is not proof: run the
    acceptance check on the real artifact.
 8. If a task id was used, update the queue (not code):
-   - pass: `tasks.py status <id> review --note "review artifact PASS at <sha>"`;
-   - send back: `tasks.py log <id> "review send-back: <one line>"`, leave it
-     active.
+   - pass: `tasks` with `args: ["status", "<id>", "review", "--note", "review artifact PASS at <sha>"]`;
+   - send back: `tasks` with `args: ["log", "<id>", "review send-back: <one line>"]`,
+     leave it active.
 9. Show the verdict and stop.
