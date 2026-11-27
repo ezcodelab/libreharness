@@ -413,9 +413,14 @@ Repository checks use pinned tools fetched by npm:
 | Syntax | `npm run check:syntax` |
 | Python tests | `python3 -m unittest discover -s tests -p 'test_*.py' -v` |
 | Node tests | `npm run test:node` |
-| Comment debt inventory | `npm run lint:comments` |
-| Comment debt on a diff | `python3 bin/comment_audit.py --diff <patch>` |
+| Comment debt inventory (repo baseline) | `npm run lint:comments` |
+| Comment debt inventory (installed) | `comment-audit .` |
+| Comment debt on a diff | `comment-audit --diff <patch>` |
+| Strict new-comment gate | `comment-audit --strict --diff <patch>` |
 | Package contents | `npm pack --dry-run` |
+
+The `comment-audit` rows use the installed path above. The npm package also
+provides the short name when its bin directory is on `PATH`.
 | Markdown correctness | `npm run lint:md` |
 | Links | `npm run lint:links` |
 | Secrets | `npm run lint:secrets` |
@@ -427,11 +432,17 @@ shellcheck into `$XDG_CACHE_HOME/libreharness/tools` for Linux x64 and arm64.
 They do not change the plugin runtime or its install size. CI calls the same
 commands.
 
-`bin/comment_audit.py` owns comment and suppression rules.
-`.comment-audit-baseline` records the inventory with context anchors, so line
-shifts pass and context swaps fail. `.comment-audit-strict` makes `--diff`
-reject every new comment outside the keep list. GitHub callers use the pinned
-reusable workflow:
+`bin/comment_audit.py` owns comment and suppression rules. Plugin setup exposes
+the owner through `comment-audit` at
+`$XDG_CONFIG_HOME/opencode/bin/comment-audit`, defaulting to
+`~/.config/opencode/bin/comment-audit`; the npm package exposes the same wrapper
+as `bin/comment-audit`. It resolves the script next to the installed package, so
+callers do not need a clone path. Install the plugin or package at the same
+tag/ref you pass as `harness_ref`; the wrapper does not copy rules, so the local
+entrypoint and CI run the same owner. `.comment-audit-baseline` records the
+inventory with context anchors, so line shifts pass and context swaps fail.
+`.comment-audit-strict` makes `--diff` reject every new comment outside the keep
+list. GitHub callers use the pinned reusable workflow:
 
 ```yaml
 jobs:

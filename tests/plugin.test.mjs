@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: MIT
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdtempSync, rmSync, statSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  lstatSync,
+  mkdtempSync,
+  readlinkSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const state = mkdtempSync(join(tmpdir(), "libreharness-plugin-"));
+const configHome = mkdtempSync(join(tmpdir(), "libreharness-config-"));
 chmodSync(state, 0o755);
+process.env.XDG_CONFIG_HOME = configHome;
 const commands = [];
 const skills = [];
 const prompts = [];
@@ -98,6 +108,14 @@ assert.equal(statePath("~/custom"), join(process.env.HOME, "custom"));
 if (previousState === undefined) delete process.env.HARNESS_STATE;
 else process.env.HARNESS_STATE = previousState;
 const cleanup = await plugin.setup(ctx);
+const entrypoint = join(configHome, "opencode", "bin", "comment-audit");
+assert.ok(existsSync(entrypoint), "setup must install comment-audit");
+assert.ok(lstatSync(entrypoint).isSymbolicLink(), "comment-audit must be a symlink");
+assert.equal(
+  readlinkSync(entrypoint),
+  join(process.env.HARNESS_HOME, "bin", "comment-audit"),
+  "comment-audit must point at the installed wrapper",
+);
 
 const commandNames = commands.map((command) => command.name);
 for (const name of ["goal", "review", "state-audit", "tune", "close", "unslop-ui"]) {
@@ -243,4 +261,5 @@ assert.ok(
 
 cleanup();
 rmSync(state, { recursive: true, force: true });
+rmSync(configHome, { recursive: true, force: true });
 console.log("plugin: PASS");
