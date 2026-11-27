@@ -30,8 +30,9 @@ work-queue skills. Do not edit code in this turn.
    is the smallest root-cause reshape, or a type, lint, test, or runtime check,
    not a shorter comment. An inline `comment-discipline: allow <reason>` or a
    linked issue accepts a deliberate case. Run
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/comment_audit.py" --diff /tmp/opencode/review-$TASK.diff`
-   and `git ls-files -z --others --exclude-standard | xargs -0 -r python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/comment_audit.py"`
+   `"${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit" --diff /tmp/opencode/review-$TASK.diff`
+   and
+   `git ls-files -z --others --exclude-standard | xargs -0 -r "${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit"`
    for new files. Add `--strict` when `.comment-audit-strict` exists. Treat a
    finding as a send-back. The fix is delete, the smallest root-cause change, or
    encode-then-delete; reject a diff that rewrites unrelated application logic

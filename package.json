@@ -4,6 +4,9 @@
   "private": false,
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "comment-audit": "bin/comment-audit"
+  },
   "exports": {
     ".": "./src/plugin.js"
   },
@@ -33,6 +36,7 @@
     "skills",
     "plugins",
     "bin/*.py",
+    "bin/comment-audit",
     "docs/reference.md"
   ],
   "os": [
@@ -44,7 +48,7 @@
   },
   "scripts": {
     "test:python": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
-    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/usage-ledger.test.mjs && node tests/structural.test.mjs && node tests/plugin.test.mjs && node tests/harness-ratchets.test.mjs",
+    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/usage-ledger.test.mjs && node tests/structural.test.mjs && node tests/comment-audit-entrypoint.test.mjs && node tests/plugin.test.mjs && node tests/harness-ratchets.test.mjs",
     "test": "npm run test:python && npm run test:node",
     "check:syntax": "python3 -m compileall -q bin tests && node --check src/plugin.js && node --check plugins/auto-intake.js && node --check plugins/goal-watch.js && node --check plugins/usage-ledger.js && python3 -m json.tool package.json >/dev/null",
     "tools:install": "python3 bin/devtool.py ensure",

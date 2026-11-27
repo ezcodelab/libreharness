@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: MIT
-import { chmodSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import {
+  chmodSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  readlinkSync,
+  symlinkSync,
+  unlinkSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -147,6 +156,47 @@ function applyAgentModels(agent, agentModels) {
   agent.model = model;
 }
 
+function configHome(value) {
+  const base = value ?? process.env.XDG_CONFIG_HOME ?? join(homedir(), ".config");
+  return resolve(base.replace(/^~/, homedir()));
+}
+
+export function installCommentAuditEntrypoint(home = configHome()) {
+  const wrapper = join(ROOT, "bin", "comment-audit");
+  const bin = join(home, "opencode", "bin");
+  const target = join(bin, "comment-audit");
+  try {
+    mkdirSync(bin, { recursive: true, mode: 0o755 });
+    try {
+      chmodSync(wrapper, 0o755);
+    } catch (error) {
+      if (error?.code !== "EPERM" && error?.code !== "EACCES") throw error;
+    }
+    let existing = null;
+    try {
+      existing = lstatSync(target);
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+    if (existing?.isSymbolicLink()) {
+      if (readlinkSync(target) === wrapper) return target;
+      unlinkSync(target);
+    } else if (existing) {
+      console.warn(
+        `libreharness: ${target} exists and is not a symlink; leaving it alone`,
+      );
+      return null;
+    }
+    symlinkSync(wrapper, target);
+    return target;
+  } catch (error) {
+    console.warn(
+      `libreharness: cannot expose comment-audit at ${target}: ${error?.message ?? error}`,
+    );
+    return null;
+  }
+}
+
 const plugin = Plugin.define({
   id: "libreharness",
   async setup(ctx) {
@@ -157,6 +207,7 @@ const plugin = Plugin.define({
     mkdirSync(state, { recursive: true, mode: 0o700 });
     // mkdir's mode only applies to a new directory; fix an existing one too.
     chmodSync(state, 0o700);
+    installCommentAuditEntrypoint();
 
     const commands = commandFiles();
     await ctx.command.transform((editor) => {

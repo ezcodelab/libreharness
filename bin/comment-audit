@@ -1,0 +1,4 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+SELF=$(readlink -f "$0")
+exec python3 "$(dirname "$SELF")/comment_audit.py" "$@"

@@ -12,9 +12,23 @@ comment, then make the code self-evident or make the constraint executable.
 ## Scope
 
 The caller's files or diff. Default: `git diff` against the merge base, plus the
-working tree. Code comments and prose docs are in scope. The portable audit
-covers high-confidence comment and suppression classes. Tautology and stale
-prose stay a review read.
+working tree. Code comments and prose docs are in scope. The installed
+`comment-audit` covers high-confidence comment and suppression classes.
+Tautology and stale prose stay a review read.
+
+## Entrypoint
+
+Plugin setup exposes the audit at
+`$XDG_CONFIG_HOME/opencode/bin/comment-audit`, defaulting to
+`~/.config/opencode/bin/comment-audit`. The npm package exposes the same wrapper
+as `bin/comment-audit`. Do not call a clone path and do not reimplement a rule.
+
+```sh
+audit="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit"
+"$audit" .                        # full inventory
+"$audit" --diff <patch>           # added lines only
+"$audit" --strict --diff <patch>  # clean-repo ratchet
+```
 
 ## Keep exceptions
 
@@ -76,9 +90,9 @@ deliberate cleanup.
    reshape it: a branded type, a narrow API, a lint whose error names the fix, a
    runtime check, or a failing test.
 5. Run the audit on the saved review diff, then on untracked files:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/comment_audit.py" --diff /tmp/opencode/review-$TASK.diff`
+   `"${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit" --diff /tmp/opencode/review-$TASK.diff`
    and
-   `git ls-files -z --others --exclude-standard | xargs -0 -r python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/comment_audit.py"`.
+   `git ls-files -z --others --exclude-standard | xargs -0 -r "${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit"`.
    Add `--strict` when `.comment-audit-strict` exists in the repo; every new
    comment then needs a keep or an allow marker. A finding is deleted, reshaped,
    or kept with an external reference. Add `--baseline <file>` only for recorded
