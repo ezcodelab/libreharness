@@ -11,8 +11,8 @@ Use the work-queue and engineering-loop skills.
    If there is no task, say so and use the stated scope.
 2. Read the project `AGENTS.md`, `CONTRIBUTING.md`, and the files or tests the
    task names. Do not read the whole repository.
-3. Find the matching lessons in the project's `docs/process-lessons.md`.
-   Include only lessons that change the next action.
+3. Find the matching decisions or lessons in the project's `AGENTS.md`,
+   `DECISIONS.md`, or docs. Include only lessons that change the next action.
 4. List the injected skills and name the skills that apply.
 5. Output, in this order:
    - **Task** and one-sentence scope

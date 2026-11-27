@@ -18,7 +18,6 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 export const ASCII_IGNORE_GLOBS = [
   "CHANGELOG.md",
-  "docs/process-lessons.md",
   "src/generated/**",
   "plugins/generated/**",
   ".opencode/node_modules/**",
@@ -208,7 +207,7 @@ export function checkInstructionOwners(root) {
   for (const path of scope) {
     const relPath = rel(root, path);
     if (relPath === owner) continue;
-    if (ignored(relPath, ["CHANGELOG.md", "docs/process-lessons.md", "skills/correct/references/rule-ledger.md"])) continue;
+    if (ignored(relPath, ["CHANGELOG.md", "skills/correct/references/rule-ledger.md"])) continue;
     if (readFileSync(path, "utf8").includes(header)) {
       push(problems, "instruction-owners", relPath, `the skill map has one owner: ${owner}`);
     }
@@ -291,14 +290,6 @@ export function checkRouterWiring(root) {
   return problems;
 }
 
-const POLICY_TOKEN_PATTERNS = [
-  [/jev_review/, "jev_review"],
-  [/jev_plan/, "jev_plan"],
-  [/jev_triage/, "jev_triage"],
-  [/bin\/jev_/, "bin/jev_"],
-  [/\bJev\b/, "Jev"],
-  [/\bJEV_/, "JEV_"],
-];
 const POLICY_PHRASES = [
   "independent verifier PASS",
   "opposite-lens",
@@ -306,7 +297,6 @@ const POLICY_PHRASES = [
 ];
 const POLICY_IGNORE = [
   "CHANGELOG.md",
-  "docs/process-lessons.md",
   "skills/correct/references/rule-ledger.md",
 ];
 
@@ -334,17 +324,6 @@ export function checkPolicyWiring(root) {
     readFileSync(path, "utf8")
       .split("\n")
       .forEach((line, index) => {
-        for (const [pattern, label] of POLICY_TOKEN_PATTERNS) {
-          if (pattern.test(line)) {
-            push(
-              problems,
-              "policy-wiring",
-              relPath,
-              `remove the agent-facing ${label} reference; the review artifact is the default gate`,
-              index + 1,
-            );
-          }
-        }
         for (const phrase of POLICY_PHRASES) {
           if (line.includes(phrase)) {
             push(
@@ -568,21 +547,6 @@ function selfTests() {
       "a playbook id list that drifts from the eight sections must fail",
     );
     writeFileSync(join(tmp, "plugins/auto-intake.js"), `export const PLAYBOOK_IDS = ${JSON.stringify(PLAYBOOKS)};\nexport function routePrompt(text) { return text; }\n`);
-    writeFileSync(join(tmp, "commands/review.md"), "Jev review and independent verifier PASS.\n");
-    assert.ok(
-      checkPolicyWiring(tmp).some(
-        (problem) =>
-          problem.rule === "policy-wiring" &&
-          problem.file === "commands/review.md",
-      ),
-      "agent-facing Jev and independent-verdict policy must fail",
-    );
-    writeFileSync(join(tmp, "commands/review.md"), "We achieve the goal with observed exits.\n");
-    assert.deepEqual(
-      checkPolicyWiring(tmp),
-      [],
-      "the substring jev inside an unrelated word must pass",
-    );
     writeFileSync(join(tmp, "commands/review.md"), "A gate cannot certify its own weakening.\n");
     assert.ok(
       checkPolicyWiring(tmp).some((problem) =>

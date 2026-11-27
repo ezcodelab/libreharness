@@ -11,8 +11,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin"))
-import tasks  # noqa: E402
+import tasks
 
 
 class QueueTests(unittest.TestCase):

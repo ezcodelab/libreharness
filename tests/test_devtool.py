@@ -3,15 +3,13 @@ from __future__ import annotations
 
 import hashlib
 import io
-import sys
 import tarfile
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin"))
-import devtool  # noqa: E402
+import devtool
 
 
 def archive_bytes(*members: tuple[str, bytes]) -> bytes:
