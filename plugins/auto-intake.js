@@ -5,7 +5,7 @@
 import { execFileSync } from "node:child_process";
 import { appendFileSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
-import { resolvePython, statePath } from "../src/runtime.js";
+import { minimalEnv, resolvePython, statePath } from "../src/runtime.js";
 
 function homeDir() {
   return process.env.HARNESS_HOME ?? `${process.env.HOME}/.config/opencode`;
@@ -263,12 +263,10 @@ function recordSessionTask(sessionID, taskID) {
 function createTask(text, directory, sessionID) {
   const title = titleOf(text);
   const project = basename(directory || "") || "general";
-  const env = {
-    PATH: process.env.PATH ?? "/usr/bin:/bin",
-    HOME: process.env.HOME ?? "",
+  const env = minimalEnv({
     HARNESS_STATE: stateDir(),
     PYTHONDONTWRITEBYTECODE: "1",
-  };
+  });
   const python = resolvePython({ env });
   const output = execFileSync(
     python.command,

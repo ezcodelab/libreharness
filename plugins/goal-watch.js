@@ -4,7 +4,7 @@
 // closes a goal, or marks anything done.
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { resolvePython, statePath } from "../src/runtime.js";
+import { minimalEnv, resolvePython, statePath } from "../src/runtime.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -42,12 +42,10 @@ export function continuationChild(state) {
 }
 
 async function run(args) {
-  const env = {
-    PATH: process.env.PATH ?? "/usr/bin:/bin",
-    HOME: process.env.HOME ?? "",
+  const env = minimalEnv({
     HARNESS_STATE: ROOT,
     PYTHONDONTWRITEBYTECODE: "1",
-  };
+  });
   const python = resolvePython({ env });
   const { stdout } = await execFileAsync(
     python.command,

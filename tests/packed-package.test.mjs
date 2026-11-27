@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +19,10 @@ const workspace = join(root, "workspace");
 const state = join(root, "state");
 mkdirSync(install);
 mkdirSync(workspace);
+writeFileSync(
+  join(workspace, "clean.py"),
+  "# SPDX-License-Identifier: MIT\nvalue = 1\n",
+);
 
 function npm(args, options = {}) {
   const result = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", args, {
@@ -132,6 +142,12 @@ try {
     });
     assert.equal(called.isError, undefined);
     assert.match(called.content[0].text, /^no tasks/);
+    const audit = await request("tools/call", {
+      name: "comment_audit",
+      arguments: { paths: ["clean.py"] },
+    });
+    assert.equal(audit.isError, undefined, audit.content?.[0]?.text);
+    assert.match(audit.content[0].text, /PASS/);
     assert.ok(
       !existsSync(join(workspace, "bin")),
       "packed runtime wrote into or resolved from the workspace",

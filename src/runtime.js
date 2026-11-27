@@ -24,6 +24,31 @@ export function statePath(value, options = {}) {
   return resolve(String(chosen).replace(/^~(?=$|[\\/])/, home));
 }
 
+export function minimalEnv(overrides = {}) {
+  const env = {
+    PATH: process.env.PATH ?? "/usr/bin:/bin",
+    HOME: process.env.HOME ?? "",
+    ...overrides,
+  };
+  if (process.platform === "win32") {
+    for (const name of [
+      "SystemRoot",
+      "SystemDrive",
+      "WINDIR",
+      "COMSPEC",
+      "PATHEXT",
+      "USERPROFILE",
+      "TEMP",
+      "TMP",
+      "APPDATA",
+      "LOCALAPPDATA",
+    ]) {
+      if (process.env[name]) env[name] = process.env[name];
+    }
+  }
+  return env;
+}
+
 export function ensureStateDirectory(state) {
   mkdirSync(state, { recursive: true, mode: 0o700 });
   if (process.platform !== "win32") chmodSync(state, 0o700);

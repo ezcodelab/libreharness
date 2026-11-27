@@ -2,11 +2,11 @@
 
 # LibreHarness
 
-A durable work queue and a risk-scaled engineering workflow for OpenCode.
+A durable work queue and a risk-scaled engineering workflow for coding agents.
 
 ## What it is
 
-LibreHarness gives an OpenCode user a small, inspectable system for work that
+LibreHarness gives an agent user a small, inspectable system for work that
 outlives one chat:
 
 - A Markdown work queue with tasks, goals, dependencies, lanes, evidence, and a
@@ -27,8 +27,9 @@ outlives one chat:
 - Three local plugins: automatic task intake, a goal watcher, and a usage
   ledger for cost-per-verified-task measurement.
 
-The queue is stdlib Python plus Linux file locking. There is no database, no
-server, and no third-party Python package. The Node plugins use built-ins only.
+The queue is stdlib Python with native Linux, macOS, and Windows locking. There
+is no database, no server, and no third-party Python package. The only runtime
+Node dependency outside the OpenCode adapter is the pinned MCP server SDK.
 
 ## Why it exists
 
@@ -46,66 +47,50 @@ harness makes three things durable:
 
 ## Install
 
-Add the package to the global `plugins` array in
-`~/.config/opencode/opencode.json`:
+Choose one native route per host. Do not install both the plugin and a copied
+skill tree in the same host.
 
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugins": ["libreharness@2.0.0"],
-  "agents": {
-    "devils-advocate": {},
-    "explore": {},
-    "implementer": {},
-    "integrator": {}
-  }
-}
-```
+| Host | Install |
+|---|---|
+| OpenCode | Add `libreharness@2.1.0` to the global `plugins` array in `~/.config/opencode/opencode.json` and keep the four agent stubs |
+| Claude Code | `claude plugin marketplace add ezcodelab/libreharness` then `claude plugin install libreharness@libreharness` |
+| Codex | `codex plugin marketplace add ezcodelab/libreharness` then `codex plugin add libreharness@libreharness` |
+| GitHub Copilot CLI | `copilot plugin marketplace add ezcodelab/libreharness` then `copilot plugin install libreharness@libreharness` |
+| Cursor | In Customize, add the GitHub repository as a plugin marketplace, then install LibreHarness |
 
-The four agent stubs are required. The plugin fills each one's prompt, mode, and
-permissions. Add a model to a stub for per-agent routing, or set the optional
-`agentModels` plugin option:
+The native plugin exposes the canonical skills and three MCP tools. The MCP
+server starts from the installed npm package, not from the plugin checkout. Its
+first start downloads `libreharness@2.1.0` through `npx`; an air-gapped machine
+must preinstall that exact package through an approved registry mirror.
 
-```jsonc
-{
-  "plugins": [
-    {
-      "package": "libreharness@2.0.0",
-      "options": {
-        "agentModels": {
-          "explore": "<provider>/<workhorse-model>#<variant>",
-          "implementer": "<provider>/<workhorse-model>#<variant>",
-          "integrator": "<provider>/<workhorse-model>#<variant>",
-          "devils-advocate": "<provider>/<challenger-model>#<variant>"
-        }
-      }
-    }
-  ]
-}
-```
+Only hosts with a passing certificate in
+[docs/certification/SUPPORT.md](docs/certification/SUPPORT.md) are supported.
+A standards-compatible client without a certificate is untested. Certification
+uses a host-driven install, skill and tool discovery, a real tool call, and the
+recorded journey in
+[docs/certification/manual-procedure.md](docs/certification/manual-procedure.md).
 
-Use exact models available in the operator's provider. Routing is applied only
-when the agent launches; the main session keeps its selected model. From a
-checkout or extracted GitHub release archive, run
-`npm install --omit=dev --no-audit --no-fund` and use the absolute path instead
-of the npm name.
+The four OpenCode agent stubs are required. Add a model to a stub for per-agent
+routing, or set the optional `agentModels` plugin option. Use exact models
+available in the operator's provider. From a checkout, run
+`npm install --omit=dev --no-audit --no-fund` and use the absolute plugin path.
 
-OpenCode loads global and project `AGENTS.md` files natively. The plugin does not
-inject instructions, so the LibreHarness contract stays scoped to this workspace.
-
-The default state directory is `~/.local/state/libreharness`, created with mode
-700. Upgrade by changing the version and reloading OpenCode.
+State lives under `%LOCALAPPDATA%\libreharness` on Windows,
+`~/Library/Application Support/libreharness` on macOS, or the existing XDG state
+directory on Linux. OpenCode uses its `state` option. Native MCP hosts use
+`HARNESS_STATE`.
 
 Full install, state layout, configuration, and upgrade notes are in
 [docs/reference.md](docs/reference.md#install).
 
 ## One path
 
-Describe the outcome in OpenCode. Auto-intake creates the task, and the agent
-runs brief, implement, verify, review, close, and ship. You do not need to type
-a slash command. The harness records observed checks and the exact HEAD, opens a
-ready pull request, waits for required CI, and merges only the reviewed head. No
-path is protected. It still stops at irreversible actions such as a production
+Describe the outcome in any certified host. The engineering loop creates or
+claims the task, then runs brief, implement, verify, review, close, and ship.
+OpenCode also provides automatic pre-prompt intake and goal watching. You do not
+need to type a slash command. The harness records observed checks and the exact
+HEAD, opens a ready pull request, waits for required CI, and merges only the
+reviewed head. It still stops at irreversible actions such as a production
 deploy, data deletion, a live secret rotation, or a force-push.
 
 Slash commands remain escape hatches when you want to intervene directly:
@@ -135,10 +120,12 @@ in `.github/`.
 
 ## Requirements
 
-Linux, OpenCode 2.x, Node 20 or newer, Python 3.10 or newer, and Git. The
-authenticated GitHub CLI is required to ship pull requests. Repository
-contributors get the pinned check tools through npm without system installs; a
-model provider is still your choice.
+Linux, macOS, or Windows. Node 20 or newer, Python 3.10 or newer, and Git. A
+certified host is required for support. The authenticated GitHub CLI is required
+to ship pull requests; without it, `pr_guard` fails closed and the task must
+explicitly mark shipping inapplicable. Repository contributors get the pinned
+check tools through npm without system installs; a model provider is still your
+choice.
 
 ## License
 

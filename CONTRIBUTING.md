@@ -7,11 +7,15 @@ Contributions are welcome.
 
 ## Development setup
 
-Requirements: Linux, Git, Python 3.10 or newer, and Node 20 or newer. No Python
-package is required. `npm install` is required for the Node tests and pinned
-Markdown checker because `src/plugin.js` imports `@opencode/plugin`; the Python
-suite runs without `node_modules`. The GitHub CLI is only needed to ship a pull
-request.
+Requirements: Linux, macOS, or Windows, Git, Python 3.10 or newer, and Node 20
+or newer. No Python package is required. `npm install` is required for the Node
+tests and pinned Markdown checker because the adapters import their runtime
+packages; the Python suite runs without `node_modules`. The GitHub CLI is only
+needed to ship a pull request.
+
+Portable syntax, unit, integration, manifest, lock, and packed-package checks run
+on all three operating systems. The complete `check:local` lint set and pinned
+binary downloads currently run on Linux.
 
 ```sh
 git clone https://github.com/ezcodelab/libreharness

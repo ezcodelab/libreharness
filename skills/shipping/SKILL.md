@@ -42,7 +42,7 @@ alone. Split by behavior and review boundary, not file count. If a split grows
 into many follow-ups, split the task before opening anything.
 
 Write the body first, then call `pr_guard` with
-`args: ["check", "--base", "main", "--title", "<title>", "--body-file", "/tmp/opencode/pr-body.md"]`.
+`args: ["check", "--base", "main", "--title", "<title>", "--body-file", "<os-temp>/pr-body.md"]`.
 
 It must return `"ok": true` and `"next": "open"` on a clean committed head.
 Commit with `-s` and run the project checks before the first push and after any

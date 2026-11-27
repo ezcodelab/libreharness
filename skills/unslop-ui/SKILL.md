@@ -29,7 +29,7 @@ Use the project's real verification path. If none can launch, drive, and observe
 the surface, use the `verification` skill before editing UI.
 
 Run the baseline full check and the real UI journey. Save evidence under
-`/tmp/opencode/unslop-ui/<task>/baseline/`. Cover the affected journeys and
+`<os-temp>/unslop-ui/<task>/baseline/`. Cover the affected journeys and
 must-hold states at 1440, 1024, and 390, plus any project width. Include empty,
 loading, error, partial, disabled, focus, long name, and long list where they
 apply. Use synthetic data; never capture a secret, credential, production URL,
@@ -55,7 +55,7 @@ case. No new design document. No permanent variant lane.
 
 Use the same model, synthetic data, states, and viewport sizes for A and B.
 Build them sequentially in the task. Keep each recoverable as a patch or commit
-under `/tmp/opencode/unslop-ui/<task>/variants/`. Do not run parallel lanes that
+under `<os-temp>/unslop-ui/<task>/variants/`. Do not run parallel lanes that
 edit the same files. Do not merge either variant.
 
 Run the project's real UI check for each variant and capture the same evidence
@@ -86,7 +86,7 @@ Run, in order:
 2. the real browser journey and accessibility check;
 3. the full project check from the task Verify line.
 
-Capture the final journey and states under `/tmp/opencode/unslop-ui/<task>/final/`
+Capture the final journey and states under `<os-temp>/unslop-ui/<task>/final/`
 at the baseline widths. Compare before and after. A green full check that does
 not drive the UI does not prove the UI.
 

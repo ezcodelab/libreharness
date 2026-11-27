@@ -6,6 +6,7 @@ import {
   chmodSync,
   existsSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -202,6 +203,25 @@ await assert.rejects(
 
 const commandNames = commands.map((command) => command.name);
 assert.deepEqual(commandNames.sort(), ["close", "goal", "review"]);
+for (const name of commandNames) {
+  const command = commands.find((item) => item.name === name);
+  const source = readFileSync(
+    join(process.cwd(), "skills", name, "SKILL.md"),
+    "utf8",
+  );
+  const end = source.indexOf("\n---", 4);
+  const canonical = source.slice(end + 4).replace(/^\r?\n/, "");
+  await command.execute({
+    sessionID: `ses_${name}`,
+    prompt: { text: "" },
+    delivery: "steer",
+  });
+  assert.equal(
+    prompts.at(-1).text,
+    canonical,
+    `${name} command diverged from its skill`,
+  );
+}
 assert.ok(skills.some((skill) => skill.id === "unslop-ui"), "missing unslop-ui skill");
 
 const goal = commands.find((command) => command.name === "goal");
@@ -210,14 +230,12 @@ await goal.execute({
   prompt: { text: "task-1" },
   delivery: "steer",
 });
-assert.equal(prompts.length, 1);
-assert.equal(prompts[0].sessionID, "ses_test");
-assert.match(prompts[0].text, /task-1/);
-assert.match(prompts[0].text, /goal/);
-// SessionApi.prompt takes SessionPromptInput: a flat { sessionID, text,
-// delivery }, not a nested { prompt } object.
-assert.equal(prompts[0].prompt, undefined);
-assert.equal(prompts[0].delivery, "steer");
+const goalPrompt = prompts.find((prompt) => prompt.sessionID === "ses_test");
+assert.ok(goalPrompt, "goal command did not prompt the session");
+assert.match(goalPrompt.text, /task-1/);
+assert.match(goalPrompt.text, /goal/);
+assert.equal(goalPrompt.prompt, undefined);
+assert.equal(goalPrompt.delivery, "steer");
 
 for (const id of agentIds) {
   assert.ok(updatedAgents.has(id), `agent was not updated: ${id}`);
