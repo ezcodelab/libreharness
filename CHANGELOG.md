@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### Repository slimming
+
+- Remove the repo-local `.comment-audit-baseline` and `.comment-audit-strict`
+  exceptions. The ten `E402` suppressions are gone; one `tests` package path
+  setup replaces the duplicated inserts.
+- Remove the unreferenced Jev scripts and tests, the `sg` wrapper and
+  `@ast-grep/cli`, the unused `@opencode-ai/plugin` development dependency, the
+  orphan tooling research note, and the stale process-lessons ledger.
+
 ### Comment and doc ratchet
 
 - Restore `bin/comment_audit.py` as the single comment-debt check, with diff and

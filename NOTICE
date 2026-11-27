@@ -8,16 +8,6 @@ Copyright (c) 2026 LibreHarness contributors
 This project is licensed under the MIT License. All source code, documentation,
 and snippets are MIT; see `LICENSE`.
 
-## Jev client origin
-
-The Jev client in `bin/jev_review.py` is project code, not a vendor SDK. It
-targets a typed-question HTTP interface and does not include model weights,
-model files, or a hosted service.
-
-`JEV_ENDPOINT` points at an external inference service. The service, its
-availability, its terms, and its billing are separate from this repository. No
-service credential or model is distributed here.
-
 ## Dependency boundary
 
 Nothing in this list is bundled in the repository.
@@ -25,10 +15,8 @@ Nothing in this list is bundled in the repository.
 | Dependency | Role | Distribution |
 |---|---|---|
 | OpenCode | The host application that loads agents, commands, skills, and plugins | Installed by the user, separate project |
-| `@opencode-ai/plugin` | Development dependency for plugin types and tests | Not bundled; license and version per upstream package |
-| `@ast-grep/cli` | Structural search CLI used through `bin/sg.py` | npm dependency, not bundled; MIT |
-| Jev inference endpoint | External service called by the Jev client | Not bundled; separate service and terms |
-| Provider models | Models selected by the user in OpenCode or by `JEV_MODEL` | Not bundled; separate provider terms |
+| `@opencode/plugin` | Plugin runtime package | npm dependency, not bundled; license and version per upstream package |
+| Provider models | Models selected by the user in OpenCode | Not bundled; separate provider terms |
 | External npm plugins named in user configuration | Optional user-installed plugins | Not bundled, not endorsed, and not supported |
 
 The Python code uses the standard library only. The bundled Node plugins use

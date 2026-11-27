@@ -47,8 +47,8 @@
     "python": ">=3.10"
   },
   "scripts": {
-    "test:python": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
-    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/usage-ledger.test.mjs && node tests/structural.test.mjs && node tests/comment-audit-entrypoint.test.mjs && node tests/plugin.test.mjs && node tests/harness-ratchets.test.mjs",
+    "test:python": "python3 -m unittest discover -s tests -t . -p 'test_*.py' -v",
+    "test:node": "node tests/auto-intake.test.mjs && node tests/goal-watch.test.mjs && node tests/usage-ledger.test.mjs && node tests/comment-audit-entrypoint.test.mjs && node tests/plugin.test.mjs && node tests/harness-ratchets.test.mjs",
     "test": "npm run test:python && npm run test:node",
     "check:syntax": "python3 -m compileall -q bin tests && node --check src/plugin.js && node --check plugins/auto-intake.js && node --check plugins/goal-watch.js && node --check plugins/usage-ledger.js && python3 -m json.tool package.json >/dev/null",
     "tools:install": "python3 bin/devtool.py ensure",
@@ -57,18 +57,13 @@
     "lint:secrets": "python3 bin/devtool.py run gitleaks detect --source . --config .gitleaks.toml --redact --verbose",
     "lint:shell": "find . -name '*.sh' -not -path './node_modules/*' -print0 | xargs -0 -r python3 bin/devtool.py run shellcheck -x",
     "lint:workflows": "python3 bin/devtool.py run actionlint",
-    "lint:comments": "python3 bin/comment_audit.py --baseline .comment-audit-baseline .",
+    "lint:comments": "python3 bin/comment_audit.py .",
     "check:local": "npm run tools:install && npm run check:syntax && npm test && npm run lint:comments && npm pack --dry-run && npm run lint:md && npm run lint:links && npm run lint:secrets && npm run lint:shell && npm run lint:workflows"
   },
   "dependencies": {
-    "@ast-grep/cli": "0.51.3",
     "@opencode/plugin": "^2.2.6"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "1.14.20",
     "markdownlint-cli2": "0.18.1"
-  },
-  "allowScripts": {
-    "@ast-grep/cli@0.51.3": true
   }
 }

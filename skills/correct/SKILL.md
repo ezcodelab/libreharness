@@ -31,9 +31,8 @@ easier.
 
 ## Steps
 
-1. Gather evidence: commits, reverts, review send-backs,
-   `docs/process-lessons.md`, and comments that justify a workaround. A class
-   counts after two occurrences.
+1. Gather evidence: commits, reverts, review send-backs, task logs, and
+   comments that justify a workaround. A class counts after two occurrences.
 2. For each class, name the level that makes it impossible, not just harder.
 3. Implement the check. Prove it fails on the real past mistake: run it against the
    old code, or add a fixture copied from the real failure. Paste the failure.

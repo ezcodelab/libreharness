@@ -23,7 +23,7 @@ against a written contract; two independent issuers; docs/index work beside a
 code slice.
 
 Bad: two authors in `rotate.py`/`executor.py`; concurrent edits to
-`AGENTS.md`, `DECISIONS.md`, `process-lessons.md`, global config, or the state;
+`AGENTS.md`, `DECISIONS.md`, global config, or the state;
 a refactor that moves the interface another lane is using; "one agent per
 file" without a merge order.
 

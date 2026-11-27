@@ -2,14 +2,12 @@
 from __future__ import annotations
 
 import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin"))
-import pr_guard  # noqa: E402
+import pr_guard
 
 
 BODY = """## Why
