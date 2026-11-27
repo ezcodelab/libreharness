@@ -36,6 +36,8 @@ lint set as CI. The Python suite needs no third-party package.
   `agents/`, and `skills/`. `plugins/` holds the hook modules.
 - `HARNESS_HOME` is the package root. `HARNESS_STATE` is mutable local state,
   defaulting to `~/.local/state/libreharness` with mode 700.
+- Harness operations come from the plugin tools `tasks`, `comment_audit`, and
+  `pr_guard`; never call a clone path or a config-bin fallback.
 - Never commit, log, print, or embed secrets, tokens, keys, or PII.
 - Never mutate production systems, live data, or shared infrastructure without
   explicit approval in the current turn.

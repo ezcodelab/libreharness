@@ -8,7 +8,7 @@ Use the work-queue and engineering-loop skills. This is the only finish command.
 Do not edit feature code in this turn.
 
 1. Read the task packet:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" show <id> --packet`.
+   `tasks show <id> --packet`.
    Confirm every acceptance item and its evidence. Missing evidence means the
    task stays open. Converge: compare every acceptance item and named
    requirement with the code on the tree that will land. A completion claim
@@ -34,7 +34,7 @@ Do not edit feature code in this turn.
    - run the full project check on current trunk after child PRs land.
    Do not create a separate integration task or command; this is part of close.
 4. First gate: validate the review artifact on the tree that will land:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" review <id> --repo "$PWD"`.
+   `tasks review <id>`.
    A missing, stale, failed, mismatched, or UNVERIFIED artifact stops the close.
    Integration or any commit or working-tree change makes the artifact stale; record a new PASS
    with the task's Verify command before continuing.
@@ -47,11 +47,11 @@ Do not edit feature code in this turn.
    working-tree change, acceptance change, or new finding requires the full
    review. State which path you took.
 6. If a single task still has a worktree and is `active`, move it to `review`
-   now (`tasks.py status <id> review --note "final review passed" --repo "$PWD"`)
+   now (`tasks status <id> review --note "final review passed"`)
    so the reaper can evaluate it. The status gate revalidates the artifact.
    Goal children are already final.
 7. Reap clean lanes:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" reap <id>`
+   `tasks reap <id>`
    It removes only clean worktrees, with no ignored files, whose branch is merged
    into another branch.
    If it exits non-zero, stop and leave the task or goal open; report every
@@ -62,11 +62,11 @@ Do not edit feature code in this turn.
    lesson when nothing surprised you.
 9. Update the queue with evidence that names the unit fail and pass commands,
    the smoke JSON path when one exists, and the review artifact path:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" status <id> done --evidence "<commands and results>"`.
+   `tasks status <id> done --evidence "<commands and results>"`.
 10. If the task is mergeable and a forge is configured, use the `shipping`
     skill. Open one ready PR that one reviewer can review in one sitting, with
     a `type(scope): subject` title and the required body headings. Stay active
-    until `bin/pr_guard.py land` merges the exact reviewed head, or one
+    until the `pr_guard` tool merges the exact reviewed head, or one
     actionable blocker is recorded. Fix CI, rebase your own branch, or close a
     superseded PR; do not leave an open ready PR for the operator to finish. If
     no forge resolves, print the manual PR and merge commands and stop. Never

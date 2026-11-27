@@ -72,12 +72,13 @@ the config directory.
 
 | Root | Meaning | Examples |
 |---|---|---|
-| `HARNESS_HOME` | Code and configuration | `bin/tasks.py`, `commands/`, `skills/`, `plugins/` |
+| `HARNESS_HOME` | Package code (internal) | plugin tools, `commands/`, `skills/`, `plugins/` |
 | `HARNESS_STATE` | Mutable local data | tasks, board, lock, metrics, review artifacts |
 
-With the plugin, `HARNESS_HOME` is the package root and OpenCode configuration
-stays in `~/.config/opencode`. No runtime component writes into
-`HARNESS_HOME`; state survives an upgrade.
+The plugin resolves its package root from its own module location.
+`HARNESS_HOME` is an internal value; a shell does not need it. OpenCode
+configuration stays in `~/.config/opencode`. No runtime component writes into
+the package; state survives an upgrade.
 
 ```text
 $HARNESS_STATE/
@@ -147,21 +148,15 @@ concrete behavior. Evidence is the result that proves it. The queue rejects
 `none`, `n/a`, `na`, `tbd`, `ok`, `pass`, `done`, `tests pass`, and empty
 evidence.
 
-```sh
-ID=$(python3 "$HARNESS_HOME/bin/tasks.py" new "Try LibreHarness" \
-  --project demo \
-  --scope "Create and close one task." \
-  --acceptance "- board lists the task")
-# Write exactly one Data shape: line and one Verify: line into ## Plan,
-# for example with /brief, before claim.
-python3 "$HARNESS_HOME/bin/tasks.py" claim "$ID" --owner quickstart
-python3 "$HARNESS_HOME/bin/tasks.py" review "$ID" --repo "$PWD" \
-  --run "python3 -m unittest tests.test_tasks -v"
-python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" review --note "review passed"
-python3 "$HARNESS_HOME/bin/tasks.py" status "$ID" done \
-  --evidence "python3 $HARNESS_HOME/bin/tasks.py board: task listed"
-python3 "$HARNESS_HOME/bin/tasks.py" board
-```
+Call the `tasks` tool with these `args`:
+
+- `new "Try LibreHarness" --project demo --scope "Create and close one task." --acceptance "- board lists the task"`
+- Write exactly one `Data shape:` and one `Verify:` line into `## Plan` before claim.
+- `claim <id> --owner quickstart`
+- `review <id> --run "python3 -m unittest tests.test_tasks -v"`
+- `status <id> review --note "review passed"`
+- `status <id> done --evidence "tasks board: task listed"`
+- `board`
 
 A tracked deferral is `[T]` plus a plan and what would change it. It is not a
 pass.
@@ -185,7 +180,7 @@ pointing Verify at an unrelated harness check.
 
 ### Review artifact
 
-`tasks.py review <id> --repo <repo> --run "<command>"` runs allowlisted argv
+The `tasks` tool's `review <id> --repo <repo> --run "<command>"` runs allowlisted argv
 without a shell, records the observed exits, the exact HEAD, a digest of the
 reviewed diff, and a digest of Scope, Out of scope, Acceptance, Data shape, and
 Verify in `work/reviews/<id>.json`, then validates the artifact. No-argument
@@ -215,8 +210,8 @@ full check after integration. A green lane is not a green integration.
 
 A handoff is a bounded state transfer for the next session. The Handoff section
 requires seven labels: State, Decisions, Files, Checks, Open, Next, and Context.
-`tasks.py handoff <id>` rejects an incomplete handoff and
-`tasks.py handoff <id> --check` validates an existing one. The packet carries
+The `tasks` tool's `handoff <id>` rejects an incomplete handoff and
+`handoff <id> --check` validates an existing one. The packet carries
 the handoff together with scope, acceptance, plan, and evidence.
 
 ## Workflow
@@ -254,7 +249,7 @@ No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
    change. Use the smallest complete change.
 4. **Prove.** Run the acceptance checks and record the command and result.
 5. **Review.** Run the task's Verify command and focused deterministic checks
-   through `tasks.py review --run`. Record the observed exits and HEAD, then
+   through the `tasks` tool's `review --run`. Record the observed exits and HEAD, then
    inspect comments, reach, and state impact. The default path makes no model
    call. A second opinion is an explicit operator request and cannot create a
    PASS. A green artifact is not proof: run the acceptance check on the real
@@ -284,7 +279,7 @@ No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
 
 ### Queue CLI
 
-Run `python3 "$HARNESS_HOME/bin/tasks.py" <command>`.
+Call the `tasks` tool with `<command>` in a session.
 
 | Command | Purpose |
 |---|---|
@@ -306,8 +301,8 @@ Run `python3 "$HARNESS_HOME/bin/tasks.py" <command>`.
 
 `bin/usage_report.py` joins the local usage ledger to completed tasks. Its
 `cost_per_verified_task` divides all measured model cost, including failed and
-abandoned work, by the number of tasks with a PASS review artifact. Run
-`python3 "$HARNESS_HOME/bin/usage_report.py" --json`.
+abandoned work, by the number of tasks with a PASS review artifact. Maintainers
+run the package script with `--json`.
 
 ## Skills
 
@@ -381,14 +376,10 @@ PRs off trunk. Only dependent follow-ups stack, and a stack lands bottom-up.
 Validate the review artifact on the head that will land, check the local PR
 contract, then stay through required checks and merge that exact head:
 
-```sh
-python3 "$HARNESS_HOME/bin/tasks.py" review <id> --repo "$PWD"
-python3 "$HARNESS_HOME/bin/pr_guard.py" check --base main \
-  --title "type(scope): subject" --body-file /tmp/opencode/pr-body.md
-HEAD=$(gh pr view <number> --json headRefOid --jq .headRefOid)
-python3 "$HARNESS_HOME/bin/pr_guard.py" land \
-  --pr <number> --head "$HEAD" --base main
-```
+Call `tasks` with `args: ["review", "<id>"]`, then `pr_guard`
+with `args: ["check", "--base", "main", "--title", "type(scope): subject", "--body-file", "/tmp/opencode/pr-body.md"]`.
+After the head is pinned, call `pr_guard` with
+`args: ["land", "--pr", "<number>", "--head", "$HEAD", "--base", "main"]`.
 
 A missing, stale, failed, or UNVERIFIED artifact, a malformed PR, a pending or
 failed required check, a conflict, a draft, or a secret in the diff stops the
@@ -414,13 +405,10 @@ Repository checks use pinned tools fetched by npm:
 | Python tests | `python3 -m unittest discover -s tests -p 'test_*.py' -v` |
 | Node tests | `npm run test:node` |
 | Comment debt inventory (repo baseline) | `npm run lint:comments` |
-| Comment debt inventory (installed) | `comment-audit .` |
-| Comment debt on a diff | `comment-audit --diff <patch>` |
-| Strict new-comment gate | `comment-audit --strict --diff <patch>` |
+| Comment debt inventory (plugin) | `comment_audit` with `{ "paths": ["."] }` |
+| Comment debt on a diff | `comment_audit` with `{ "diff": "<patch>", "untracked": true }` |
+| Strict new-comment gate | add `"strict": true` to the same tool call |
 | Package contents | `npm pack --dry-run` |
-
-The `comment-audit` rows use the installed path above. The npm package also
-provides the short name when its bin directory is on `PATH`.
 | Markdown correctness | `npm run lint:md` |
 | Links | `npm run lint:links` |
 | Secrets | `npm run lint:secrets` |
@@ -432,17 +420,15 @@ shellcheck into `$XDG_CACHE_HOME/libreharness/tools` for Linux x64 and arm64.
 They do not change the plugin runtime or its install size. CI calls the same
 commands.
 
-`bin/comment_audit.py` owns comment and suppression rules. Plugin setup exposes
-the owner through `comment-audit` at
-`$XDG_CONFIG_HOME/opencode/bin/comment-audit`, defaulting to
-`~/.config/opencode/bin/comment-audit`; the npm package exposes the same wrapper
-as `bin/comment-audit`. It resolves the script next to the installed package, so
-callers do not need a clone path. Install the plugin or package at the same
-tag/ref you pass as `harness_ref`; the wrapper does not copy rules, so the local
-entrypoint and CI run the same owner. `.comment-audit-baseline` records the
-inventory with context anchors, so line shifts pass and context swaps fail.
+`bin/comment_audit.py` owns comment and suppression rules. The plugin registers
+`comment_audit`, `tasks`, and `pr_guard` as tools; each runs the package script
+relative to the plugin, with the session directory as the default cwd. The npm
+package also exposes `bin/comment-audit` for human and CI use. CI does not load
+the plugin: GitHub callers use the pinned reusable workflow, which checks out
+`harness_ref` and runs `bin/comment_audit.py`. `.comment-audit-baseline` records
+the inventory with context anchors, so line shifts pass and context swaps fail.
 `.comment-audit-strict` makes `--diff` reject every new comment outside the keep
-list. GitHub callers use the pinned reusable workflow:
+list. The workflow:
 
 ```yaml
 jobs:

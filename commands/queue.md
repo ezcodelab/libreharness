@@ -7,8 +7,7 @@ Queue command: $ARGUMENTS
 Use the work-queue skill. Run the equivalent command with separate, quoted
 arguments; never interpolate raw input into a shell string.
 
-Default with no arguments: `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py"
-ready` and then `board`, so the operator sees claimable work and the board.
+Default with no arguments: call `tasks` with `ready`, then `board`, so the operator sees claimable work and the board.
 
 Common forms:
 - `list [--status <status>] [--project <name>]`

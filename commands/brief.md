@@ -7,14 +7,13 @@ Build a one-page brief for task: $ARGUMENTS
 Use the work-queue and engineering-loop skills.
 
 1. Read the task packet:
-   `python3 "${HARNESS_HOME:-$HOME/.config/opencode}/bin/tasks.py" show <id> --packet`.
+   `tasks show <id> --packet`.
    If there is no task, say so and use the stated scope.
 2. Read the project `AGENTS.md`, `CONTRIBUTING.md`, and the files or tests the
    task names. Do not read the whole repository.
 3. Find the matching lessons in the project's `docs/process-lessons.md`.
    Include only lessons that change the next action.
-4. List the skills under `${HARNESS_HOME}/skills/*/SKILL.md` and name the skills
-   that apply.
+4. List the injected skills and name the skills that apply.
 5. Output, in this order:
    - **Task** and one-sentence scope
    - **Playbook**: the `engineering-loop` row that matches, or the fallback and why

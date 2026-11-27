@@ -18,7 +18,7 @@ Use the `work-queue` skill; the format is below. Do not edit code.
 3. Keep it a bounded state transfer: state, decisions, changed files, next
    action, open verification. No secrets, tokens, values, full logs, or
    transcript. Cite paths and shapes.
-4. Save it with `tasks.py handoff <id> --file /tmp/opencode/handoff-<id>.md`
+4. Save it with `tasks handoff <id> --file /tmp/opencode/handoff-<id>.md`
    (write the file first). Do not edit the Handoff section directly. Then run
-   `tasks.py handoff <id> --check` and show the packet. Stop; do not close the
+   `tasks handoff <id> --check` and show the packet. Stop; do not close the
    task unless `/close` was also requested.

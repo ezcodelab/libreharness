@@ -12,23 +12,16 @@ comment, then make the code self-evident or make the constraint executable.
 ## Scope
 
 The caller's files or diff. Default: `git diff` against the merge base, plus the
-working tree. Code comments and prose docs are in scope. The installed
-`comment-audit` covers high-confidence comment and suppression classes.
-Tautology and stale prose stay a review read.
+working tree. Code comments and prose docs are in scope. The `comment_audit`
+tool covers high-confidence comment and suppression classes. Tautology and stale
+prose stay a review read.
 
-## Entrypoint
+## Tools
 
-Plugin setup exposes the audit at
-`$XDG_CONFIG_HOME/opencode/bin/comment-audit`, defaulting to
-`~/.config/opencode/bin/comment-audit`. The npm package exposes the same wrapper
-as `bin/comment-audit`. Do not call a clone path and do not reimplement a rule.
-
-```sh
-audit="${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit"
-"$audit" .                        # full inventory
-"$audit" --diff <patch>           # added lines only
-"$audit" --strict --diff <patch>  # clean-repo ratchet
-```
+Call the `comment_audit` tool with `{ paths: ["."] }` for a full inventory, with
+`{ diff: "<patch>", untracked: true }` for the review diff, and add
+`strict: true` when `.comment-audit-strict` exists. Call `tasks` for queue
+operations. Do not call a clone path or reimplement a rule.
 
 ## Keep exceptions
 
@@ -71,7 +64,7 @@ die.
 
 ## Baselines
 
-Use `--baseline` for recorded inventory, not to launder a diff. A baseline
+Pass `baseline` for recorded inventory, not to launder a diff. A baseline
 records path, rule, text, and a context anchor, so a pure line shift passes and a
 move to another code context fails. Regenerate the baseline only after a
 deliberate cleanup.
@@ -89,14 +82,13 @@ deliberate cleanup.
 4. If deletion hides a real constraint, mark the exact symbol `MUST KILL` and
    reshape it: a branded type, a narrow API, a lint whose error names the fix, a
    runtime check, or a failing test.
-5. Run the audit on the saved review diff, then on untracked files:
-   `"${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit" --diff /tmp/opencode/review-$TASK.diff`
-   and
-   `git ls-files -z --others --exclude-standard | xargs -0 -r "${XDG_CONFIG_HOME:-$HOME/.config}/opencode/bin/comment-audit"`.
-   Add `--strict` when `.comment-audit-strict` exists in the repo; every new
-   comment then needs a keep or an allow marker. A finding is deleted, reshaped,
-   or kept with an external reference. Add `--baseline <file>` only for recorded
-   debt outside the diff.
+5. Call `comment_audit` with
+   `{ diff: "/tmp/opencode/review-$TASK.diff", untracked: true }`; add
+   `strict: true` when `.comment-audit-strict` exists in the repo, so every new
+   comment needs a keep or an allow marker. A tool error is a finding. A finding
+   is deleted, reshaped, or kept with an external reference. Add
+   `{ baseline: ".comment-audit-baseline" }` only for recorded debt outside the
+   diff.
 6. Report: files touched, deletions, docs deleted, `MUST KILL` symbols with one
    line each, and kept comments with the exception that applies.
 7. Run the same audit through the repository merge path. In LibreHarness and
