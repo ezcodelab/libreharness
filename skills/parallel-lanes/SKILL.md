@@ -46,12 +46,14 @@ contention, not throughput.
 1. `/goal` the outcome; the plan gets one child per independent slice and
    explicit dependencies.
 2. `/goal go` runs `goal-start`; it creates lanes for ready children with
-   disjoint `owns`; `--max-lanes` is an optional operator budget. Use `/lane`
-   only for a manual worktree or an existing task.
-3. `/brief <task>` for each lane; fix the interface and acceptance before code.
+   disjoint `owns`; `--max-lanes` is an optional operator budget. Use `tasks
+   lane` only for a manual worktree or an existing task.
+3. Brief each lane with the `work-queue` brief reference; fix the interface and
+   acceptance before code.
 4. Each lane works only in its worktree. It does not edit shared config, the
    state, or another lane's files.
-5. At a pause, `/handoff <task>`; at review, `/review <task>`.
+5. At a pause, use the `work-queue` handoff reference; at review, `/review
+   <task>`.
 6. Close and ship each independent child as its own PR off trunk. Run those
    owners in parallel only while their paths stay disjoint. Stack dependent
    children by base branch and land bottom-up. Use the `integrator` agent only

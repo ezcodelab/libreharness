@@ -34,8 +34,23 @@ Call the `tasks` tool with `args`; it runs the queue in the session directory.
 - `validate`
 - `report`
 
-`/goal`, `/queue`, `/lane`, `/takeover`, and `/handoff` wrap these commands.
-Use the tool, not hand edits, for status, ownership, dependencies, and evidence.
+`/goal` is the task-entry command. Use the `tasks` tool directly for queue
+inspection, lanes, resume, and handoff; do not add wrapper commands.
+
+## Brief
+
+Use `references/brief.md` before claim. Write one `Data shape:` line and one
+`Verify:` line into the task Plan, then stop before editing.
+
+## Resume
+
+Read the packet and handoff, run the last check if safe, and claim only when the
+task is ready and unowned. Stop on a dual owner.
+
+## Handoff
+
+Use `references/handoff.md`. Write the file first, save it with `tasks handoff
+<id> --file <path>`, then run `tasks handoff <id> --check`.
 
 ## Goals
 

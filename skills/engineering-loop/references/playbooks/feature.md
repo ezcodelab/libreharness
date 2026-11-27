@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: MIT -->
-1. Name the data shape, state machine, and boundary parser. Use `/brief` only
+1. Name the data shape, state machine, and boundary parser. Use the `work-queue` brief reference only
    for multi-deliverable or ambiguous scope.
 2. For UI work, load `ui-design` and `verification`. Name the affected user
    journeys and must-hold states, then use the product's tokens and components

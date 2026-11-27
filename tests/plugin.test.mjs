@@ -195,35 +195,23 @@ await assert.rejects(
 );
 
 const commandNames = commands.map((command) => command.name);
-for (const name of ["goal", "review", "state-audit", "tune", "close", "unslop-ui"]) {
-  assert.ok(commandNames.includes(name), `missing command ${name}`);
-}
+assert.deepEqual(commandNames.sort(), ["close", "goal", "review"]);
+assert.ok(skills.some((skill) => skill.id === "unslop-ui"), "missing unslop-ui skill");
 
-const stateAudit = commands.find((command) => command.name === "state-audit");
-await stateAudit.execute({
+const goal = commands.find((command) => command.name === "goal");
+await goal.execute({
   sessionID: "ses_test",
-  prompt: { text: "src/" },
+  prompt: { text: "task-1" },
   delivery: "steer",
 });
 assert.equal(prompts.length, 1);
 assert.equal(prompts[0].sessionID, "ses_test");
-assert.match(prompts[0].text, /src\//);
-assert.match(prompts[0].text, /state-audit/);
+assert.match(prompts[0].text, /task-1/);
+assert.match(prompts[0].text, /goal/);
 // SessionApi.prompt takes SessionPromptInput: a flat { sessionID, text,
 // delivery }, not a nested { prompt } object.
 assert.equal(prompts[0].prompt, undefined);
 assert.equal(prompts[0].delivery, "steer");
-
-const unslop = commands.find((command) => command.name === "unslop-ui");
-await unslop.execute({
-  sessionID: "ses_test",
-  prompt: { text: "Apps" },
-  delivery: "steer",
-});
-assert.equal(prompts.length, 2);
-assert.match(prompts[1].text, /Apps/);
-assert.match(prompts[1].text, /only operator stop is choosing A or B/);
-assert.match(prompts[1].text, /Reply A or B/);
 
 for (const id of agentIds) {
   assert.ok(updatedAgents.has(id), `agent was not updated: ${id}`);

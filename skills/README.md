@@ -12,6 +12,7 @@ entry point and picks the playbook.
 | `shipping` | Ready PR, review artifact, exact-head CI, merge |
 | `state-audit` | States, invariants, transitions, regression tests |
 | `ui-design` | UI and UX work |
+| `unslop-ui` | End-to-end UI baseline, A/B choice, implementation, ship |
 | `unslop` | Prose only: replies, PR bodies, docs, commit messages |
 | `no-comments` | Remove comment and doc alibis before review |
 | `correct` | Repeated mistake classes become checks |

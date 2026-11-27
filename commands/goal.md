@@ -1,104 +1,19 @@
 ---
-description: Manual task entry: execute a small task, or plan/review/run a multi-step goal
+description: Manual task entry: execute a small task, or plan and run a multi-step goal
 ---
 <!-- SPDX-License-Identifier: MIT -->
 Request: $ARGUMENTS
 
-Use the goal, work-queue, parallel-lanes, and engineering-loop skills.
+Use the `goal`, `work-queue`, `parallel-lanes`, and `engineering-loop` skills.
+This is an escape hatch; auto-intake handles a normal request without a command.
 
-This command is an escape hatch. A normal request arrives through auto-intake
-and runs the same flow without the operator typing `/goal`.
-
-## Existing goal or single task
-
-1. If `$ARGUMENTS` is an existing `kind: goal` task id, execute it:
-   `goal-status`, then `tasks goal-start <goal-id>` once. It
-   creates lanes for ready children with disjoint `owns`; `--max-lanes` is an
-   optional operator budget. If it reports serial, work in the current tree.
-   Then `/brief <child>`, implement, test, `/review`, `/close`. Do not ask the
-   operator to run `/lane` for each child; `/lane` is only for manual or
-   existing-task isolation.
-   Stop on a one-way door, blocker, two same-axis send-backs, a merge conflict,
-   a deploy or production mutation, or ambiguous acceptance. A verified PR
-   push/merge is part of the normal path, not a stop.
-2. If `$ARGUMENTS` is an existing `kind: task` id with status `inbox` or
-   `ready`, first decide whether the packet is **one reviewable diff**. If it is
-   more than one, plan it as a goal with this task's title/scope as the first
-   child, then stop at the plan; mark the original task `abandoned --note
-   "superseded by goal <id>"` only after the plan is created.
-   Otherwise this is the **small-task fast path**:
-   - read the packet; if Scope/Acceptance are placeholders, fill them from the
-     request or ask one question; run `tasks status <id> ready --note "goal confirmed"`;
-   - claim it: `tasks claim <id> --owner <session-or-lane>`; if another owner
-     holds it, stop;
-   - execute: `/brief`, implement, run checks, `/review`, `/close`. Use `/lane`
-     only when you deliberately want a manual worktree for this one task.
-     Do **not** create a goal or a plan for one small task.
-3. If `$ARGUMENTS` is empty, ask one question: "What observable outcome means
-   this is done?" Then stop. If the request is trivial, say so and skip the
-   queue.
-
-## Plan mode (multi-deliverable)
-
-1. Read the matching project page, `AGENTS.md`, `DECISIONS.md` standing rules,
-   `docs/reference.md` if present, the relevant tree/tests, and the lessons that
-   change the next action.
-2. If this is actually one bounded change, create a single task directly with
-   `tasks new "<title>" --project <name> --scope "<scope>" --acceptance "<checks>"`,
-   then execute it as the small-task path. Do not create a goal. Otherwise split
-   by deliverable/review boundary into children. A one-way door is a
-   decision-memo child (`owns: []`), not an implementation.
-3. Each child gets scope, observable acceptance, dependencies, `owns` paths, and
-   a lane. Lanes: disjoint owns, one owner per shared file. If two children
-   need the same path, combine or serialize.
-4. Write `/tmp/opencode/goal-plan.json`:
-
-```json
-{
-  "goal": {
-    "title": "Outcome",
-    "project": "demo",
-    "scope": "One sentence.",
-    "acceptance": "- observable check",
-    "priority": 1,
-    "autorun": false
-  },
-  "children": [
-    {
-      "key": "readme",
-      "title": "README audit",
-      "scope": "What this child changes.",
-      "acceptance": "- command runs",
-      "priority": 1,
-      "depends_on": [],
-      "owns": ["README.md"],
-      "lane": "docs"
-    }
-  ],
-  "lanes": [{"name": "docs", "tasks": ["readme"]}]
-}
-```
-
-Set `autorun: true` only when the operator asks to leave it alone.
-5. Validate and bind:
-   `tasks plan --file /tmp/opencode/goal-plan.json --dry-run --json`
-   Fix every validator error; save the returned `hash` to
-   `/tmp/opencode/goal-plan.sha256`.
-6. Show goal, children, lanes, dependencies, owns, one-way doors, autorun, and
-   hash. Stop. Nothing is created yet.
-
-## Go mode
-
-If `$ARGUMENTS` starts with `go`:
-1. Require `/tmp/opencode/goal-plan.json` and `.sha256`.
-2. Dry-run with `--expect-hash "$(cat /tmp/opencode/goal-plan.sha256)"` to prove
-   the reviewed plan is unchanged.
-3. Create with `plan --file /tmp/opencode/goal-plan.json --expect-hash
-   "$(cat /tmp/opencode/goal-plan.sha256)"` (add `--unattended` for `go
-   --unattended`); show the goal id.
-4. Run `tasks goal-start <goal-id>` once. It uses the reviewed
-   lane map and creates lanes for ready children with disjoint `owns`; use
-   `--max-lanes` only as an explicit budget. If it reports serial, work the ready
-   children in the current tree. Then execute as in section 1.
-5. `go` is the approval; there is no separate apply step. Do not re-plan
-   silently.
+1. If `$ARGUMENTS` is an existing task or goal id, read its packet. For a goal,
+   call `tasks` with `goal-status`, then `goal-start`. Execute each ready child
+   with the `work-queue` brief, implement, the `review` command, and the `close`
+   command. Use `tasks lane` only when the operator explicitly wants a manual
+   worktree.
+2. If it is a new request, brief it with the `work-queue` brief reference. Plan
+   it with the `goal` skill, show the plan, and stop for approval before
+   creating it.
+3. Let the `goal` skill own the plan, child, dependency, and lane details. Do
+   not restate or improvise them here.

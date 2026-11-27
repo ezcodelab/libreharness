@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+### Command surface
+
+- Keep only `/goal`, `/review`, and `/close` as commands. Move the brief,
+  queue, lane, resume, and handoff procedures into `work-queue`; move UI review
+  into `ui-design/references/review.md`; move periodic tuning into `correct`;
+  keep `state-audit` skill-only.
+- Convert `unslop-ui` to a skill. Its baseline, two-variant, A/B, implement,
+  verify, and ship workflow is distinct from the `ui-design` rules.
+
 ### Repository slimming
 
 - Remove the repo-local `.comment-audit-baseline` and `.comment-audit-strict`

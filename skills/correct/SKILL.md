@@ -1,6 +1,6 @@
 ---
 name: correct
-description: Turn a repeated agent mistake into a check. Use from /close or /tune when the same correction appears twice, or when the operator names it. Fix at the highest level that works and prove the new check fails on the past mistake.
+description: Turn a repeated agent mistake into a check. Use from /close, the periodic tune, or when the same correction appears twice, or when the operator names it. Fix at the highest level that works and prove the new check fails on the past mistake.
 ---
 <!-- SPDX-License-Identifier: MIT -->
 
@@ -29,6 +29,14 @@ easier.
 5. **Prose.** Last, and only for judgment calls. Nothing fails when an agent skips
    it. Write it with `references/skill-writing.md`.
 
+## Periodic tune
+
+After a work wave, not at task finish: run `npm run lint:md`, run `state-audit`
+over the changed area, and read `tasks report` plus the workflow log for rework,
+stale active tasks, blocked work, and lanes that did not pay off. Propose
+deletions first. For repeated corrections, use this skill. Stop for approval;
+do not do feature work in the tune turn.
+
 ## Steps
 
 1. Gather evidence: commits, reverts, review send-backs, task logs, and
@@ -44,10 +52,10 @@ easier.
 
 ## Ownership
 
-`correct` runs only when the operator names it, or from `/close` and `/tune` after
-a mistake class repeats twice. An in-flight `bug-fix`, `feature`, or `refactoring`
-does not switch into `correct`. It records the candidate and leaves the sweep to
-the next close or tune.
+`correct` runs only when the operator names it, or from `/close` or the periodic
+tune after a mistake class repeats twice. An in-flight `bug-fix`, `feature`, or
+`refactoring` does not switch into `correct`. It records the candidate and leaves
+the sweep to the next close or tune.
 
 ## Exit
 

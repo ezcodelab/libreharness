@@ -114,16 +114,15 @@ Slash commands remain escape hatches when you want to intervene directly:
 |---|---|
 | Let the harness run a request | Just describe it; no command required |
 | Intervene in a task or goal | `/goal <request-or-id>` |
-| Continue a task | `/brief <task-id>` |
-| Run independent slices | Auto-lanes; `/lane` only for manual isolation |
+| Continue or resume a task | The `work-queue` brief and resume procedures |
+| Run independent slices | Auto-lanes; `tasks lane` only for manual isolation |
 | Review a diff | `/review <task-id>` |
-| Audit stateful code | `/state-audit <path>` |
-| Resume after a pause | `/takeover <task-id>` |
+| Audit stateful code | The `state-audit` skill |
 | Finish a task or goal | `/close <task-id>` |
-| Unslop one UI surface with one A/B choice | `/unslop-ui <surface>` |
-| Review a UI | `/design-review` |
-| Prove real app behavior | `verification` skill |
-| Clean up the workflow | `/tune` |
+| Unslop one UI surface with one A/B choice | The `unslop-ui` skill |
+| Review a UI | The `ui-design` skill and its review reference |
+| Prove real app behavior | The `verification` skill |
+| Clean up the workflow | The `correct` skill's periodic tune |
 
 ## Documentation
 

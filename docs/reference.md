@@ -235,8 +235,9 @@ review -> close -> ready PR -> CI -> merge only the reviewed head
 post-merge check
 ```
 
-No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
-`/lane` are escape hatches for a human who wants to intervene.
+No slash command is required. `/goal`, `/review`, and `/close` are the only
+commands: task entry, the review gate, and the finish gate. Everything else is
+a skill or the `tasks` tool.
 
 1. **Intake.** A nontrivial request becomes one `inbox` task. A trivial request
    is done directly. A request with several deliverables becomes a goal with
@@ -265,17 +266,12 @@ No slash command is required. `/goal`, `/brief`, `/review`, `/close`, and
 | Command | Use |
 |---|---|
 | `/goal <request-or-id>` | Plan or resume a task or goal |
-| `/brief <id>` | Build a one-page brief |
-| `/queue` | Inspect the board and ready work |
-| `/lane <id>` | Create a manual worktree lane |
-| `/takeover <id>` | Resume a task from its packet |
 | `/review <id>` | Deterministic review with a recorded artifact |
-| `/state-audit <path>` | Document and check a state machine |
 | `/close <id>` | Integrate, validate the artifact, reap, evidence, ship |
-| `/handoff` | Write a bounded handoff |
-| `/unslop-ui <surface>` | Baseline, two variants, one A/B choice, implement, verify, close, ship |
-| `/design-review` | Review UI work |
-| `/tune` | Propose deletions and process patches |
+
+Use the `work-queue` skill for the brief, queue, lane, resume, and handoff
+procedures; `state-audit` for stateful code; `unslop-ui` for the UI A/B loop;
+`ui-design` for UI review; and the periodic tune in `correct` for cleanup.
 
 ### Queue CLI
 
