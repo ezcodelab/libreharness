@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { chmodSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -148,37 +148,61 @@ function applyAgentModels(agent, agentModels) {
   agent.model = model;
 }
 
-function packageTool(script, args, cwd, env) {
-  const childEnv = { ...process.env, ...env };
-  delete childEnv.HARNESS_HOME;
-  const result = spawnSync("python3", [join(ROOT, "bin", script), ...args], {
-    cwd,
-    encoding: "utf8",
-    env: childEnv,
+function runProcess(command, args, cwd, env, signal) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd,
+      env,
+      signal,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("error", reject);
+    child.on("close", (code, signalName) => {
+      const output = [stdout, stderr].filter(Boolean).join("\n").trim();
+      if (code === 0) {
+        resolve(output);
+        return;
+      }
+      reject(
+        new Error(
+          `${command} exited ${code ?? signalName}${output ? `:\n${output}` : ""}`,
+        ),
+      );
+    });
   });
-  if (result.error) throw result.error;
-  const output = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
-  if (result.status !== 0) {
-    throw new Error(
-      `${script} exited ${result.status}${output ? `:\n${output}` : ""}`,
-    );
-  }
-  return output;
 }
 
-function untracked(cwd) {
-  const result = spawnSync(
+async function packageTool(script, args, cwd, env, signal) {
+  const childEnv = { ...process.env, ...env };
+  delete childEnv.HARNESS_HOME;
+  return runProcess(
+    "python3",
+    [join(ROOT, "bin", script), ...args],
+    cwd,
+    childEnv,
+    signal,
+  );
+}
+
+async function untracked(cwd, signal) {
+  const output = await runProcess(
     "git",
     ["ls-files", "-z", "--others", "--exclude-standard"],
-    { cwd, encoding: "buffer" },
+    cwd,
+    process.env,
+    signal,
   );
-  if (result.error) throw result.error;
-  if (result.status !== 0) {
-    throw new Error(
-      `git ls-files exited ${result.status}: ${result.stderr.toString("utf8")}`,
-    );
-  }
-  return result.stdout.toString("utf8").split("\0").filter(Boolean);
+  return output.split("\0").filter(Boolean);
 }
 
 const ARGS_INPUT = {
@@ -205,7 +229,7 @@ const AUDIT_INPUT = {
   additionalProperties: false,
 };
 
-async function runAudit(input, state, defaultCwd) {
+async function runAudit(input, state, defaultCwd, signal) {
   const cwd = input.cwd ?? defaultCwd;
   const flags = [];
   if (input.strict) flags.push("--strict");
@@ -214,25 +238,33 @@ async function runAudit(input, state, defaultCwd) {
   const runs = [];
   if (input.diff) runs.push(["--diff", input.diff, ...flags]);
   const paths = [...(input.paths ?? [])];
-  if (input.untracked) paths.push(...untracked(cwd));
+  if (input.untracked) paths.push(...(await untracked(cwd, signal)));
   if (paths.length) runs.push([...paths, ...flags]);
   const requested =
     Boolean(input.diff) || Boolean(input.paths?.length) || Boolean(input.untracked);
   if (!runs.length && !requested) runs.push([".", ...flags]);
   const outputs = [];
   for (const args of runs) {
-    const output = packageTool("comment_audit.py", args, cwd, {
-      HARNESS_STATE: state,
-    });
+    const output = await packageTool(
+      "comment_audit.py",
+      args,
+      cwd,
+      { HARNESS_STATE: state },
+      signal,
+    );
     if (output) outputs.push(output);
   }
   return outputs.join("\n") || "comment audit: PASS";
 }
 
-function runArgs(script, input, state, defaultCwd) {
-  const output = packageTool(script, input.args, input.cwd ?? defaultCwd, {
-    HARNESS_STATE: state,
-  });
+async function runArgs(script, input, state, defaultCwd, signal) {
+  const output = await packageTool(
+    script,
+    input.args,
+    input.cwd ?? defaultCwd,
+    { HARNESS_STATE: state },
+    signal,
+  );
   return output || `${script}: PASS`;
 }
 
@@ -253,8 +285,8 @@ const plugin = Plugin.define({
         description:
           "Run the deterministic LibreHarness comment audit on a diff, paths, or untracked files.",
         input: AUDIT_INPUT,
-        execute: async (input) => ({
-          content: await runAudit(input, state, defaultCwd),
+        execute: async (input, context) => ({
+          content: await runAudit(input, state, defaultCwd, context?.signal),
         }),
       });
       editor.add({
@@ -262,16 +294,28 @@ const plugin = Plugin.define({
         description:
           "Run the LibreHarness task queue CLI against the current repository.",
         input: ARGS_INPUT,
-        execute: async (input) => ({
-          content: runArgs("tasks.py", input, state, defaultCwd),
+        execute: async (input, context) => ({
+          content: await runArgs(
+            "tasks.py",
+            input,
+            state,
+            defaultCwd,
+            context?.signal,
+          ),
         }),
       });
       editor.add({
         name: "pr_guard",
         description: "Run the LibreHarness PR guard for shipping.",
         input: ARGS_INPUT,
-        execute: async (input) => ({
-          content: runArgs("pr_guard.py", input, state, defaultCwd),
+        execute: async (input, context) => ({
+          content: await runArgs(
+            "pr_guard.py",
+            input,
+            state,
+            defaultCwd,
+            context?.signal,
+          ),
         }),
       });
     });
