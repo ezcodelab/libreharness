@@ -17,4 +17,3 @@ Certified. Standards compatibility alone is not a support claim.
 ## Recorded limits
 
 - OpenCode Linux: Certified through the OpenCode headless CLI. The interactive TUI transport was not exercised.
-

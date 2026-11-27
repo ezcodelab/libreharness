@@ -84,7 +84,6 @@ for (const [key, certificate] of [...certificates.entries()].sort()) {
   }
 }
 if (!limits) lines.push("None.");
-lines.push("");
 const expected = `${lines.join("\n")}\n`;
 
 if (process.argv.includes("--write")) {
